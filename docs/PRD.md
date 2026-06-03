@@ -164,7 +164,7 @@ Initial MVP thresholds:
 
 The policy is intentionally simple in V1.
 
-Future versions may incorporate:
+Future versions incorporate:
 
 - confidence estimation,
 - uncertainty handling,
