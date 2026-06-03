@@ -92,9 +92,11 @@ Output:
 
 ## Repository Structure
 
-docs/ 
-modules/  
-  bounded-application-workflow/ 
+```txt
+docs/
+modules/
+  bounded-application-workflow/
+```
 
 ---
 
