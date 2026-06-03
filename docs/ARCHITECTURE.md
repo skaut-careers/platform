@@ -1,6 +1,6 @@
-## Agentic Direction
+## Agentic 
 
-The long-term architecture of Limen is agent-oriented.
+The architecture of the first module Bounded Application Workflow is agent-oriented.
 
 Instead of relying on a single monolithic LLM interaction, the system is designed around specialized bounded agents responsible for:
 
@@ -11,6 +11,11 @@ Instead of relying on a single monolithic LLM interaction, the system is designe
 - workflow orchestration,
 - human escalation,
 - execution safety.
+
+<br>
+<p align="center">
+  <img src="./images/runtime.png" width="500">
+</p>
 
 The system prioritizes:
 
@@ -25,9 +30,9 @@ Agentic behavior is introduced incrementally and remains constrained by explicit
 
 ---
 
-# Future Architecture Direction
+# Architecture 
 
-Future iterations may introduce:
+Iterations may introduce:
 
 - multi-agent orchestration,
 - memory systems,
@@ -67,11 +72,5 @@ Capabilities should be isolated into composable components instead of hidden ins
 The architecture prioritizes reliability, evaluation, monitoring, and controlled execution over unconstrained autonomy.
 
 
-## Architecture
 
-<br>
-
-<p align="center">
-  <img src="./images/runtime.png" width="850">
-</p>
 
