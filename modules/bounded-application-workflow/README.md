@@ -36,6 +36,24 @@ This module does not submit applications automatically.
 
 It supports decision-making and preparation while keeping final actions human-controlled.
 
+## Run the API locally
+
+From this module directory:
+
+```bash
+poetry install
+poetry run uvicorn app.api.main:app --reload
+```
+
+Run tests:
+
+```bash
+poetry run pytest
+```
+
+- `GET /health` — liveness check
+- `POST /workflow/run` — evaluate a `WorkflowInput` and return `WorkflowOutput`
+
 ## Documentation
 
 Core product and architecture documentation lives in the root documentation folder:
