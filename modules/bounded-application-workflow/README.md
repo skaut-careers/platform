@@ -23,9 +23,9 @@ This module is designed to help users decide whether an opportunity should be:
 
 The first executable evaluation engine is in place: input/output contract, job description parsing, profile matching, decision policy, runtime API, tests, and CI.
 
-**Milestone 2 — Signal Extraction** — in progress.
+**Milestone 2 — Signal Extraction** — completed.
 
-Improve structured extraction from job descriptions and user profiles.
+Structured signals are extracted from job descriptions and drive matching, decision risks, missing information, and escalation guardrails.
 
 Focus:
 
@@ -35,6 +35,10 @@ Focus:
 - production expectations
 - ambiguity and risk indicators
 - missing signals
+
+**Milestone 3 — Agentic Workflow Layer** — next.
+
+Introduce bounded agentic orchestration on top of the planning/execution split: explicit workflow states, agent responsibilities, and human review points.
 
 See the full roadmap: [`../../docs/ROADMAP.md`](../../docs/ROADMAP.md).
 

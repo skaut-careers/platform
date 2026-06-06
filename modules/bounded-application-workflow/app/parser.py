@@ -14,9 +14,6 @@ def parse_job_description(raw_text: str) -> JobDescription:
     seniority = None
     employment_type = None
 
-    required_skills = []
-    nice_to_have_skills = []
-
     for line in lines:
         lower = line.lower()
 
@@ -32,19 +29,11 @@ def parse_job_description(raw_text: str) -> JobDescription:
         elif lower.startswith("employment type:"):
             employment_type = line.split(":", 1)[1].strip()
 
-        elif line.startswith("-"):
-            required_skills.append(line.lstrip("- ").strip())
-
-        elif line.startswith("+"):
-            nice_to_have_skills.append(line.lstrip("+ ").strip())
-
     return JobDescription(
         title=title,
         company=company,
         location=location,
         description=raw_text,
-        required_skills=required_skills,
-        nice_to_have_skills=nice_to_have_skills,
         seniority=seniority,
         employment_type=employment_type,
     )

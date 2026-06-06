@@ -1,6 +1,7 @@
 import re
 from typing import Iterable
 
+from app.domain.job_signals import JobSignals
 from app.domain.models import JobDescription, ProfileMatchResult, UserProfile
 
 _TOKEN_PATTERN = re.compile(r"[a-z0-9]+")
@@ -135,37 +136,135 @@ def _coverage_ratio(matched_count: int, total_count: int) -> float:
     return matched_count / total_count
 
 
+_SENIORITY_RANKS: list[tuple[str, int]] = [
+    ("mid-senior", 3),
+    ("mid-level", 2),
+    ("junior", 1),
+    ("staff", 5),
+    ("principal", 5),
+    ("director", 6),
+    ("senior", 4),
+    ("lead", 4),
+    ("mid", 2),
+]
+
+
+def _normalize_seniority(value: str) -> str:
+    return " ".join(value.lower().split())
+
+
+def _seniority_rank(value: str) -> int | None:
+    normalized = _normalize_seniority(value)
+    for label, rank in _SENIORITY_RANKS:
+        if label in normalized:
+            return rank
+    return None
+
+
+def _primary_job_seniority(
+    job: JobDescription, signals: JobSignals
+) -> str | None:
+    if job.seniority:
+        return job.seniority
+
+    for signal in signals.seniority_signals:
+        if _seniority_rank(signal) is not None:
+            return signal
+
+    return None
+
+
+def _assess_seniority_alignment(
+    profile: UserProfile,
+    job: JobDescription,
+    signals: JobSignals,
+) -> tuple[list[str], list[str]]:
+    reasons: list[str] = []
+    risks: list[str] = []
+
+    job_seniority = _primary_job_seniority(job, signals)
+    if not job_seniority:
+        return reasons, risks
+
+    if not profile.seniority:
+        risks.append(
+            "Profile seniority is not specified; cannot verify alignment with job."
+        )
+        return reasons, risks
+
+    profile_rank = _seniority_rank(profile.seniority)
+    job_rank = _seniority_rank(job_seniority)
+
+    if profile_rank is not None and job_rank is not None:
+        rank_gap = profile_rank - job_rank
+
+        if rank_gap < 0:
+            risks.append(
+                f"Job expects {job_seniority}; profile indicates {profile.seniority}."
+            )
+        elif rank_gap >= 2:
+            risks.append(
+                "Profile seniority exceeds job expectations by more than one level "
+                f"(job: {job_seniority}, profile: {profile.seniority}); "
+                "this role may be a poor fit."
+            )
+        else:
+            reasons.append(
+                "Seniority meets job expectations "
+                f"(job: {job_seniority}, profile: {profile.seniority})."
+            )
+        return reasons, risks
+
+    profile_normalized = _normalize_seniority(profile.seniority)
+    job_normalized = _normalize_seniority(job_seniority)
+    if profile_normalized in job_normalized or job_normalized in profile_normalized:
+        reasons.append(
+            "Seniority meets job expectations "
+            f"(job: {job_seniority}, profile: {profile.seniority})."
+        )
+    else:
+        risks.append(
+            f"Job expects {job_seniority}; profile indicates {profile.seniority}."
+        )
+
+    return reasons, risks
+
+
 def match_profile_to_job(
-    user_profile: UserProfile, job_description: JobDescription
+    user_profile: UserProfile,
+    job_description: JobDescription,
+    signals: JobSignals,
 ) -> ProfileMatchResult:
     required_matched, required_missing = _partition_skills(
-        user_profile, job_description.required_skills
+        user_profile, signals.required_skills
     )
-    nice_matched, _ = _partition_skills(
-        user_profile, job_description.nice_to_have_skills
+    preferred_matched, _ = _partition_skills(
+        user_profile, signals.preferred_skills
     )
 
     required_ratio = _coverage_ratio(
-        len(required_matched), len(job_description.required_skills)
+        len(required_matched), len(signals.required_skills)
     )
-    nice_ratio = _coverage_ratio(
-        len(nice_matched), len(job_description.nice_to_have_skills)
+    preferred_ratio = _coverage_ratio(
+        len(preferred_matched), len(signals.preferred_skills)
     )
     role_aligned = _role_aligned(user_profile, job_description)
 
     role_component = 0.15 if role_aligned else 0.0
-    score = min(1.0, 0.75 * required_ratio + 0.10 * nice_ratio + role_component)
+    score = min(
+        1.0, 0.75 * required_ratio + 0.10 * preferred_ratio + role_component
+    )
 
     reasons: list[str] = []
     risks: list[str] = []
 
     if required_matched:
         reasons.append(
-            f"Matched {len(required_matched)} of {len(job_description.required_skills)} required skills."
+            f"Matched {len(required_matched)} of {len(signals.required_skills)} required skills."
         )
-    if nice_matched:
+    if preferred_matched:
         reasons.append(
-            f"Matched {len(nice_matched)} nice-to-have skills."
+            f"Matched {len(preferred_matched)} preferred skills."
         )
     if role_aligned:
         reasons.append("Job aligns with target role.")
@@ -177,11 +276,17 @@ def match_profile_to_job(
             f"Missing required skills: {', '.join(required_missing)}."
         )
 
+    seniority_reasons, seniority_risks = _assess_seniority_alignment(
+        user_profile, job_description, signals
+    )
+    reasons.extend(seniority_reasons)
+    risks.extend(seniority_risks)
+
     return ProfileMatchResult(
         score=round(score, 2),
         required_skills_matched=required_matched,
         required_skills_missing=required_missing,
-        nice_to_have_skills_matched=nice_matched,
+        preferred_skills_matched=preferred_matched,
         role_aligned=role_aligned,
         reasons=reasons,
         risks=risks,

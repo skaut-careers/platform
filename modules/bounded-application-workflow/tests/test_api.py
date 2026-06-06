@@ -29,6 +29,8 @@ def test_run_workflow_returns_structured_output():
     assert body["decision"]["score"] >= 0.0
     assert body["decision"]["decision"] in {d.value for d in DecisionType}
     assert body["recommended_next_steps"]
+    assert "required_skills" in body["job_signals"]
+    assert "risk_indicators" in body["job_signals"]
 
 
 def test_run_workflow_ambiguous_match_escalates():

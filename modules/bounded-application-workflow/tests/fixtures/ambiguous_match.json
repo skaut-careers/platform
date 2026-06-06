@@ -10,6 +10,7 @@
     ],
     "experience_summary": "ML and LLM product experience; needs clarity on role scope.",
     "location": "Zurich, Switzerland",
+    "seniority": "mid-senior",
     "work_preferences": [
       "remote",
       "hybrid",
@@ -21,17 +22,7 @@
     "title": "Machine Learning Product Engineer",
     "company": "Career Tech Platform",
     "location": "London, UK",
-    "description": "ML product role in career tech. Unclear signals: no explicit remote policy; seniority level unclear; production AI ownership unclear.",
-    "required_skills": [
-      "Python",
-      "ML models",
-      "product analytics",
-      "cross-functional collaboration"
-    ],
-    "nice_to_have_skills": [
-      "LLM experience",
-      "career-tech experience"
-    ]
+    "description": "ML product role in career tech. Unclear signals: no explicit remote policy; seniority level unclear; production AI ownership unclear.\n\n- Python\n- ML models\n- product analytics\n- cross-functional collaboration\n\n+ LLM experience\n+ career-tech experience"
   },
   "expected_decision": "escalate"
 }

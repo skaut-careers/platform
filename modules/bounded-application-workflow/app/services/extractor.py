@@ -188,7 +188,8 @@ def _seniority_signals_from_job(job: JobDescription) -> list[str]:
     for match in _SENIORITY_LEVEL_PATTERN.finditer(corpus):
         signals.append(_normalize_skill(match.group(0)))
 
-    for skill in [*job.required_skills, *job.nice_to_have_skills]:
+    description_required, description_preferred = _skills_from_description(job.description)
+    for skill in [*description_required, *description_preferred]:
         if "ownership" in skill.casefold():
             signals.append(skill)
 
@@ -248,16 +249,12 @@ def extract_job_signals(job: JobDescription) -> JobSignals:
         job.description
     )
 
-    required_skills = _dedupe_skills(
-        [*job.required_skills, *description_required]
-    )
+    required_skills = _dedupe_skills(description_required)
     required_keys = {skill.casefold() for skill in required_skills}
 
     preferred_skills = [
         skill
-        for skill in _dedupe_skills(
-            [*job.nice_to_have_skills, *description_preferred]
-        )
+        for skill in _dedupe_skills(description_preferred)
         if skill.casefold() not in required_keys
     ]
 

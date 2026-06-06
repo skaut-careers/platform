@@ -1,5 +1,6 @@
 from app.domain.models import UserProfile, WorkflowInput
 from app.parser import parse_job_description
+from app.services.extractor import extract_job_signals
 from app.services.policy import evaluate_workflow
 from tests.fixture_helpers import load_fixture
 
@@ -36,3 +37,10 @@ def test_parse_and_evaluate_workflow_end_to_end():
     assert output.input_summary
     assert output.decision.score >= 0.0
     assert output.recommended_next_steps
+
+    expected = extract_job_signals(job)
+    assert output.job_signals == expected
+    assert any(
+        "Seniority meets job expectations" in reason
+        for reason in output.decision.reasons
+    )

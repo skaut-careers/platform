@@ -73,13 +73,12 @@ def test_extract_job_signals_deduplicates_skills():
 - Python
 - python
 -  Python
+- LLMs
 
 + FastAPI
 + fastapi
 + React
 """,
-        required_skills=["Python", "LLMs"],
-        nice_to_have_skills=["FastAPI", "React"],
     )
 
     signals = extract_job_signals(job)
@@ -96,8 +95,6 @@ def test_extract_job_signals_prefers_required_over_preferred():
 + Python
 + FastAPI
 """,
-        required_skills=[],
-        nice_to_have_skills=["Python", "FastAPI"],
     )
 
     signals = extract_job_signals(job)
@@ -109,9 +106,7 @@ def test_extract_job_signals_prefers_required_over_preferred():
 def test_extract_job_signals_returns_job_signals_model():
     job = JobDescription(
         title="AI Engineer",
-        description="Build LLM workflows.",
-        required_skills=["Python"],
-        nice_to_have_skills=["FastAPI"],
+        description="Build LLM workflows.\n\n- Python\n\n+ FastAPI",
     )
 
     signals = extract_job_signals(job)
@@ -133,8 +128,6 @@ def test_extract_job_signals_detects_years_of_experience():
     job = JobDescription(
         title="Senior AI Engineer",
         description="Looking for 5+ years of experience building ML systems.",
-        required_skills=[],
-        nice_to_have_skills=[],
         seniority=None,
     )
 
@@ -150,8 +143,6 @@ def test_extract_job_signals_detects_production_expectations():
             "Operate large-scale inference systems with on-call rotation "
             "and production-ready deployment practices."
         ),
-        required_skills=[],
-        nice_to_have_skills=[],
     )
 
     signals = extract_job_signals(job)
@@ -167,8 +158,6 @@ def test_extract_job_signals_deduplicates_seniority_signals():
     job = JobDescription(
         title="Senior Engineer",
         description="Senior engineer with 3-5 years experience. Senior team lead.",
-        required_skills=[],
-        nice_to_have_skills=[],
         seniority="senior",
     )
 
@@ -195,8 +184,6 @@ def test_extract_job_signals_detects_risk_indicators():
             "Ambiguous scope with high infrastructure ownership. "
             "We need a 10x engineer who can wear many hats."
         ),
-        required_skills=[],
-        nice_to_have_skills=[],
     )
 
     signals = extract_job_signals(job)
@@ -213,10 +200,10 @@ def test_extract_job_signals_detects_explicit_missing_signals():
     job = JobDescription(
         title="ML Engineer",
         description=(
-            "Build ML models. No explicit remote policy. "
+            "Build ML models.\n\n- Python\n\n"
+            "No explicit remote policy. "
             "Seniority level unclear. Compensation not listed."
         ),
-        required_skills=["Python"],
         seniority=None,
     )
 

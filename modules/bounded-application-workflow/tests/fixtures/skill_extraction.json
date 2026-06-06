@@ -3,18 +3,7 @@
     "title": "AI Engineer",
     "company": "Frontier AI Startup",
     "location": "Remote Europe",
-    "description": "Build and own LLM-based product workflows, evaluation pipelines, and agentic systems in a product-facing AI role.",
-    "required_skills": [
-      "Python",
-      "LLM applications",
-      "evaluation pipelines",
-      "agentic workflows",
-      "product ownership"
-    ],
-    "nice_to_have_skills": [
-      "research background",
-      "startup experience"
-    ],
+    "description": "Build and own LLM-based product workflows, evaluation pipelines, and agentic systems in a product-facing AI role.\n\n- Python\n- LLM applications\n- evaluation pipelines\n- agentic workflows\n- product ownership\n\n+ research background\n+ startup experience",
     "seniority": "mid-senior",
     "employment_type": "full-time"
   },

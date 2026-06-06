@@ -1,3 +1,4 @@
+from app.domain.job_signals import JobSignals
 from app.domain.models import (
     DecisionType,
     JobDescription,
@@ -7,6 +8,7 @@ from app.domain.models import (
     WorkflowInput,
     WorkflowOutput,
 )
+from app.services.extractor import extract_job_signals
 from app.services.matcher import match_profile_to_job
 
 # MVP thresholds — docs/PRD.md
@@ -47,8 +49,31 @@ def decision_from_score(score: float) -> DecisionType:
     return DecisionType.SKIP
 
 
-def _missing_information(
-    profile: UserProfile, job: JobDescription, match: ProfileMatchResult
+def decision_from_signals(score: float, signals: JobSignals) -> DecisionType:
+    """Map match score to a decision, then apply job-signal guardrails."""
+    base = decision_from_score(score)
+
+    # Risky postings require human review even when the profile match is strong.
+    if base == DecisionType.PREPARE and signals.risk_indicators:
+        return DecisionType.ESCALATE
+
+    return base
+
+
+def _risks_from_signals(signals: JobSignals) -> list[str]:
+    risks: list[str] = []
+
+    for indicator in signals.risk_indicators:
+        risks.append(f"Job posting risk: {indicator}")
+
+    for expectation in signals.production_expectations:
+        risks.append(f"Job production expectation: {expectation}")
+
+    return risks
+
+
+def _missing_information_from_profile(
+    profile: UserProfile, match: ProfileMatchResult
 ) -> list[str]:
     missing: list[str] = []
 
@@ -61,26 +86,30 @@ def _missing_information(
     if not profile.target_roles:
         missing.append("Profile has no target roles defined.")
 
-    if not job.seniority:
-        missing.append("Job seniority level is not specified.")
-
-    if not job.employment_type:
-        missing.append("Job employment type is not specified.")
-
     return missing
+
+
+def _missing_information_from_signals(signals: JobSignals) -> list[str]:
+    return [
+        f"Job posting missing signal: {signal}"
+        for signal in signals.missing_signals
+    ]
 
 
 def build_workflow_decision(
     match: ProfileMatchResult,
     profile: UserProfile,
-    job: JobDescription,
+    signals: JobSignals,
 ) -> WorkflowDecision:
     return WorkflowDecision(
-        decision=decision_from_score(match.score),
+        decision=decision_from_signals(match.score, signals),
         score=match.score,
         reasons=list(match.reasons),
-        risks=list(match.risks),
-        missing_information=_missing_information(profile, job, match),
+        risks=list(match.risks) + _risks_from_signals(signals),
+        missing_information=(
+            _missing_information_from_profile(profile, match)
+            + _missing_information_from_signals(signals)
+        ),
     )
 
 
@@ -95,11 +124,13 @@ def evaluate_workflow(workflow_input: WorkflowInput) -> WorkflowOutput:
     profile = workflow_input.user_profile
     job = workflow_input.job_description
 
-    match = match_profile_to_job(profile, job)
-    decision = build_workflow_decision(match, profile, job)
+    signals = extract_job_signals(job)
+    match = match_profile_to_job(profile, job, signals)
+    decision = build_workflow_decision(match, profile, signals)
 
     return WorkflowOutput(
         input_summary=_input_summary(profile, job),
         decision=decision,
+        job_signals=signals,
         recommended_next_steps=list(_NEXT_STEPS[decision.decision]),
     )

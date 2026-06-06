@@ -1,6 +1,7 @@
 import pytest
 
 from app.parser import parse_job_description
+from app.services.extractor import extract_job_signals
 
 RAW_JOB_TEXT = """
 AI Engineer
@@ -29,8 +30,9 @@ def test_parse_job_description():
     assert job.employment_type == "Full-time"
     assert job.description == RAW_JOB_TEXT
 
-    assert job.required_skills == ["Python", "LLM Systems", "Evaluation"]
-    assert job.nice_to_have_skills == ["FastAPI", "React"]
+    signals = extract_job_signals(job)
+    assert signals.required_skills == ["Python", "LLM Systems", "Evaluation"]
+    assert signals.preferred_skills == ["FastAPI", "React"]
 
 
 def test_parse_job_description_rejects_empty_text():

@@ -9,6 +9,7 @@ from app.domain.models import (
     WorkflowInput,
     WorkflowOutput,
 )
+from app.domain.job_signals import JobSignals
 
 
 def test_workflow_input_can_be_created():
@@ -25,9 +26,10 @@ def test_workflow_input_can_be_created():
         title="AI Engineer",
         company="Example AI",
         location="Remote",
-        description="Build and evaluate LLM-based product workflows.",
-        required_skills=["Python", "LLMs", "APIs"],
-        nice_to_have_skills=["FastAPI", "Evaluation"],
+        description=(
+            "Build and evaluate LLM-based product workflows.\n\n"
+            "- Python\n- LLMs\n- APIs\n\n+ FastAPI\n+ Evaluation"
+        ),
         seniority="mid-senior",
         employment_type="full-time",
     )
@@ -77,6 +79,7 @@ def test_workflow_output_can_be_created():
     output = WorkflowOutput(
         input_summary="Ana is being evaluated for an AI Engineer role.",
         decision=decision,
+        job_signals=JobSignals(),
         recommended_next_steps=[
             "Review job requirements manually",
             "Improve CV alignment before applying",
