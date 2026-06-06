@@ -36,6 +36,8 @@ def test_extract_job_signals_from_fixture():
     assert signals.preferred_skills == expected["preferred_skills"]
     assert signals.seniority_signals == expected["seniority_signals"]
     assert signals.production_expectations == expected["production_expectations"]
+    assert signals.risk_indicators == expected["risk_indicators"]
+    assert signals.missing_signals == expected["missing_signals"]
 
 
 def test_extract_job_signals_from_parsed_description():
@@ -60,6 +62,8 @@ def test_extract_job_signals_from_parsed_description():
         "own LLM-based product workflows",
     ]
     assert signals.production_expectations == []
+    assert signals.risk_indicators == []
+    assert signals.missing_signals == ["salary range", "team size"]
 
 
 def test_extract_job_signals_deduplicates_skills():
@@ -116,7 +120,13 @@ def test_extract_job_signals_returns_job_signals_model():
     assert signals.seniority_signals == []
     assert signals.production_expectations == []
     assert signals.risk_indicators == []
-    assert signals.missing_signals == []
+    assert signals.missing_signals == [
+        "seniority level",
+        "remote policy",
+        "salary range",
+        "team size",
+        "employment type",
+    ]
 
 
 def test_extract_job_signals_detects_years_of_experience():
@@ -165,3 +175,53 @@ def test_extract_job_signals_deduplicates_seniority_signals():
     signals = extract_job_signals(job)
 
     assert signals.seniority_signals == ["senior", "3-5 years", "team lead"]
+
+
+def test_extract_job_signals_from_risk_fixture():
+    fixture = load_fixture("risk_extraction.json")
+    job = JobDescription(**fixture["job_description"])
+    expected = fixture["expected_signals"]
+
+    signals = extract_job_signals(job)
+
+    assert signals.risk_indicators == expected["risk_indicators"]
+    assert signals.missing_signals == expected["missing_signals"]
+
+
+def test_extract_job_signals_detects_risk_indicators():
+    job = JobDescription(
+        title="Full Stack Unicorn Engineer",
+        description=(
+            "Ambiguous scope with high infrastructure ownership. "
+            "We need a 10x engineer who can wear many hats."
+        ),
+        required_skills=[],
+        nice_to_have_skills=[],
+    )
+
+    signals = extract_job_signals(job)
+
+    assert signals.risk_indicators == [
+        "ambiguous scope",
+        "unrealistic expectations",
+        "broad unfocused role",
+        "high infrastructure ownership",
+    ]
+
+
+def test_extract_job_signals_detects_explicit_missing_signals():
+    job = JobDescription(
+        title="ML Engineer",
+        description=(
+            "Build ML models. No explicit remote policy. "
+            "Seniority level unclear. Compensation not listed."
+        ),
+        required_skills=["Python"],
+        seniority=None,
+    )
+
+    signals = extract_job_signals(job)
+
+    assert "remote policy" in signals.missing_signals
+    assert "seniority level" in signals.missing_signals
+    assert "salary range" in signals.missing_signals

@@ -35,6 +35,11 @@
       "product ownership",
       "own LLM-based product workflows"
     ],
-    "production_expectations": []
+    "production_expectations": [],
+    "risk_indicators": [],
+    "missing_signals": [
+      "salary range",
+      "team size"
+    ]
   }
 }

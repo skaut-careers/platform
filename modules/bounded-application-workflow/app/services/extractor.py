@@ -56,6 +56,70 @@ _PRODUCTION_PATTERNS: list[PatternLabel] = [
         None,
     ),
 ]
+_RISK_PATTERNS: list[PatternLabel] = [
+    (
+        re.compile(
+            r"\b(?:unclear|ambiguous|vague|TBD|to be determined)\b",
+            re.IGNORECASE,
+        ),
+        "ambiguous scope",
+    ),
+    (
+        re.compile(
+            r"\b(?:10x|rockstar|ninja|unicorn)\s+(?:engineer|developer|hire)\b",
+            re.IGNORECASE,
+        ),
+        "unrealistic expectations",
+    ),
+    (
+        re.compile(r"\bwear many hats\b", re.IGNORECASE),
+        "broad unfocused role",
+    ),
+    (
+        re.compile(r"\bhigh(?:\s+[\w-]+){0,2}\s+ownership\b", re.IGNORECASE),
+        "high ownership expectations",
+    )
+]
+_MISSING_PATTERNS: list[PatternLabel] = [
+    (
+        re.compile(r"\bno explicit remote policy\b", re.IGNORECASE),
+        "remote policy",
+    ),
+    (
+        re.compile(r"\bseniority(?: level)? unclear\b", re.IGNORECASE),
+        "seniority level",
+    ),
+    (
+        re.compile(
+            r"\b(?:salary|compensation) (?:not listed|unclear|unlisted)\b",
+            re.IGNORECASE,
+        ),
+        "salary range",
+    ),
+    (
+        re.compile(
+            r"\b(?:team size|team structure) (?:not mentioned|unclear|unspecified)\b",
+            re.IGNORECASE,
+        ),
+        "team size",
+    ),
+]
+_SALARY_PATTERN = re.compile(
+    r"\b(?:salary|compensation|pay range|pay band|£|\$|€|USD|EUR|CHF|\d+k)\b",
+    re.IGNORECASE,
+)
+_TEAM_SIZE_PATTERN = re.compile(
+    r"\b(?:team size|team of \d+|\d+[- ]person team|\d+\s+engineers|\d+\s+people)\b",
+    re.IGNORECASE,
+)
+_REMOTE_POLICY_PATTERN = re.compile(
+    r"\b(?:remote[- ]first|fully remote|remote|hybrid|on[- ]site|office[- ]first|work from home|WFH)\b",
+    re.IGNORECASE,
+)
+_EMPLOYMENT_TYPE_PATTERN = re.compile(
+    r"\b(?:full[- ]time|part[- ]time|contract|freelance|permanent|employment type)\b",
+    re.IGNORECASE,
+)
 
 
 def _normalize_skill(skill: str) -> str:
@@ -139,6 +203,46 @@ def _production_expectations_from_job(job: JobDescription) -> list[str]:
     )
 
 
+def _risk_indicators_from_job(job: JobDescription) -> list[str]:
+    return _dedupe_skills(
+        _signals_from_labeled_patterns(_job_corpus(job), _RISK_PATTERNS)
+    )
+
+
+def _has_remote_policy(job: JobDescription, corpus: str) -> bool:
+    if _REMOTE_POLICY_PATTERN.search(corpus):
+        return True
+    return bool(job.location and _REMOTE_POLICY_PATTERN.search(job.location))
+
+
+def _missing_signals_from_job(job: JobDescription) -> list[str]:
+    missing: list[str] = []
+    corpus = _job_corpus(job)
+
+    missing.extend(_signals_from_labeled_patterns(corpus, _MISSING_PATTERNS))
+
+    if (
+        not job.seniority
+        and not _SENIORITY_LEVEL_PATTERN.search(corpus)
+        and not _YEARS_EXPERIENCE_PATTERN.search(corpus)
+    ):
+        missing.append("seniority level")
+
+    if not _has_remote_policy(job, corpus):
+        missing.append("remote policy")
+
+    if not _SALARY_PATTERN.search(corpus):
+        missing.append("salary range")
+
+    if not _TEAM_SIZE_PATTERN.search(corpus):
+        missing.append("team size")
+
+    if not job.employment_type and not _EMPLOYMENT_TYPE_PATTERN.search(corpus):
+        missing.append("employment type")
+
+    return _dedupe_skills(missing)
+
+
 def extract_job_signals(job: JobDescription) -> JobSignals:
     description_required, description_preferred = _skills_from_description(
         job.description
@@ -162,4 +266,6 @@ def extract_job_signals(job: JobDescription) -> JobSignals:
         preferred_skills=preferred_skills,
         seniority_signals=_seniority_signals_from_job(job),
         production_expectations=_production_expectations_from_job(job),
+        risk_indicators=_risk_indicators_from_job(job),
+        missing_signals=_missing_signals_from_job(job),
     )

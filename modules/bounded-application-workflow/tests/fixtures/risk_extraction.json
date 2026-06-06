@@ -1,0 +1,42 @@
+{
+  "job_description": {
+    "title": "Machine Learning Product Engineer",
+    "company": "Career Tech Platform",
+    "location": "London, UK",
+    "description": "ML product role in career tech. Unclear signals: no explicit remote policy; seniority level unclear; production AI ownership unclear.",
+    "required_skills": [
+      "Python",
+      "ML models",
+      "product analytics",
+      "cross-functional collaboration"
+    ],
+    "nice_to_have_skills": [
+      "LLM experience",
+      "career-tech experience"
+    ]
+  },
+  "expected_signals": {
+    "required_skills": [
+      "Python",
+      "ML models",
+      "product analytics",
+      "cross-functional collaboration"
+    ],
+    "preferred_skills": [
+      "LLM experience",
+      "career-tech experience"
+    ],
+    "seniority_signals": [],
+    "production_expectations": [],
+    "risk_indicators": [
+      "ambiguous scope"
+    ],
+    "missing_signals": [
+      "remote policy",
+      "seniority level",
+      "salary range",
+      "team size",
+      "employment type"
+    ]
+  }
+}
