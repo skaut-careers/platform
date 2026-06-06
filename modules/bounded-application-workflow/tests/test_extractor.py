@@ -205,7 +205,7 @@ def test_extract_job_signals_detects_risk_indicators():
         "ambiguous scope",
         "unrealistic expectations",
         "broad unfocused role",
-        "high infrastructure ownership",
+        "high ownership expectations",
     ]
 
 
