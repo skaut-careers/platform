@@ -20,6 +20,7 @@ class UserProfile(BaseModel):
     experience_summary: Optional[str] = None
     location: Optional[str] = None
     seniority: Optional[str] = None
+    production_experience: List[str] = Field(default_factory=list)
     work_preferences: List[str] = Field(default_factory=list)
 
 
@@ -37,6 +38,8 @@ class ProfileMatchResult(BaseModel):
     required_skills_matched: List[str] = Field(default_factory=list)
     required_skills_missing: List[str] = Field(default_factory=list)
     preferred_skills_matched: List[str] = Field(default_factory=list)
+    production_expectations_matched: List[str] = Field(default_factory=list)
+    production_expectations_missing: List[str] = Field(default_factory=list)
     role_aligned: bool = False
     severe_seniority_mismatch: bool = False
     reasons: List[str] = Field(default_factory=list)

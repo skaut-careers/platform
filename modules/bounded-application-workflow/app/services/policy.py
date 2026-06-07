@@ -68,18 +68,6 @@ def decision_from_signals(
     return base
 
 
-def _risks_from_signals(signals: JobSignals) -> list[str]:
-    risks: list[str] = []
-
-    for indicator in signals.risk_indicators:
-        risks.append(f"Job posting risk: {indicator}")
-
-    for expectation in signals.production_expectations:
-        risks.append(f"Job production expectation: {expectation}")
-
-    return risks
-
-
 def _missing_information_from_profile(
     profile: UserProfile, match: ProfileMatchResult
 ) -> list[str]:
@@ -117,7 +105,7 @@ def build_workflow_decision(
         ),
         score=match.score,
         reasons=list(match.reasons),
-        risks=list(match.risks) + _risks_from_signals(signals),
+        risks=list(match.risks),
         missing_information=(
             _missing_information_from_profile(profile, match)
             + _missing_information_from_signals(signals)

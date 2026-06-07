@@ -136,3 +136,131 @@ def test_underqualified_profile_flags_severe_seniority_gap():
     assert any(
         "more than one level below job expectations" in risk for risk in result.risks
     )
+
+
+def test_production_expectations_align_when_profile_documents_experience():
+    profile = UserProfile(
+        name="Ana",
+        production_experience=["on-call rotation", "incident response"],
+    )
+    signals = JobSignals(
+        production_expectations=["on-call rotation", "observability"],
+    )
+
+    result = match_profile_to_job(
+        profile,
+        JobDescription(title="Platform Engineer", description="Operate services."),
+        signals,
+    )
+
+    assert result.production_expectations_matched == ["on-call rotation"]
+    assert result.production_expectations_missing == ["observability"]
+    assert any(
+        "Matched 1 of 2 production expectations" in reason
+        for reason in result.reasons
+    )
+    assert not any(
+        "Missing production experience for:" in risk for risk in result.risks
+    )
+
+
+def test_production_expectations_flags_missing_experience():
+    profile = UserProfile(
+        name="Ana",
+        seniority="senior",
+        production_experience=["incident response"],
+    )
+    signals = JobSignals(production_expectations=["on-call rotation"])
+
+    result = match_profile_to_job(
+        profile,
+        JobDescription(title="Platform Engineer", description="Operate services."),
+        signals,
+    )
+
+    assert result.production_expectations_matched == []
+    assert result.production_expectations_missing == ["on-call rotation"]
+    assert any(
+        "Missing production experience for: on-call rotation" in risk
+        for risk in result.risks
+    )
+
+
+def test_production_gap_risk_when_majority_missing():
+    profile = UserProfile(
+        name="Ana",
+        production_experience=["on-call rotation"],
+    )
+    signals = JobSignals(
+        production_expectations=[
+            "on-call rotation",
+            "observability",
+            "incident response",
+        ],
+    )
+
+    result = match_profile_to_job(
+        profile,
+        JobDescription(title="Platform Engineer", description="Operate services."),
+        signals,
+    )
+
+    assert len(result.production_expectations_missing) == 2
+    assert any(
+        "Missing production experience for:" in risk for risk in result.risks
+    )
+
+
+def test_production_gap_lowers_score():
+    job = JobDescription(title="Platform Engineer", description="Operate services.")
+    aligned = UserProfile(
+        name="Ana",
+        skills=["Python"],
+        production_experience=["on-call rotation", "observability"],
+    )
+    partial = UserProfile(
+        name="Ana",
+        skills=["Python"],
+        production_experience=["on-call rotation"],
+    )
+    signals = JobSignals(
+        required_skills=["Python"],
+        production_expectations=["on-call rotation", "observability"],
+    )
+
+    aligned_result = match_profile_to_job(aligned, job, signals)
+    partial_result = match_profile_to_job(partial, job, signals)
+
+    assert aligned_result.score > partial_result.score
+
+
+def test_seniority_gap_lowers_score():
+    job = JobDescription(
+        title="Senior Engineer",
+        description="Build features.\n\n- Python",
+        seniority="senior",
+    )
+    signals = JobSignals(required_skills=["Python"], seniority_signals=["senior"])
+    aligned = UserProfile(name="Ana", skills=["Python"], seniority="senior")
+    gap = UserProfile(name="Ana", skills=["Python"], seniority="mid-level")
+
+    aligned_result = match_profile_to_job(aligned, job, signals)
+    gap_result = match_profile_to_job(gap, job, signals)
+
+    assert aligned_result.score > gap_result.score
+
+
+def test_production_expectations_skipped_when_job_has_none():
+    profile = UserProfile(name="Ana", production_experience=["on-call rotation"])
+    signals = JobSignals(required_skills=["Python"])
+
+    result = match_profile_to_job(
+        profile,
+        JobDescription(title="Engineer", description="- Python"),
+        signals,
+    )
+
+    assert result.production_expectations_matched == []
+    assert result.production_expectations_missing == []
+    assert not any("production" in reason.lower() for reason in result.reasons)
+    assert not any("production" in risk.lower() for risk in result.risks)

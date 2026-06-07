@@ -8,7 +8,6 @@ from app.domain.models import (
     UserProfile,
     WorkflowInput,
 )
-from app.services.extractor import extract_job_signals
 from app.services.policy import (
     build_workflow_decision,
     decision_from_score,
@@ -57,11 +56,16 @@ def test_build_workflow_decision_carries_match_and_job_signals():
         score=0.82,
         required_skills_matched=["Python"],
         required_skills_missing=["Kubernetes"],
+        production_expectations_missing=["on-call rotation"],
         reasons=[
             "Matched 1 of 2 required skills.",
             "Seniority meets job expectations (job: senior, profile: senior).",
         ],
-        risks=["Missing required skills: Kubernetes."],
+        risks=[
+            "Missing required skills: Kubernetes.",
+            "Missing production experience for: on-call rotation.",
+            "Job posting risk: ambiguous scope",
+        ],
     )
     signals = JobSignals(
         required_skills=["Python", "Kubernetes"],
@@ -78,13 +82,47 @@ def test_build_workflow_decision_carries_match_and_job_signals():
     assert decision.score == match.score
     assert decision.reasons == match.reasons
     assert "Missing required skills: Kubernetes." in decision.risks
+    assert "Missing production experience for: on-call rotation." in decision.risks
     assert "Job posting risk: ambiguous scope" in decision.risks
-    assert "Job production expectation: on-call rotation" in decision.risks
     assert (
         "Required skill not evidenced in profile: Kubernetes"
         in decision.missing_information
     )
     assert "Job posting missing signal: remote policy" in decision.missing_information
+
+
+def test_build_workflow_decision_carries_production_alignment_from_match():
+    profile = UserProfile(
+        name="Ana",
+        skills=["Python"],
+        seniority="senior",
+        production_experience=["on-call rotation"],
+    )
+    match = ProfileMatchResult(
+        score=0.82,
+        required_skills_matched=["Python"],
+        required_skills_missing=["Kubernetes"],
+        production_expectations_matched=["on-call rotation"],
+        production_expectations_missing=[],
+        reasons=[
+            "Matched 1 of 2 required skills.",
+            "Seniority meets job expectations (job: senior, profile: senior).",
+            "Matched 1 of 1 production expectations.",
+        ],
+        risks=["Missing required skills: Kubernetes."],
+    )
+    signals = JobSignals(
+        required_skills=["Python", "Kubernetes"],
+        production_expectations=["on-call rotation"],
+        risk_indicators=["ambiguous scope"],
+    )
+
+    decision = build_workflow_decision(match, profile, signals)
+
+    assert "Matched 1 of 1 production expectations." in decision.reasons
+    assert not any(
+        "Missing production experience for:" in risk for risk in decision.risks
+    )
 
 
 @pytest.mark.parametrize(
@@ -167,13 +205,12 @@ def test_evaluate_workflow_risk_fixture_signals_flow_into_decision():
     fixture = load_fixture("risk_extraction.json")
     job = JobDescription(**fixture["job_description"])
     profile = load_workflow_input("ambiguous_match.json").user_profile
-    signals = extract_job_signals(job)
-    decision = build_workflow_decision(
-        ProfileMatchResult(score=0.8, reasons=["Strong overlap"]),
-        profile,
-        signals,
+    output = evaluate_workflow(
+        WorkflowInput(user_profile=profile, job_description=job)
     )
 
-    assert decision.decision == DecisionType.ESCALATE
-    assert any("ambiguous scope" in risk for risk in decision.risks)
-    assert len(decision.missing_information) >= len(signals.missing_signals)
+    assert output.decision.decision == DecisionType.ESCALATE
+    assert any("ambiguous scope" in risk for risk in output.decision.risks)
+    assert len(output.decision.missing_information) >= len(
+        output.job_signals.missing_signals
+    )
