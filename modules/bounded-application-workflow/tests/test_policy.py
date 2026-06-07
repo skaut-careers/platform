@@ -45,29 +45,36 @@ def test_build_workflow_decision_carries_match_and_job_signals():
     profile = UserProfile(name="Ana", skills=["Python"], seniority="senior")
     match = ProfileMatchResult(
         score=0.82,
-        reasons=["Strong skill overlap", "Seniority meets job expectations (job: senior, profile: senior)."],
-        risks=[],
+        required_skills_matched=["Python"],
         required_skills_missing=["Kubernetes"],
+        reasons=[
+            "Matched 1 of 2 required skills.",
+            "Seniority meets job expectations (job: senior, profile: senior).",
+        ],
+        risks=["Missing required skills: Kubernetes."],
     )
     signals = JobSignals(
+        required_skills=["Python", "Kubernetes"],
+        preferred_skills=[],
         seniority_signals=["senior"],
-        risk_indicators=["ambiguous scope"],
         production_expectations=["on-call rotation"],
+        risk_indicators=["ambiguous scope"],
         missing_signals=["remote policy", "salary range"],
     )
 
     decision = build_workflow_decision(match, profile, signals)
 
     assert decision.decision == DecisionType.ESCALATE
-    assert decision.score == 0.82
-    assert "Strong skill overlap" in decision.reasons
-    assert any("Seniority meets job expectations" in reason for reason in decision.reasons)
-    assert any("ambiguous scope" in risk for risk in decision.risks)
-    assert any("on-call rotation" in risk for risk in decision.risks)
-    assert any("Kubernetes" in item for item in decision.missing_information)
-    assert any("remote policy" in item for item in decision.missing_information)
-    assert any("no target roles" in item for item in decision.missing_information)
-    assert not any("target roles" in risk for risk in decision.risks)
+    assert decision.score == match.score
+    assert decision.reasons == match.reasons
+    assert "Missing required skills: Kubernetes." in decision.risks
+    assert "Job posting risk: ambiguous scope" in decision.risks
+    assert "Job production expectation: on-call rotation" in decision.risks
+    assert (
+        "Required skill not evidenced in profile: Kubernetes"
+        in decision.missing_information
+    )
+    assert "Job posting missing signal: remote policy" in decision.missing_information
 
 
 @pytest.mark.parametrize(
