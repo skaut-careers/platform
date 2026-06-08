@@ -67,7 +67,30 @@ Done when:
 - human review points are wired into escalation paths
 - state transitions and decisions are logged and inspectable
 
-## Milestone 4 — User-Facing Demo
+## Milestone 4 — LLM-Backed Agent Runtime
+
+Introduce LLM-backed implementations for selected workflow agents while preserving typed contracts, deterministic fallbacks, and auditable execution.
+
+Focus:
+
+- LLM structured output for job signal extraction
+- prompt/versioned agent configurations
+- tool-ready agent interface
+- model fallback and retry policy
+- validation of LLM outputs against Pydantic schemas
+- evaluation set for extraction and decision quality
+- tracing of prompts, outputs, errors, and decisions
+
+Done when:
+
+- at least one workflow agent has an LLM-backed implementation behind the existing Protocol contract
+- LLM outputs are validated against Pydantic schemas before entering the workflow
+- deterministic fallback is used when the model fails or output is invalid
+- agent prompts and model configs are versioned and selectable at runtime
+- extraction and decision quality can be measured against a fixed evaluation set
+- prompts, outputs, errors, and final decisions are traced for inspection
+
+## Milestone 5 — User-Facing Demo
 
 Expose the workflow through a simple interface.
 
@@ -77,7 +100,7 @@ Focus:
 - evaluate opportunity
 - show score, decision, missing signals, risks, and reasoning summary
 
-# Milestone 5 — Evaluation & Reliability
+## Milestone 6 — Evaluation & Reliability
 
 Build confidence that workflow decisions are consistent, observable, and measurable.
 
