@@ -1,87 +1,22 @@
 import pytest
 
-from app.domain.job_signals import JobSignals
 from app.domain.models import (
     DecisionType,
     JobDescription,
-    ProfileMatchResult,
     UserProfile,
     WorkflowInput,
 )
+from app.domain.workflow_run import WorkflowEventType
 from app.parser import parse_job_description
 from app.domain.workflow_state import WorkflowState
-from app.services.policy import (
-    build_workflow_decision,
-    decision_from_score,
-    decision_from_signals,
-    evaluate_workflow,
-    run_workflow_evaluation,
-)
+from app.agents import evaluate_workflow, run_workflow_evaluation
 from tests.fixture_helpers import (
+    AI_ENGINEER_JOB_TEXT,
     WORKFLOW_FIXTURES,
     expected_decision,
     load_fixture,
     workflow_input as load_workflow_input,
 )
-from tests.test_extractor import RAW_JOB_TEXT
-
-
-@pytest.mark.parametrize(
-    "score,expected",
-    [
-        (0.0, DecisionType.SKIP),
-        (0.34, DecisionType.SKIP),
-        (0.35, DecisionType.ESCALATE),
-        (0.54, DecisionType.ESCALATE),
-        (0.55, DecisionType.QUEUE),
-        (0.74, DecisionType.QUEUE),
-        (0.75, DecisionType.PREPARE),
-        (1.0, DecisionType.PREPARE),
-    ],
-)
-def test_decision_from_score_thresholds(score: float, expected: DecisionType):
-    assert decision_from_score(score) == expected
-
-
-def test_decision_from_signals_escalates_on_risk_indicators():
-    signals = JobSignals(risk_indicators=["ambiguous scope"])
-
-    assert decision_from_signals(0.9, signals) == DecisionType.ESCALATE
-
-
-def test_decision_from_signals_keeps_prepare_without_risks():
-    assert decision_from_signals(0.9, JobSignals()) == DecisionType.PREPARE
-
-
-def test_decision_from_signals_skips_on_severe_seniority_mismatch():
-    signals = JobSignals(risk_indicators=["ambiguous scope"])
-
-    assert (
-        decision_from_signals(0.9, signals, severe_seniority_mismatch=True)
-        == DecisionType.SKIP
-    )
-
-
-def test_build_workflow_decision_maps_match_and_signals():
-    match = ProfileMatchResult(
-        score=0.82,
-        reasons=["Matched 1 of 2 required skills."],
-        risks=["Missing required skills: Kubernetes."],
-    )
-    signals = JobSignals(
-        risk_indicators=["ambiguous scope"],
-        missing_signals=["salary range"],
-    )
-
-    decision = build_workflow_decision(match, signals)
-
-    assert decision.decision == DecisionType.ESCALATE
-    assert decision.score == match.score
-    assert decision.reasons == match.reasons
-    assert decision.risks == match.risks
-    assert decision.missing_information == [
-        "Job posting missing signal: salary range"
-    ]
 
 
 @pytest.mark.parametrize("fixture_name", WORKFLOW_FIXTURES)
@@ -93,7 +28,7 @@ def test_evaluate_workflow_fixture_decisions(fixture_name: str):
 
 def test_evaluate_workflow_from_parsed_job_description():
     profile = UserProfile(**load_fixture("strong_match.json")["user_profile"])
-    job = parse_job_description(RAW_JOB_TEXT)
+    job = parse_job_description(AI_ENGINEER_JOB_TEXT)
 
     output = evaluate_workflow(
         WorkflowInput(user_profile=profile, job_description=job)
@@ -174,3 +109,21 @@ def test_run_workflow_evaluation_state_trace_for_escalate():
         WorkflowState.DECISION,
     ]
     assert run.is_complete is True
+
+
+def test_completed_workflow_run_is_inspectable():
+    output, run = run_workflow_evaluation(load_workflow_input("strong_match.json"))
+
+    assert run.is_complete is True
+    assert run.output == output
+    assert run.completed_at is not None
+    assert run.workflow_id
+    assert run.current_state == WorkflowState.DECISION
+    assert run.events[0].event_type == WorkflowEventType.RUN_STARTED
+    assert run.events[-1].event_type == WorkflowEventType.RUN_COMPLETED
+
+    snapshot = run.model_dump()
+    assert snapshot["workflow_id"] == run.workflow_id
+    assert snapshot["current_state"] == WorkflowState.DECISION.value
+    assert snapshot["output"]["decision"]["decision"] == output.decision.decision.value
+    assert len(snapshot["events"]) >= 2

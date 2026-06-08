@@ -1,7 +1,9 @@
 from fastapi import FastAPI
 
+from app.agents import WorkflowOrchestratorInput, default_agents
 from app.domain.models import WorkflowInput, WorkflowOutput
-from app.services.policy import evaluate_workflow
+
+_, _, _, _, orchestrator = default_agents()
 
 app = FastAPI(
     title="Bounded Application Workflow",
@@ -17,4 +19,7 @@ def health() -> dict[str, str]:
 
 @app.post("/workflow/run", response_model=WorkflowOutput)
 def run_workflow(workflow_input: WorkflowInput) -> WorkflowOutput:
-    return evaluate_workflow(workflow_input)
+    result = orchestrator.run(
+        WorkflowOrchestratorInput(workflow_input=workflow_input)
+    )
+    return result.output

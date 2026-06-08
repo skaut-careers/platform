@@ -1,27 +1,7 @@
 from app.domain.models import JobDescription
 from app.parser import parse_job_description
-from app.services.extractor import extract_job_signals
-from tests.fixture_helpers import load_fixture
-
-RAW_JOB_TEXT = """
-AI Engineer
-
-Company: Frontier AI Startup
-Location: Remote Europe
-Seniority: mid-senior
-Employment Type: full-time
-
-- Python
-- LLM applications
-- evaluation pipelines
-- agentic workflows
-- product ownership
-
-+ research background
-+ startup experience
-
-Build and own LLM-based product workflows.
-"""
+from app.agents import extract_job_signals
+from tests.fixture_helpers import AI_ENGINEER_JOB_TEXT, load_fixture
 
 
 def test_extract_job_signals_from_fixture():
@@ -40,7 +20,7 @@ def test_extract_job_signals_from_fixture():
 
 
 def test_extract_job_signals_from_parsed_description():
-    job = parse_job_description(RAW_JOB_TEXT)
+    job = parse_job_description(AI_ENGINEER_JOB_TEXT)
 
     signals = extract_job_signals(job)
 

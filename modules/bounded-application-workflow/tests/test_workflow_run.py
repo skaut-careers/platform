@@ -5,7 +5,6 @@ from app.domain.workflow_run import (
     default_workflow_plan,
 )
 from app.domain.workflow_state import WorkflowState
-from app.services.policy import run_workflow_evaluation
 from tests.fixture_helpers import workflow_input as load_workflow_input
 
 
@@ -64,21 +63,3 @@ def test_default_workflow_plan_defines_standard_stages():
         WorkflowState.POLICY_EVALUATION,
         WorkflowState.DECISION,
     ]
-
-
-def test_completed_workflow_run_is_inspectable():
-    output, run = run_workflow_evaluation(load_workflow_input("strong_match.json"))
-
-    assert run.is_complete is True
-    assert run.output == output
-    assert run.completed_at is not None
-    assert run.workflow_id
-    assert run.current_state == WorkflowState.DECISION
-    assert run.events[0].event_type == WorkflowEventType.RUN_STARTED
-    assert run.events[-1].event_type == WorkflowEventType.RUN_COMPLETED
-
-    snapshot = run.model_dump()
-    assert snapshot["workflow_id"] == run.workflow_id
-    assert snapshot["current_state"] == WorkflowState.DECISION.value
-    assert snapshot["output"]["decision"]["decision"] == output.decision.decision.value
-    assert len(snapshot["events"]) >= 2

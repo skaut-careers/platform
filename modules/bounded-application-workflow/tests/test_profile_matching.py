@@ -2,8 +2,7 @@ import pytest
 
 from app.domain.job_signals import JobSignals
 from app.domain.models import JobDescription, UserProfile
-from app.services.extractor import extract_job_signals
-from app.services.matcher import match_profile_to_job
+from app.agents import extract_job_signals, match_profile_to_job
 from tests.fixture_helpers import workflow_input as load_workflow_input
 
 

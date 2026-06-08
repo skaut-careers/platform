@@ -15,6 +15,11 @@ from app.agents.contracts import (
     WorkflowOrchestratorInput,
     WorkflowOrchestratorOutput,
 )
+from app.agents.decision_rules import (
+    build_workflow_decision,
+    decision_from_score,
+    decision_from_signals,
+)
 from app.agents.default import (
     DefaultDecisionPolicy,
     DefaultProfileMatcher,
@@ -22,7 +27,11 @@ from app.agents.default import (
     DefaultWorkflowOrchestrator,
     PassthroughHumanReviewGate,
     default_agents,
+    evaluate_workflow,
+    run_workflow_evaluation,
 )
+from app.agents.profile_matching import match_profile_to_job
+from app.agents.signal_extraction import extract_job_signals
 
 __all__ = [
     "DecisionPolicy",
@@ -45,5 +54,12 @@ __all__ = [
     "WorkflowOrchestrator",
     "WorkflowOrchestratorInput",
     "WorkflowOrchestratorOutput",
+    "build_workflow_decision",
+    "decision_from_score",
+    "decision_from_signals",
     "default_agents",
+    "evaluate_workflow",
+    "extract_job_signals",
+    "match_profile_to_job",
+    "run_workflow_evaluation",
 ]
