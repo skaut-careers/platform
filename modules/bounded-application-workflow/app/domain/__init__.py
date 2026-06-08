@@ -8,15 +8,23 @@ from app.domain.models import (
     WorkflowInput,
     WorkflowOutput,
 )
+from app.domain.workflow_state import (
+    VALID_TRANSITIONS,
+    InvalidTransitionError,
+    WorkflowState,
+)
 
 __all__ = [
     "DecisionType",
+    "InvalidTransitionError",
     "JobDescription",
     "JobSignals",
     "ProfileMatchResult",
     "SignalCategory",
     "UserProfile",
+    "VALID_TRANSITIONS",
     "WorkflowDecision",
     "WorkflowInput",
     "WorkflowOutput",
+    "WorkflowState",
 ]

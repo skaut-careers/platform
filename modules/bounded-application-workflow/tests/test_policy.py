@@ -9,11 +9,13 @@ from app.domain.models import (
     WorkflowInput,
 )
 from app.parser import parse_job_description
+from app.domain.workflow_state import WorkflowState
 from app.services.policy import (
     build_workflow_decision,
     decision_from_score,
     decision_from_signals,
     evaluate_workflow,
+    run_workflow_evaluation,
 )
 from tests.fixture_helpers import (
     WORKFLOW_FIXTURES,
@@ -139,3 +141,34 @@ def test_evaluate_workflow_risk_fixture_escalates():
     )
 
     assert output.decision.decision == DecisionType.ESCALATE
+
+
+def test_run_workflow_evaluation_state_trace_for_prepare():
+    _, state_machine = run_workflow_evaluation(load_workflow_input("strong_match.json"))
+
+    assert state_machine.history == [
+        WorkflowState.INTAKE,
+        WorkflowState.SIGNAL_EXTRACTION,
+        WorkflowState.PROFILE_MATCHING,
+        WorkflowState.POLICY_EVALUATION,
+        WorkflowState.DECISION,
+    ]
+
+
+def test_run_workflow_evaluation_state_trace_for_escalate():
+    fixture = load_fixture("risk_extraction.json")
+    job = JobDescription(**fixture["job_description"])
+    profile = load_workflow_input("ambiguous_match.json").user_profile
+    workflow_input = WorkflowInput(user_profile=profile, job_description=job)
+
+    output, state_machine = run_workflow_evaluation(workflow_input)
+
+    assert output.decision.decision == DecisionType.ESCALATE
+    assert state_machine.history == [
+        WorkflowState.INTAKE,
+        WorkflowState.SIGNAL_EXTRACTION,
+        WorkflowState.PROFILE_MATCHING,
+        WorkflowState.POLICY_EVALUATION,
+        WorkflowState.HUMAN_REVIEW,
+        WorkflowState.DECISION,
+    ]

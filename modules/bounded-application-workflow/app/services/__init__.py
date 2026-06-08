@@ -6,8 +6,10 @@ from app.services.policy import (
     decision_from_signals,
     evaluate_workflow,
 )
+from app.services.state_machine import WorkflowStateMachine
 
 __all__ = [
+    "WorkflowStateMachine",
     "build_workflow_decision",
     "decision_from_score",
     "decision_from_signals",

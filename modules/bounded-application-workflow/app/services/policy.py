@@ -8,8 +8,10 @@ from app.domain.models import (
     WorkflowInput,
     WorkflowOutput,
 )
+from app.domain.workflow_state import WorkflowState
 from app.services.extractor import extract_job_signals
 from app.services.matcher import match_profile_to_job
+from app.services.state_machine import WorkflowStateMachine
 
 # MVP thresholds — docs/PRD.md
 _PREPARE_MIN = 0.75
@@ -95,17 +97,36 @@ def _input_summary(profile: UserProfile, job: JobDescription) -> str:
     )
 
 
-def evaluate_workflow(workflow_input: WorkflowInput) -> WorkflowOutput:
+def run_workflow_evaluation(
+    workflow_input: WorkflowInput,
+) -> tuple[WorkflowOutput, WorkflowStateMachine]:
     profile = workflow_input.user_profile
     job = workflow_input.job_description
+    state_machine = WorkflowStateMachine()
 
+    state_machine.transition_to(WorkflowState.SIGNAL_EXTRACTION)
     signals = extract_job_signals(job)
+
+    state_machine.transition_to(WorkflowState.PROFILE_MATCHING)
     match = match_profile_to_job(profile, job, signals)
+
+    state_machine.transition_to(WorkflowState.POLICY_EVALUATION)
     decision = build_workflow_decision(match, signals)
 
-    return WorkflowOutput(
+    if decision.decision == DecisionType.ESCALATE:
+        state_machine.transition_to(WorkflowState.HUMAN_REVIEW)
+
+    state_machine.transition_to(WorkflowState.DECISION)
+
+    output = WorkflowOutput(
         input_summary=_input_summary(profile, job),
         decision=decision,
         job_signals=signals,
         recommended_next_steps=list(_NEXT_STEPS[decision.decision]),
     )
+    return output, state_machine
+
+
+def evaluate_workflow(workflow_input: WorkflowInput) -> WorkflowOutput:
+    output, _ = run_workflow_evaluation(workflow_input)
+    return output
