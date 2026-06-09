@@ -2,132 +2,29 @@
 
 > Navigate your professional life with clarity.
 
-Limen is a career platform designed to support people throughout their professional lives — across opportunities, applications, learning, growth, transitions, and long-term direction.
-
----
+Limen is a modular career platform for deliberate professional decisions — opportunities, applications, learning, and long-term direction.
 
 ## Current Module
 
-# Bounded Application Workflow
+**[Bounded Application Workflow](modules/bounded-application-workflow/)** — evaluates job opportunities against a user profile and returns a bounded decision (`prepare`, `queue`, `skip`, `escalate`). Human-controlled; no autonomous applications.
 
-A workflow for evaluating opportunities, preparing tailored applications, and keeping the human in control of final application decisions.
+**Phase:** Milestone 3 — Agentic Workflow Layer (Milestones 1–2 complete).
 
-The workflow prioritizes high-value opportunities while keeping execution bounded, reviewable, and human-controlled.
+## Principles
 
----
+Bounded autonomy · human-in-the-loop · policy-gated actions · reviewable runtime · uncertainty-aware orchestration
 
-## Core Principles
+## Documentation
 
-- bounded autonomy
-- human-in-the-loop execution
-- expected-value decision making
-- policy-gated actions
-- reviewable runtime behavior
-- uncertainty-aware orchestration
+| Doc | Contents |
+| --- | -------- |
+| [PRD](docs/PRD.md) | Problem, users, I/O contract, decision policy |
+| [ARCHITECTURE](docs/ARCHITECTURE.md) | Workflow states, agent boundaries, principles |
+| [ROADMAP](docs/ROADMAP.md) | Milestones 1–12 |
 
----
-
-## Architecture
-
-intake
-  → ranking
-  → bounded decision runtime
-  → execution
-  → human submission
-
-Decision loop:
-
-research
-  → prepare
-  → queue
-  → skip
-  → escalate
-
-Learning loop:
-
-outcomes
-  → ranking updates
-  → threshold adaptation
-  → retry policy tuning
-
----
-
-## Example Runtime Flow
-
-120 jobs
-→ 18 filtered
-→ 6 shortlisted
-→ 2 prepared
-→ 1 escalated
-→ 1 submitted
-
----
-
-## Real Execution Pipeline
-
-Input:
-
-- CV
-- job description
-- preferences
-
-Output:
-
-```
-{
-  "score": 0.82,
-  "decision": "prepare",
-  "missing_signals": [
-    "production inference",
-    "LLM evaluation"
-  ],
-  "risks": [
-    "domain mismatch"
-  ],
-  "suggested_angle": "AI systems + product ownership"
-}
-```
-
----
-
-## Repository Structure
+## Repository
 
 ```txt
-docs/ 
-modules/  
-  bounded-application-workflow/
+docs/
+modules/bounded-application-workflow/
 ```
-
----
-
-## Current Milestone
-
-**Milestone 1 — Bounded Application Workflow MVP** — completed.
-
-The first executable evaluation engine is in place: input/output contract, job description parsing, profile matching, decision policy, runtime API, tests, and CI.
-
-**Milestone 2 — Signal Extraction** — completed.
-
-Structured signal extraction from job descriptions and user profiles: required and preferred skills, seniority signals, production expectations, ambiguity and risk indicators, and missing signals. Matcher and extractor are covered by tests and fixtures.
-
-**Milestone 3 — Agentic Workflow Layer** — in progress.
-
-Introduce bounded agentic orchestration on top of the evaluation engine.
-
-Focus:
-
-- separate planning from execution
-- define agent responsibilities
-- add explicit workflow states
-- introduce human review points
-- keep decisions observable and auditable
-
-See the full roadmap: [`docs/ROADMAP.md`](docs/ROADMAP.md).
-
----
-
-## Long-Term Direction
-
-Liman is being designed as a modular career platform.
-
-The Bounded Application Workflow is the first system module inside a broader professional decision and execution environment.
