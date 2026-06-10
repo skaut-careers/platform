@@ -1,12 +1,20 @@
 import pytest
 
 from app.agents import (
+    DefaultWorkflowOrchestrator,
+    RecordedHumanReviewGate,
     WorkflowOrchestratorInput,
     default_agents,
     evaluate_workflow,
     run_workflow_evaluation,
 )
-from app.domain.models import DecisionType, JobDescription, UserProfile, WorkflowInput
+from app.domain.models import (
+    DecisionType,
+    JobDescription,
+    UserProfile,
+    WorkflowDecision,
+    WorkflowInput,
+)
 from app.domain.workflow_run import WorkflowEventType
 from app.domain.workflow_state import WorkflowState
 from app.parser import parse_job_description
@@ -55,15 +63,16 @@ def test_severe_seniority_gap_skips():
     assert output.decision.decision == DecisionType.SKIP
 
 
-def test_risk_posting_escalates_through_human_review():
+def _escalating_workflow() -> WorkflowInput:
     fixture = load_fixture("risk_extraction.json")
-    profile = workflow_input("ambiguous_match.json").user_profile
-    workflow = WorkflowInput(
-        user_profile=profile,
+    return WorkflowInput(
+        user_profile=workflow_input("ambiguous_match.json").user_profile,
         job_description=JobDescription(**fixture["job_description"]),
     )
 
-    output, run = run_workflow_evaluation(workflow)
+
+def test_risk_posting_escalates_through_human_review():
+    output, run = run_workflow_evaluation(_escalating_workflow())
 
     assert output.decision.decision == DecisionType.ESCALATE
     assert run.is_complete is True
@@ -79,6 +88,10 @@ def test_risk_posting_escalates_through_human_review():
     assert WorkflowState.HUMAN_REVIEW in run.plan.stages
     assert run.plan_report is not None
     assert run.plan_report.followed_plan is True
+    # The passthrough gate approves the escalated decision and stores why.
+    assert run.review is not None
+    assert run.review.reason.startswith("Escalated for human review")
+    assert run.review.approved is True
 
 
 def test_prepare_path_state_history():
@@ -122,6 +135,40 @@ def test_unplanned_human_review_is_reported():
     assert report.followed_plan is False
     assert report.unplanned_stages == [WorkflowState.HUMAN_REVIEW]
     assert report.skipped_stages == []
+
+
+def test_recorded_review_revises_escalated_decision():
+    revised = WorkflowDecision(decision=DecisionType.QUEUE, score=0.5)
+    orchestrator = DefaultWorkflowOrchestrator(
+        review_gate=RecordedHumanReviewGate(
+            revised_decision=revised,
+            reviewer_notes="Scope clarified with recruiter.",
+        )
+    )
+
+    result = orchestrator.run(
+        WorkflowOrchestratorInput(workflow_input=_escalating_workflow())
+    )
+
+    assert result.output.decision == revised
+    assert result.run.review is not None
+    assert result.run.review.is_revised is True
+    assert result.run.review.reviewer_notes == "Scope clarified with recruiter."
+
+
+def test_recorded_review_approves_escalated_decision():
+    orchestrator = DefaultWorkflowOrchestrator(
+        review_gate=RecordedHumanReviewGate()
+    )
+
+    result = orchestrator.run(
+        WorkflowOrchestratorInput(workflow_input=_escalating_workflow())
+    )
+
+    assert result.output.decision.decision == DecisionType.ESCALATE
+    assert result.run.review is not None
+    assert result.run.review.approved is True
+    assert result.run.review.is_revised is False
 
 
 def test_orchestrator_returns_inspectable_run():

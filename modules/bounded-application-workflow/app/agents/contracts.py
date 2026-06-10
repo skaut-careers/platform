@@ -87,6 +87,7 @@ class HumanReviewGateInput(BaseModel):
     decision: WorkflowDecision
     match: ProfileMatchResult
     signals: JobSignals
+    reason: str = Field(default="")
 
 
 class HumanReviewGateOutput(BaseModel):

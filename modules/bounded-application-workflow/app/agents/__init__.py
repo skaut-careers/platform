@@ -22,6 +22,7 @@ from app.agents.decision_rules import (
     build_workflow_decision,
     decision_from_score,
     decision_from_signals,
+    review_reason,
 )
 from app.agents.default import (
     DefaultDecisionPolicy,
@@ -30,6 +31,7 @@ from app.agents.default import (
     DefaultWorkflowOrchestrator,
     DefaultWorkflowPlanner,
     PassthroughHumanReviewGate,
+    RecordedHumanReviewGate,
     default_agents,
     evaluate_workflow,
     run_workflow_evaluation,
@@ -52,6 +54,7 @@ __all__ = [
     "HumanReviewGateOutput",
     "PassthroughHumanReviewGate",
     "ProfileMatcher",
+    "RecordedHumanReviewGate",
     "ProfileMatcherInput",
     "ProfileMatcherOutput",
     "SignalExtractor",
@@ -71,5 +74,6 @@ __all__ = [
     "evaluate_workflow",
     "extract_job_signals",
     "match_profile_to_job",
+    "review_reason",
     "run_workflow_evaluation",
 ]

@@ -138,6 +138,67 @@ def test_compare_plan_flags_skipped_human_review():
     assert report.unplanned_stages == []
 
 
+def _escalated_decision() -> WorkflowDecision:
+    return WorkflowDecision(
+        decision=DecisionType.ESCALATE,
+        score=0.5,
+        risks=["ambiguous scope"],
+    )
+
+
+def _run_in_human_review() -> WorkflowRun:
+    run = _run_through_evaluation(default_workflow_plan())
+    run.transition_to(WorkflowState.HUMAN_REVIEW)
+    return run
+
+
+def test_request_review_stores_pending_record():
+    run = _run_in_human_review()
+
+    record = run.request_review("Risky posting.", _escalated_decision())
+
+    assert run.review is record
+    assert record.reason == "Risky posting."
+    assert record.is_pending is True
+
+
+def test_request_review_outside_review_state_raises():
+    run = _run_through_evaluation(default_workflow_plan())
+
+    with pytest.raises(ValueError):
+        run.request_review("Risky posting.", _escalated_decision())
+
+
+def test_resolve_review_approves_decision():
+    run = _run_in_human_review()
+    decision = _escalated_decision()
+    run.request_review("Risky posting.", decision)
+
+    record = run.resolve_review(final_decision=decision, approved=True)
+
+    assert record.approved is True
+    assert record.is_revised is False
+    assert run.events[-1].event_type == WorkflowEventType.REVIEW_COMPLETED
+
+
+def test_resolve_review_revises_decision():
+    run = _run_in_human_review()
+    run.request_review("Risky posting.", _escalated_decision())
+    revised = WorkflowDecision(decision=DecisionType.QUEUE, score=0.5)
+
+    record = run.resolve_review(final_decision=revised, approved=False)
+
+    assert record.is_revised is True
+    assert record.final_decision == revised
+
+
+def test_resolve_review_without_request_raises():
+    run = _run_in_human_review()
+
+    with pytest.raises(ValueError):
+        run.resolve_review(final_decision=_escalated_decision(), approved=True)
+
+
 def test_user_profile_rejects_null_list_fields():
     with pytest.raises(ValidationError):
         UserProfile(name="Ana", skills=None)

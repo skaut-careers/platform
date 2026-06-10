@@ -8,6 +8,7 @@ from app.agents.contracts import (
     SignalExtractor,
     SignalExtractorInput,
 )
+from app.agents.decision_rules import review_reason
 from app.domain.models import (
     DecisionType,
     JobDescription,
@@ -86,15 +87,24 @@ def run_workflow_evaluation(
     ).decision
 
     if decision.decision == DecisionType.ESCALATE:
-        run.transition_to(WorkflowState.HUMAN_REVIEW)
+        reason = review_reason(decision)
+        run.transition_to(WorkflowState.HUMAN_REVIEW, reason)
+        run.request_review(reason, decision)
         if review_gate is not None:
-            decision = review_gate.run(
+            gate_output = review_gate.run(
                 HumanReviewGateInput(
                     decision=decision,
                     match=match,
                     signals=signals,
+                    reason=reason,
                 )
-            ).decision
+            )
+            review = run.resolve_review(
+                final_decision=gate_output.decision,
+                approved=gate_output.approved,
+                reviewer_notes=gate_output.reviewer_notes,
+            )
+            decision = review.final_decision or decision
 
     run.transition_to(WorkflowState.DECISION)
 

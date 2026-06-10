@@ -5,7 +5,7 @@ from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, computed_field
 
-from app.domain.models import WorkflowInput, WorkflowOutput
+from app.domain.models import WorkflowDecision, WorkflowInput, WorkflowOutput
 from app.domain.state_machine import WorkflowStateMachine
 from app.domain.workflow_state import InvalidTransitionError, WorkflowState
 
@@ -13,6 +13,7 @@ from app.domain.workflow_state import InvalidTransitionError, WorkflowState
 class WorkflowEventType(str, Enum):
     RUN_STARTED = "run_started"
     STATE_ENTERED = "state_entered"
+    REVIEW_COMPLETED = "review_completed"
     RUN_COMPLETED = "run_completed"
 
 
@@ -21,6 +22,29 @@ class WorkflowEvent(BaseModel):
     state: WorkflowState
     timestamp: datetime
     message: str = ""
+
+
+class HumanReviewRecord(BaseModel):
+    """Why a run entered human review and how the review was resolved."""
+
+    reason: str
+    original_decision: WorkflowDecision
+    final_decision: Optional[WorkflowDecision] = None
+    approved: Optional[bool] = None
+    reviewer_notes: str = ""
+    requested_at: datetime
+    reviewed_at: Optional[datetime] = None
+
+    @property
+    def is_pending(self) -> bool:
+        return self.approved is None
+
+    @property
+    def is_revised(self) -> bool:
+        return (
+            self.final_decision is not None
+            and self.final_decision != self.original_decision
+        )
 
 
 class WorkflowPlan(BaseModel):
@@ -60,6 +84,7 @@ class WorkflowRun(BaseModel):
     input: WorkflowInput
     plan: WorkflowPlan
     output: Optional[WorkflowOutput] = None
+    review: Optional[HumanReviewRecord] = None
     plan_report: Optional[PlanExecutionReport] = None
     events: list[WorkflowEvent] = Field(default_factory=list)
     started_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -112,6 +137,51 @@ class WorkflowRun(BaseModel):
         self.record_event(WorkflowEventType.STATE_ENTERED, target, message)
         return target
 
+    def request_review(
+        self, reason: str, decision: WorkflowDecision
+    ) -> HumanReviewRecord:
+        if self.current_state != WorkflowState.HUMAN_REVIEW:
+            raise ValueError(
+                "Review can only be requested while the run is in the "
+                f"'{WorkflowState.HUMAN_REVIEW.value}' state, "
+                f"not '{self.current_state.value}'."
+            )
+        if self.review is not None:
+            raise ValueError("A review was already requested for this run.")
+        self.review = HumanReviewRecord(
+            reason=reason,
+            original_decision=decision,
+            requested_at=datetime.now(timezone.utc),
+        )
+        return self.review
+
+    def resolve_review(
+        self,
+        *,
+        final_decision: WorkflowDecision,
+        approved: bool,
+        reviewer_notes: str = "",
+    ) -> HumanReviewRecord:
+        if self.review is None:
+            raise ValueError("No review was requested for this run.")
+        if not self.review.is_pending:
+            raise ValueError("The review for this run was already resolved.")
+        self.review.final_decision = final_decision
+        self.review.approved = approved
+        self.review.reviewer_notes = reviewer_notes
+        self.review.reviewed_at = datetime.now(timezone.utc)
+        outcome = (
+            "approved"
+            if not self.review.is_revised
+            else f"revised to '{final_decision.decision.value}'"
+        )
+        self.record_event(
+            WorkflowEventType.REVIEW_COMPLETED,
+            WorkflowState.HUMAN_REVIEW,
+            f"Human review {outcome}.",
+        )
+        return self.review
+
     def compare_plan(self) -> PlanExecutionReport:
         planned = list(self.plan.stages)
         executed = list(self.state_history)
@@ -141,6 +211,7 @@ class WorkflowRun(BaseModel):
 
 
 __all__ = [
+    "HumanReviewRecord",
     "InvalidTransitionError",
     "PlanExecutionReport",
     "WorkflowEvent",

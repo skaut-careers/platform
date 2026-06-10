@@ -40,6 +40,18 @@ def decision_from_signals(
     return base
 
 
+def review_reason(decision: WorkflowDecision) -> str:
+    """Explain why an escalated decision needs human review."""
+    parts: list[str] = []
+    if decision.risks:
+        parts.append("risks: " + "; ".join(decision.risks))
+    if decision.missing_information:
+        parts.append("missing information: " + "; ".join(decision.missing_information))
+    if not parts:
+        parts.append(f"match score {decision.score:.2f} is in the escalation band")
+    return "Escalated for human review: " + " | ".join(parts)
+
+
 def build_workflow_decision(
     match: ProfileMatchResult,
     signals: JobSignals,
