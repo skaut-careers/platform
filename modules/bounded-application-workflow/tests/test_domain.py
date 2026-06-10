@@ -1,9 +1,20 @@
 import pytest
 from pydantic import ValidationError
 
-from app.domain.models import DecisionType, UserProfile, WorkflowDecision
+from app.domain.job_signals import JobSignals
+from app.domain.models import (
+    DecisionType,
+    UserProfile,
+    WorkflowDecision,
+    WorkflowOutput,
+)
 from app.domain.state_machine import WorkflowStateMachine
-from app.domain.workflow_run import WorkflowEventType, WorkflowRun, default_workflow_plan
+from app.domain.workflow_run import (
+    WorkflowEventType,
+    WorkflowPlan,
+    WorkflowRun,
+    default_workflow_plan,
+)
 from app.domain.workflow_state import InvalidTransitionError, WorkflowState
 from tests.fixture_helpers import workflow_input
 
@@ -74,6 +85,57 @@ def test_default_workflow_plan():
         WorkflowState.POLICY_EVALUATION,
         WorkflowState.DECISION,
     ]
+
+
+def _run_through_evaluation(plan: WorkflowPlan) -> WorkflowRun:
+    """Build a run that executed the direct path (no human review)."""
+    run = WorkflowRun(input=workflow_input("strong_match.json"), plan=plan)
+    for state in [
+        WorkflowState.SIGNAL_EXTRACTION,
+        WorkflowState.PROFILE_MATCHING,
+        WorkflowState.POLICY_EVALUATION,
+    ]:
+        run.transition_to(state)
+    return run
+
+
+def test_complete_populates_followed_plan_report():
+    run = _run_through_evaluation(default_workflow_plan())
+    output = WorkflowOutput(
+        input_summary="summary",
+        decision=WorkflowDecision(decision=DecisionType.PREPARE, score=0.8),
+        job_signals=JobSignals(),
+    )
+
+    run.complete(output)
+
+    report = run.plan_report
+    assert report is not None
+    assert report.followed_plan is True
+    assert report.executed_stages == run.state_history
+    assert report.unplanned_stages == []
+    assert report.skipped_stages == []
+
+
+def test_compare_plan_flags_skipped_human_review():
+    plan = WorkflowPlan(
+        stages=[
+            WorkflowState.INTAKE,
+            WorkflowState.SIGNAL_EXTRACTION,
+            WorkflowState.PROFILE_MATCHING,
+            WorkflowState.POLICY_EVALUATION,
+            WorkflowState.HUMAN_REVIEW,
+            WorkflowState.DECISION,
+        ],
+    )
+    run = _run_through_evaluation(plan)
+    run.transition_to(WorkflowState.DECISION)
+
+    report = run.compare_plan()
+
+    assert report.followed_plan is False
+    assert report.skipped_stages == [WorkflowState.HUMAN_REVIEW]
+    assert report.unplanned_stages == []
 
 
 def test_user_profile_rejects_null_list_fields():

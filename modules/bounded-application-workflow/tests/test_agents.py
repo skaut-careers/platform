@@ -2,13 +2,21 @@ import pytest
 
 from app.agents import (
     build_workflow_decision,
+    create_workflow_plan,
     decision_from_score,
     decision_from_signals,
     extract_job_signals,
     match_profile_to_job,
 )
 from app.domain.job_signals import JobSignals
-from app.domain.models import DecisionType, JobDescription, ProfileMatchResult, UserProfile
+from app.domain.models import (
+    DecisionType,
+    JobDescription,
+    ProfileMatchResult,
+    UserProfile,
+    WorkflowInput,
+)
+from app.domain.workflow_state import WorkflowState
 from tests.fixture_helpers import load_fixture, workflow_input
 
 
@@ -124,6 +132,31 @@ def test_decision_skips_on_severe_seniority_mismatch():
         decision_from_signals(0.9, signals, severe_seniority_mismatch=True)
         == DecisionType.SKIP
     )
+
+
+def test_plan_for_clean_posting_omits_human_review():
+    plan = create_workflow_plan(workflow_input("strong_match.json"))
+
+    assert plan.stages == [
+        WorkflowState.INTAKE,
+        WorkflowState.SIGNAL_EXTRACTION,
+        WorkflowState.PROFILE_MATCHING,
+        WorkflowState.POLICY_EVALUATION,
+        WorkflowState.DECISION,
+    ]
+
+
+def test_plan_for_risky_posting_includes_human_review():
+    fixture = load_fixture("risk_extraction.json")
+    workflow = WorkflowInput(
+        user_profile=workflow_input("ambiguous_match.json").user_profile,
+        job_description=JobDescription(**fixture["job_description"]),
+    )
+
+    plan = create_workflow_plan(workflow)
+
+    assert WorkflowState.HUMAN_REVIEW in plan.stages
+    assert plan.stages[-1] == WorkflowState.DECISION
 
 
 def test_build_workflow_decision():

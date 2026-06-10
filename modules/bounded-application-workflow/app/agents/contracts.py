@@ -11,7 +11,23 @@ from app.domain.models import (
     WorkflowInput,
     WorkflowOutput,
 )
-from app.domain.workflow_run import WorkflowRun
+from app.domain.workflow_run import WorkflowPlan, WorkflowRun
+
+
+class WorkflowPlannerInput(BaseModel):
+    """Workflow input from which to estimate an execution plan."""
+
+    workflow_input: WorkflowInput
+
+
+class WorkflowPlannerOutput(BaseModel):
+    plan: WorkflowPlan
+
+
+class WorkflowPlanner(Protocol):
+    """Estimate stages, evaluation focus and required signals before execution."""
+
+    def run(self, agent_input: WorkflowPlannerInput) -> WorkflowPlannerOutput: ...
 
 
 class SignalExtractorInput(BaseModel):

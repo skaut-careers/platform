@@ -14,13 +14,23 @@ from app.agents.contracts import (
     WorkflowOrchestrator,
     WorkflowOrchestratorInput,
     WorkflowOrchestratorOutput,
+    WorkflowPlanner,
+    WorkflowPlannerInput,
+    WorkflowPlannerOutput,
 )
 from app.agents.decision_rules import build_workflow_decision
 from app.agents.orchestration import run_workflow_evaluation as _run_workflow_evaluation
 from app.agents.profile_matching import match_profile_to_job
 from app.agents.signal_extraction import extract_job_signals
+from app.agents.workflow_planning import create_workflow_plan
 from app.domain.models import WorkflowInput, WorkflowOutput
 from app.domain.workflow_run import WorkflowRun
+
+
+class DefaultWorkflowPlanner:
+    def run(self, agent_input: WorkflowPlannerInput) -> WorkflowPlannerOutput:
+        plan = create_workflow_plan(agent_input.workflow_input)
+        return WorkflowPlannerOutput(plan=plan)
 
 
 class DefaultSignalExtractor:
@@ -59,11 +69,13 @@ class DefaultWorkflowOrchestrator:
     def __init__(
         self,
         *,
+        planner: WorkflowPlanner | None = None,
         extractor: SignalExtractor | None = None,
         matcher: ProfileMatcher | None = None,
         policy: DecisionPolicy | None = None,
         review_gate: HumanReviewGate | None = None,
     ) -> None:
+        self._planner = planner or DefaultWorkflowPlanner()
         self._extractor = extractor or DefaultSignalExtractor()
         self._matcher = matcher or DefaultProfileMatcher()
         self._policy = policy or DefaultDecisionPolicy()
@@ -72,8 +84,12 @@ class DefaultWorkflowOrchestrator:
     def run(
         self, agent_input: WorkflowOrchestratorInput
     ) -> WorkflowOrchestratorOutput:
+        plan = self._planner.run(
+            WorkflowPlannerInput(workflow_input=agent_input.workflow_input)
+        ).plan
         output, run = _run_workflow_evaluation(
             agent_input.workflow_input,
+            plan=plan,
             extractor=self._extractor,
             matcher=self._matcher,
             policy=self._policy,
@@ -83,27 +99,30 @@ class DefaultWorkflowOrchestrator:
 
 
 def default_agents() -> tuple[
+    WorkflowPlanner,
     SignalExtractor,
     ProfileMatcher,
     DecisionPolicy,
     HumanReviewGate,
     WorkflowOrchestrator,
 ]:
+    planner = DefaultWorkflowPlanner()
     extractor = DefaultSignalExtractor()
     matcher = DefaultProfileMatcher()
     policy = DefaultDecisionPolicy()
     review_gate = PassthroughHumanReviewGate()
     orchestrator = DefaultWorkflowOrchestrator(
+        planner=planner,
         extractor=extractor,
         matcher=matcher,
         policy=policy,
         review_gate=review_gate,
     )
-    return extractor, matcher, policy, review_gate, orchestrator
+    return planner, extractor, matcher, policy, review_gate, orchestrator
 
 
 def evaluate_workflow(workflow_input: WorkflowInput) -> WorkflowOutput:
-    _, _, _, _, orchestrator = default_agents()
+    *_, orchestrator = default_agents()
     return orchestrator.run(
         WorkflowOrchestratorInput(workflow_input=workflow_input)
     ).output
@@ -112,7 +131,7 @@ def evaluate_workflow(workflow_input: WorkflowInput) -> WorkflowOutput:
 def run_workflow_evaluation(
     workflow_input: WorkflowInput,
 ) -> tuple[WorkflowOutput, WorkflowRun]:
-    _, _, _, _, orchestrator = default_agents()
+    *_, orchestrator = default_agents()
     result = orchestrator.run(
         WorkflowOrchestratorInput(workflow_input=workflow_input)
     )

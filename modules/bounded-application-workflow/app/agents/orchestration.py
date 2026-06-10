@@ -15,7 +15,7 @@ from app.domain.models import (
     WorkflowInput,
     WorkflowOutput,
 )
-from app.domain.workflow_run import WorkflowEventType, WorkflowRun, default_workflow_plan
+from app.domain.workflow_run import WorkflowEventType, WorkflowPlan, WorkflowRun
 from app.domain.workflow_state import WorkflowState
 
 _NEXT_STEPS: dict[DecisionType, list[str]] = {
@@ -51,6 +51,7 @@ def _input_summary(profile: UserProfile, job: JobDescription) -> str:
 def run_workflow_evaluation(
     workflow_input: WorkflowInput,
     *,
+    plan: WorkflowPlan,
     extractor: SignalExtractor,
     matcher: ProfileMatcher,
     policy: DecisionPolicy,
@@ -58,7 +59,7 @@ def run_workflow_evaluation(
 ) -> tuple[WorkflowOutput, WorkflowRun]:
     profile = workflow_input.user_profile
     job = workflow_input.job_description
-    run = WorkflowRun(input=workflow_input, plan=default_workflow_plan())
+    run = WorkflowRun(input=workflow_input, plan=plan)
     run.record_event(
         WorkflowEventType.RUN_STARTED,
         WorkflowState.INTAKE,

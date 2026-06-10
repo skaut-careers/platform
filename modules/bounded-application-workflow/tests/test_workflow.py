@@ -66,8 +66,19 @@ def test_risk_posting_escalates_through_human_review():
     output, run = run_workflow_evaluation(workflow)
 
     assert output.decision.decision == DecisionType.ESCALATE
-    assert WorkflowState.HUMAN_REVIEW in run.state_history
     assert run.is_complete is True
+    assert run.state_history == [
+        WorkflowState.INTAKE,
+        WorkflowState.SIGNAL_EXTRACTION,
+        WorkflowState.PROFILE_MATCHING,
+        WorkflowState.POLICY_EVALUATION,
+        WorkflowState.HUMAN_REVIEW,
+        WorkflowState.DECISION,
+    ]
+    # The planner pre-scans the risky posting, so review was anticipated.
+    assert WorkflowState.HUMAN_REVIEW in run.plan.stages
+    assert run.plan_report is not None
+    assert run.plan_report.followed_plan is True
 
 
 def test_prepare_path_state_history():
@@ -80,30 +91,41 @@ def test_prepare_path_state_history():
         WorkflowState.POLICY_EVALUATION,
         WorkflowState.DECISION,
     ]
+    assert run.plan.stages == run.state_history
+    assert run.plan_report is not None
+    assert run.plan_report.followed_plan is True
 
 
-def test_escalate_path_state_history():
-    fixture = load_fixture("risk_extraction.json")
-    profile = workflow_input("ambiguous_match.json").user_profile
+def test_unplanned_human_review_is_reported():
+    # Score lands in the escalate band without any risk indicators, so the
+    # planner does not anticipate review but execution still enters it.
     workflow = WorkflowInput(
-        user_profile=profile,
-        job_description=JobDescription(**fixture["job_description"]),
+        user_profile=UserProfile(
+            name="Ana",
+            target_roles=["Backend Engineer"],
+            skills=["Go"],
+            seniority="mid-senior",
+        ),
+        job_description=JobDescription(
+            title="Backend Engineer",
+            description="Backend role.\n\n- Python\n- Kubernetes\n- Terraform",
+            seniority="mid-senior",
+        ),
     )
 
-    _, run = run_workflow_evaluation(workflow)
+    output, run = run_workflow_evaluation(workflow)
 
-    assert run.state_history == [
-        WorkflowState.INTAKE,
-        WorkflowState.SIGNAL_EXTRACTION,
-        WorkflowState.PROFILE_MATCHING,
-        WorkflowState.POLICY_EVALUATION,
-        WorkflowState.HUMAN_REVIEW,
-        WorkflowState.DECISION,
-    ]
+    assert output.decision.decision == DecisionType.ESCALATE
+    assert WorkflowState.HUMAN_REVIEW not in run.plan.stages
+    report = run.plan_report
+    assert report is not None
+    assert report.followed_plan is False
+    assert report.unplanned_stages == [WorkflowState.HUMAN_REVIEW]
+    assert report.skipped_stages == []
 
 
 def test_orchestrator_returns_inspectable_run():
-    _, _, _, _, orchestrator = default_agents()
+    *_, orchestrator = default_agents()
     result = orchestrator.run(
         WorkflowOrchestratorInput(workflow_input=workflow_input("strong_match.json"))
     )

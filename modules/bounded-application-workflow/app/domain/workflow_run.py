@@ -27,8 +27,16 @@ class WorkflowPlan(BaseModel):
     """Describes intended workflow stages before execution."""
 
     stages: list[WorkflowState] = Field(default_factory=list)
-    evaluation_focus: list[str] = Field(default_factory=list)
-    required_signals: list[str] = Field(default_factory=list)
+
+
+class PlanExecutionReport(BaseModel):
+    """Comparison of planned stages against the executed state history."""
+
+    planned_stages: list[WorkflowState]
+    executed_stages: list[WorkflowState]
+    unplanned_stages: list[WorkflowState]
+    skipped_stages: list[WorkflowState]
+    followed_plan: bool
 
 
 def default_workflow_plan() -> WorkflowPlan:
@@ -52,6 +60,7 @@ class WorkflowRun(BaseModel):
     input: WorkflowInput
     plan: WorkflowPlan
     output: Optional[WorkflowOutput] = None
+    plan_report: Optional[PlanExecutionReport] = None
     events: list[WorkflowEvent] = Field(default_factory=list)
     started_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     completed_at: Optional[datetime] = None
@@ -103,11 +112,27 @@ class WorkflowRun(BaseModel):
         self.record_event(WorkflowEventType.STATE_ENTERED, target, message)
         return target
 
+    def compare_plan(self) -> PlanExecutionReport:
+        planned = list(self.plan.stages)
+        executed = list(self.state_history)
+        return PlanExecutionReport(
+            planned_stages=planned,
+            executed_stages=executed,
+            unplanned_stages=[
+                stage for stage in executed if stage not in planned
+            ],
+            skipped_stages=[
+                stage for stage in planned if stage not in executed
+            ],
+            followed_plan=planned == executed,
+        )
+
     def complete(self, output: WorkflowOutput) -> None:
         if self.current_state != WorkflowState.DECISION:
             self.transition_to(WorkflowState.DECISION)
         self.output = output
         self.completed_at = datetime.now(timezone.utc)
+        self.plan_report = self.compare_plan()
         self.record_event(
             WorkflowEventType.RUN_COMPLETED,
             WorkflowState.DECISION,
@@ -117,6 +142,7 @@ class WorkflowRun(BaseModel):
 
 __all__ = [
     "InvalidTransitionError",
+    "PlanExecutionReport",
     "WorkflowEvent",
     "WorkflowEventType",
     "WorkflowPlan",

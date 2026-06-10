@@ -14,6 +14,9 @@ from app.agents.contracts import (
     WorkflowOrchestrator,
     WorkflowOrchestratorInput,
     WorkflowOrchestratorOutput,
+    WorkflowPlanner,
+    WorkflowPlannerInput,
+    WorkflowPlannerOutput,
 )
 from app.agents.decision_rules import (
     build_workflow_decision,
@@ -25,6 +28,7 @@ from app.agents.default import (
     DefaultProfileMatcher,
     DefaultSignalExtractor,
     DefaultWorkflowOrchestrator,
+    DefaultWorkflowPlanner,
     PassthroughHumanReviewGate,
     default_agents,
     evaluate_workflow,
@@ -32,6 +36,7 @@ from app.agents.default import (
 )
 from app.agents.profile_matching import match_profile_to_job
 from app.agents.signal_extraction import extract_job_signals
+from app.agents.workflow_planning import create_workflow_plan
 
 __all__ = [
     "DecisionPolicy",
@@ -41,6 +46,7 @@ __all__ = [
     "DefaultProfileMatcher",
     "DefaultSignalExtractor",
     "DefaultWorkflowOrchestrator",
+    "DefaultWorkflowPlanner",
     "HumanReviewGate",
     "HumanReviewGateInput",
     "HumanReviewGateOutput",
@@ -54,7 +60,11 @@ __all__ = [
     "WorkflowOrchestrator",
     "WorkflowOrchestratorInput",
     "WorkflowOrchestratorOutput",
+    "WorkflowPlanner",
+    "WorkflowPlannerInput",
+    "WorkflowPlannerOutput",
     "build_workflow_decision",
+    "create_workflow_plan",
     "decision_from_score",
     "decision_from_signals",
     "default_agents",

@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from app.agents import WorkflowOrchestratorInput, default_agents
 from app.domain.models import WorkflowInput, WorkflowOutput
 
-_, _, _, _, orchestrator = default_agents()
+*_, orchestrator = default_agents()
 
 app = FastAPI(
     title="Bounded Application Workflow",
