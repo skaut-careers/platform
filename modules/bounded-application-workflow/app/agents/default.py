@@ -229,17 +229,14 @@ def create_agents(
 
 
 def evaluate_workflow(workflow_input: WorkflowInput) -> WorkflowOutput:
-    *_, orchestrator = create_agents()
-    return orchestrator.run(
-        WorkflowOrchestratorInput(workflow_input=workflow_input)
-    ).output
+    output, _ = run_workflow_evaluation(workflow_input)
+    return output
 
 
 def run_workflow_evaluation(
     workflow_input: WorkflowInput,
 ) -> tuple[WorkflowOutput, WorkflowRun]:
-    *_, orchestrator = create_agents()
-    result = orchestrator.run(
+    result = create_agents()[-1].run(
         WorkflowOrchestratorInput(workflow_input=workflow_input)
     )
     return result.output, result.run
