@@ -244,25 +244,38 @@ def _missing_signals_from_job(job: JobDescription) -> list[str]:
     return _dedupe_skills(missing)
 
 
-def extract_job_signals(job: JobDescription) -> JobSignals:
-    description_required, description_preferred = _skills_from_description(
-        job.description
-    )
-
-    required_skills = _dedupe_skills(description_required)
+def _normalize_job_signals(signals: JobSignals) -> JobSignals:
+    """Deduplicate parsed signals from regex/heuristic extraction."""
+    required_skills = _dedupe_skills(signals.required_skills)
     required_keys = {skill.casefold() for skill in required_skills}
-
     preferred_skills = [
         skill
-        for skill in _dedupe_skills(description_preferred)
+        for skill in _dedupe_skills(signals.preferred_skills)
         if skill.casefold() not in required_keys
     ]
 
     return JobSignals(
         required_skills=required_skills,
         preferred_skills=preferred_skills,
-        seniority_signals=_seniority_signals_from_job(job),
-        production_expectations=_production_expectations_from_job(job),
-        risk_indicators=_risk_indicators_from_job(job),
-        missing_signals=_missing_signals_from_job(job),
+        seniority_signals=_dedupe_skills(signals.seniority_signals),
+        production_expectations=_dedupe_skills(signals.production_expectations),
+        risk_indicators=_dedupe_skills(signals.risk_indicators),
+        missing_signals=_dedupe_skills(signals.missing_signals),
+    )
+
+
+def extract_job_signals(job: JobDescription) -> JobSignals:
+    description_required, description_preferred = _skills_from_description(
+        job.description
+    )
+
+    return _normalize_job_signals(
+        JobSignals(
+            required_skills=description_required,
+            preferred_skills=description_preferred,
+            seniority_signals=_seniority_signals_from_job(job),
+            production_expectations=_production_expectations_from_job(job),
+            risk_indicators=_risk_indicators_from_job(job),
+            missing_signals=_missing_signals_from_job(job),
+        )
     )

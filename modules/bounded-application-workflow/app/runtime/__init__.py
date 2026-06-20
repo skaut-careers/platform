@@ -5,6 +5,7 @@ from app.runtime.result import (
     RuntimeExecutionError,
 )
 from app.runtime.runtime import AgentOperation, AgentRuntime, BoundedAgentRuntime
+from app.runtime.signal_extractor_config import SignalExtractorRuntimeConfig
 
 __all__ = [
     "AgentExecutionResult",
@@ -14,4 +15,5 @@ __all__ = [
     "ExecutionStatus",
     "RuntimeConfig",
     "RuntimeExecutionError",
+    "SignalExtractorRuntimeConfig",
 ]

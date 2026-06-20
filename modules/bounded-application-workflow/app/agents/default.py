@@ -1,3 +1,5 @@
+import os
+
 from app.agents.contracts import (
     DecisionPolicy,
     DecisionPolicyInput,
@@ -8,6 +10,7 @@ from app.agents.contracts import (
     ProfileMatcher,
     ProfileMatcherInput,
     ProfileMatcherOutput,
+    SignalExtractionMetadata,
     SignalExtractor,
     SignalExtractorInput,
     SignalExtractorOutput,
@@ -19,12 +22,15 @@ from app.agents.contracts import (
     WorkflowPlannerOutput,
 )
 from app.agents.decision_rules import build_workflow_decision
+from app.agents.llm_signal_extraction import LLMSignalExtractor
 from app.agents.orchestration import run_workflow_evaluation as _run_workflow_evaluation
 from app.agents.profile_matching import match_profile_to_job
 from app.agents.signal_extraction import extract_job_signals
 from app.agents.workflow_planning import create_workflow_plan
 from app.domain.models import WorkflowDecision, WorkflowInput, WorkflowOutput
 from app.domain.workflow_run import WorkflowRun
+from app.llm.client import LLMClient, OpenAILLMClient
+from app.runtime import BoundedAgentRuntime, SignalExtractorRuntimeConfig
 
 
 class DefaultWorkflowPlanner:
@@ -152,8 +158,78 @@ def default_agents() -> tuple[
     return planner, extractor, matcher, policy, review_gate, orchestrator
 
 
+def llm_agents(
+    *,
+    client: LLMClient | None = None,
+    config: SignalExtractorRuntimeConfig | None = None,
+) -> tuple[
+    WorkflowPlanner,
+    SignalExtractor,
+    ProfileMatcher,
+    DecisionPolicy,
+    HumanReviewGate,
+    WorkflowOrchestrator,
+]:
+    """Wire the workflow with an LLM-backed signal extractor and deterministic fallback."""
+    planner = DefaultWorkflowPlanner()
+    extractor = LLMSignalExtractor(
+        client=client or OpenAILLMClient(model=(config or SignalExtractorRuntimeConfig()).model),
+        config=config,
+        runtime=BoundedAgentRuntime(),
+        fallback=DefaultSignalExtractor(),
+    )
+    matcher = DefaultProfileMatcher()
+    policy = DefaultDecisionPolicy()
+    review_gate = PassthroughHumanReviewGate()
+    orchestrator = DefaultWorkflowOrchestrator(
+        planner=planner,
+        extractor=extractor,
+        matcher=matcher,
+        policy=policy,
+        review_gate=review_gate,
+    )
+    return planner, extractor, matcher, policy, review_gate, orchestrator
+
+
+def _signal_extractor_mode(mode: str | None = None) -> str:
+    resolved = (mode or os.environ.get("SIGNAL_EXTRACTOR", "deterministic")).casefold()
+    if resolved in {"deterministic", "llm"}:
+        return resolved
+    raise ValueError(
+        f"Unsupported SIGNAL_EXTRACTOR value {resolved!r}; expected 'deterministic' or 'llm'"
+    )
+
+
+def _signal_extractor_config_from_env() -> SignalExtractorRuntimeConfig:
+    return SignalExtractorRuntimeConfig(
+        model=os.environ.get("LLM_SIGNAL_MODEL", "gpt-5-mini"),
+    )
+
+
+def create_agents(
+    *,
+    signal_extractor: str | None = None,
+    client: LLMClient | None = None,
+    config: SignalExtractorRuntimeConfig | None = None,
+) -> tuple[
+    WorkflowPlanner,
+    SignalExtractor,
+    ProfileMatcher,
+    DecisionPolicy,
+    HumanReviewGate,
+    WorkflowOrchestrator,
+]:
+    """Select agent wiring from env or an explicit override."""
+    if _signal_extractor_mode(signal_extractor) == "llm":
+        return llm_agents(
+            client=client,
+            config=config or _signal_extractor_config_from_env(),
+        )
+    return default_agents()
+
+
 def evaluate_workflow(workflow_input: WorkflowInput) -> WorkflowOutput:
-    *_, orchestrator = default_agents()
+    *_, orchestrator = create_agents()
     return orchestrator.run(
         WorkflowOrchestratorInput(workflow_input=workflow_input)
     ).output
@@ -162,7 +238,7 @@ def evaluate_workflow(workflow_input: WorkflowInput) -> WorkflowOutput:
 def run_workflow_evaluation(
     workflow_input: WorkflowInput,
 ) -> tuple[WorkflowOutput, WorkflowRun]:
-    *_, orchestrator = default_agents()
+    *_, orchestrator = create_agents()
     result = orchestrator.run(
         WorkflowOrchestratorInput(workflow_input=workflow_input)
     )

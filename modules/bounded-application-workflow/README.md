@@ -28,6 +28,7 @@ Agentic workflow:
 ## In progress — Milestone 4
 
 - Agent runtime — bounded, observable execution path for LLM-backed agents behind the existing contracts (`AgentRuntime`, `BoundedAgentRuntime`, `RuntimeConfig`, `AgentExecutionResult`)
+- LLM signal extractor — `LLMSignalExtractor` behind the `SignalExtractor` protocol, with versioned prompts, Pydantic schema validation, runtime retries, and deterministic fallback to `DefaultSignalExtractor`
 
 ## Run locally
 
@@ -36,6 +37,8 @@ poetry install
 poetry run uvicorn app.api.main:app --reload
 poetry run pytest
 ```
+
+Set `SIGNAL_EXTRACTOR=llm` to use the LLM-backed signal extractor (falls back to deterministic rules when the provider is unavailable). Optional: `LLM_SIGNAL_MODEL` (default `gpt-5-mini`), `OPENAI_API_KEY` for live OpenAI Responses API calls. Install the OpenAI extra with `poetry install -E openai`.
 
 ## API
 
