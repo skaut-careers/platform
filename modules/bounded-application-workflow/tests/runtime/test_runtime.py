@@ -28,8 +28,6 @@ def _fail(_: SignalExtractorInput) -> SignalExtractorOutput:
 
 
 class _Flaky:
-    """Fails `failures` times before succeeding."""
-
     def __init__(self, failures: int) -> None:
         self.failures = failures
         self.calls = 0

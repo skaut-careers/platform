@@ -16,7 +16,10 @@ from app.domain.workflow_run import (
     default_workflow_plan,
 )
 from app.domain.workflow_state import InvalidTransitionError, WorkflowState
-from tests.fixture_helpers import workflow_input
+from tests.conftest import workflow_input
+
+
+# --- state_machine.py ---
 
 
 @pytest.mark.parametrize(
@@ -62,6 +65,9 @@ def test_invalid_state_transition(current: WorkflowState, target: WorkflowState)
         machine.transition_to(target)
 
     assert machine.current_state == current
+
+
+# --- workflow_run.py ---
 
 
 def _new_run() -> WorkflowRun:
@@ -114,7 +120,6 @@ def test_default_workflow_plan():
 
 
 def _run_through_evaluation(plan: WorkflowPlan) -> WorkflowRun:
-    """Build a run that executed the direct path (no human review)."""
     run = WorkflowRun(input=workflow_input("strong_match.json"), plan=plan)
     for state in [
         WorkflowState.SIGNAL_EXTRACTION,
@@ -225,6 +230,9 @@ def test_resolve_review_without_request_raises():
 
     with pytest.raises(ValueError):
         run.resolve_review(final_decision=_escalated_decision(), approved=True)
+
+
+# --- models.py ---
 
 
 def test_user_profile_rejects_null_list_fields():

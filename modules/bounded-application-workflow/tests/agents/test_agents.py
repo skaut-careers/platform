@@ -8,6 +8,7 @@ from app.agents import (
     extract_job_signals,
     match_profile_to_job,
 )
+from app.agents.llm_signal_extraction import LLMSignalExtractor, job_signals_schema, load_system_prompt
 from app.domain.job_signals import JobSignals
 from app.domain.models import (
     DecisionType,
@@ -17,7 +18,19 @@ from app.domain.models import (
     WorkflowInput,
 )
 from app.domain.workflow_state import WorkflowState
-from tests.fixture_helpers import load_fixture, workflow_input
+from app.llm.client import LLMClientError
+from app.runtime import ExecutionStatus, SignalExtractorRuntimeConfig
+from tests.conftest import (
+    escalating_workflow_input,
+    load_fixture,
+    mock_llm_client,
+    sample_signal_extractor_input,
+    signals_payload,
+    workflow_input,
+)
+
+
+# --- profile_matching.py ---
 
 
 def _match(fixture_name: str):
@@ -63,6 +76,9 @@ def test_severe_seniority_mismatch(profile_seniority: str, job_seniority: str):
     assert result.severe_seniority_mismatch
 
 
+# --- signal_extraction.py ---
+
+
 def test_extract_from_fixture():
     fixture = load_fixture("skill_extraction.json")
     job = JobDescription(**fixture["job_description"])
@@ -106,6 +122,9 @@ def test_extract_normalizes_skill_lists():
     assert signals.preferred_skills == ["FastAPI"]
 
 
+# --- decision_rules.py ---
+
+
 @pytest.mark.parametrize(
     "score,expected",
     [
@@ -134,31 +153,6 @@ def test_decision_skips_on_severe_seniority_mismatch():
     )
 
 
-def test_plan_for_clean_posting_omits_human_review():
-    plan = create_workflow_plan(workflow_input("strong_match.json"))
-
-    assert plan.stages == [
-        WorkflowState.INTAKE,
-        WorkflowState.SIGNAL_EXTRACTION,
-        WorkflowState.PROFILE_MATCHING,
-        WorkflowState.POLICY_EVALUATION,
-        WorkflowState.DECISION,
-    ]
-
-
-def test_plan_for_risky_posting_includes_human_review():
-    fixture = load_fixture("risk_extraction.json")
-    workflow = WorkflowInput(
-        user_profile=workflow_input("ambiguous_match.json").user_profile,
-        job_description=JobDescription(**fixture["job_description"]),
-    )
-
-    plan = create_workflow_plan(workflow)
-
-    assert WorkflowState.HUMAN_REVIEW in plan.stages
-    assert plan.stages[-1] == WorkflowState.DECISION
-
-
 def test_build_workflow_decision():
     match = ProfileMatchResult(
         score=0.82,
@@ -175,3 +169,70 @@ def test_build_workflow_decision():
     assert decision.decision == DecisionType.ESCALATE
     assert decision.score == match.score
     assert decision.missing_information == ["Job posting missing signal: salary range"]
+
+
+# --- workflow_planning.py ---
+
+
+def test_plan_for_clean_posting_omits_human_review():
+    plan = create_workflow_plan(workflow_input("strong_match.json"))
+
+    assert plan.stages == [
+        WorkflowState.INTAKE,
+        WorkflowState.SIGNAL_EXTRACTION,
+        WorkflowState.PROFILE_MATCHING,
+        WorkflowState.POLICY_EVALUATION,
+        WorkflowState.DECISION,
+    ]
+
+
+def test_plan_for_risky_posting_includes_human_review():
+    plan = create_workflow_plan(escalating_workflow_input())
+
+    assert WorkflowState.HUMAN_REVIEW in plan.stages
+    assert plan.stages[-1] == WorkflowState.DECISION
+
+
+# --- llm_signal_extraction.py ---
+
+
+def test_prompt_and_schema():
+    assert "required_skills" in load_system_prompt("v1")
+    assert set(job_signals_schema()["properties"]) == set(signals_payload())
+
+
+def test_llm_extractor_success():
+    client = mock_llm_client(signals_payload(required_skills=["Python"], preferred_skills=["FastAPI"]))
+    output = LLMSignalExtractor(client=client).run(sample_signal_extractor_input())
+
+    assert output.signals.required_skills == ["Python"]
+    assert output.signals.preferred_skills == ["FastAPI"]
+    assert output.metadata and not output.metadata.used_fallback
+
+
+@pytest.mark.parametrize(
+    "responses, used_fallback, attempts, error_prefix",
+    [
+        ([LLMClientError("down")], True, 1, "SignalExtractionLLMError"),
+        ([signals_payload(required_skills="Python")], True, 1, "SignalExtractionSchemaError"),
+        (
+            [LLMClientError("retry"), signals_payload(required_skills=["Python"])],
+            False,
+            2,
+            None,
+        ),
+    ],
+)
+def test_llm_extractor_runtime_paths(responses, used_fallback, attempts, error_prefix):
+    client = mock_llm_client(*responses)
+    output = LLMSignalExtractor(
+        client=client,
+        config=SignalExtractorRuntimeConfig(max_attempts=attempts),
+    ).run(sample_signal_extractor_input())
+
+    assert output.metadata
+    assert output.metadata.used_fallback is used_fallback
+    assert output.metadata.attempts == attempts
+    if used_fallback:
+        assert output.metadata.status == ExecutionStatus.FAILED
+        assert output.metadata.error.startswith(error_prefix)

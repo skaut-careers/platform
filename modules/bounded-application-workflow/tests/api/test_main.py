@@ -1,25 +1,21 @@
 from unittest.mock import MagicMock
 
-import pytest
 from fastapi.testclient import TestClient
 
 from app.agents.default import create_agents
-from app.api.main import app, create_app
-from tests.fixture_helpers import load_fixture
-from tests.llm_helpers import mock_llm_client
-
-client = TestClient(app)
+from app.api.main import create_app
+from tests.conftest import load_fixture, mock_llm_client
 
 
-def test_health():
-    response = client.get("/health")
+def test_health(api_client):
+    response = api_client.get("/health")
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
 
 
-def test_run_workflow():
+def test_run_workflow(api_client):
     fixture = load_fixture("strong_match.json")
-    response = client.post(
+    response = api_client.post(
         "/workflow/run",
         json={
             "user_profile": fixture["user_profile"],
@@ -31,8 +27,8 @@ def test_run_workflow():
     assert response.json()["decision"]["decision"] == fixture["expected_decision"]
 
 
-def test_run_workflow_rejects_invalid_payload():
-    assert client.post("/workflow/run", json={}).status_code == 422
+def test_run_workflow_rejects_invalid_payload(api_client):
+    assert api_client.post("/workflow/run", json={}).status_code == 422
 
 
 def test_run_workflow_with_llm_orchestrator(monkeypatch):
