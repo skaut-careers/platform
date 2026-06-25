@@ -7,14 +7,15 @@ from app.agents import (
 )
 from app.agents.decision_rules import DefaultDecisionPolicy
 from app.agents.human_review import PassthroughHumanReviewGate, RecordedHumanReviewGate
-from app.agents.orchestration.runner import run_workflow_evaluation
+from app.agents.orchestration.runner import execute_workflow_pipeline
 from app.agents.profile_matching import DefaultProfileMatcher
-from app.agents.signal_extraction import DefaultSignalExtractor
+from app.agents.signal_extraction import DefaultSignalExtractor, LLMSignalExtractor
 from app.agents.wiring import create_agents
 from app.agents.workflow_planning.planning import create_workflow_plan
 from app.domain.models import DecisionType, JobDescription, UserProfile, WorkflowDecision, WorkflowInput
 from app.domain.workflow_run import WorkflowEventType
 from app.domain.workflow_state import WorkflowState
+from app.runtime import RuntimeConfig
 from app.parser import parse_job_description
 from tests.conftest import (
     AI_ENGINEER_JOB_TEXT,
@@ -23,6 +24,7 @@ from tests.conftest import (
     expected_decision,
     load_fixture,
     mock_llm_client,
+    signals_payload,
     workflow_input,
 )
 
@@ -32,7 +34,7 @@ def _run(
     *,
     review_gate: PassthroughHumanReviewGate | RecordedHumanReviewGate | None = None,
 ):
-    return run_workflow_evaluation(
+    return execute_workflow_pipeline(
         workflow,
         plan=create_workflow_plan(workflow),
         extractor=DefaultSignalExtractor(),
@@ -172,6 +174,37 @@ def test_run_logs_agent_traces():
         (WorkflowState.PROFILE_MATCHING, "DefaultProfileMatcher"),
         (WorkflowState.POLICY_EVALUATION, "DefaultDecisionPolicy"),
     ]
+
+
+def test_llm_run_trace_includes_execution_metadata():
+    workflow = workflow_input("strong_match.json")
+    _, run = execute_workflow_pipeline(
+        workflow,
+        plan=create_workflow_plan(workflow),
+        extractor=LLMSignalExtractor(
+            client=mock_llm_client(
+                signals_payload(
+                    required_skills=["Python", "LLM applications"],
+                    preferred_skills=["research background"],
+                )
+            ),
+            runtime_config=RuntimeConfig.build(),
+        ),
+        matcher=DefaultProfileMatcher(),
+        policy=DefaultDecisionPolicy(),
+        review_gate=PassthroughHumanReviewGate(),
+    )
+
+    extractor_trace = run.traces[0]
+    assert extractor_trace.agent == "LLMSignalExtractor"
+    execution = extractor_trace.output["execution"]
+    assert execution is not None
+    assert execution["prompt_hash"]
+    assert execution["config_version"]
+    assert execution["config_hash"]
+    assert execution["attempts"] == 1
+    assert execution["used_fallback"] is False
+    assert execution["status"] == "success"
 
 
 def test_escalated_run_is_traceable():

@@ -10,7 +10,7 @@ from app.agents.contracts import (
 )
 from app.agents.decision_rules import DefaultDecisionPolicy
 from app.agents.human_review import PassthroughHumanReviewGate
-from app.agents.orchestration.runner import run_workflow_evaluation
+from app.agents.orchestration.runner import execute_workflow_pipeline
 from app.agents.profile_matching import DefaultProfileMatcher
 from app.agents.signal_extraction import DefaultSignalExtractor
 from app.agents.workflow_planning import DefaultWorkflowPlanner
@@ -38,7 +38,7 @@ class DefaultWorkflowOrchestrator:
         plan = self._planner.run(
             WorkflowPlannerInput(workflow_input=agent_input.workflow_input)
         ).plan
-        output, run = run_workflow_evaluation(
+        output, run = execute_workflow_pipeline(
             agent_input.workflow_input,
             plan=plan,
             extractor=self._extractor,

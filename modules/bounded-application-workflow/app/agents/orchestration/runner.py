@@ -49,7 +49,7 @@ def _input_summary(profile: UserProfile, job: JobDescription) -> str:
     )
 
 
-def run_workflow_evaluation(
+def execute_workflow_pipeline(
     workflow_input: WorkflowInput,
     *,
     plan: WorkflowPlan,
