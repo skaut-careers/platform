@@ -17,6 +17,11 @@ WORKFLOW_FIXTURES = (
     "ambiguous_match.json",
 )
 
+SIGNAL_EXTRACTION_FIXTURES = (
+    "skill_extraction.json",
+    "risk_extraction.json",
+)
+
 AI_ENGINEER_JOB_TEXT = """
 AI Engineer
 
@@ -95,6 +100,48 @@ def mock_llm_client(*responses: dict[str, Any] | BaseException) -> MagicMock:
     else:
         client.complete_json.side_effect = list(responses)
     return client
+
+
+def runtime_config(version: str | None = None, **env: str):
+    from app.runtime.config_loader import load_runtime_config
+
+    if version is not None:
+        env = {"RUNTIME_CONFIG_VERSION": version, **env}
+    return load_runtime_config(env=env)
+
+
+def register_runtime_bundle(
+    *,
+    version: str,
+    settings: dict[str, Any],
+    prompt_version: str,
+    prompt_content: str,
+):
+    from app.agents.signal_extraction import LLMSignalExtractor
+    from app.runtime.agent_identity import agent_name_for
+    from app.runtime.config_registry import ConfigRegistry, ConfigSpec, compute_config_hash
+    from app.runtime.prompt_registry import PromptRegistry, PromptSpec, compute_content_hash
+
+    agent_name = agent_name_for(LLMSignalExtractor)
+    prompt_registry = PromptRegistry()
+    prompt_registry.register(
+        PromptSpec(
+            agent_name=agent_name,
+            version=prompt_version,
+            content=prompt_content,
+            content_hash=compute_content_hash(prompt_content),
+        )
+    )
+    config_registry = ConfigRegistry()
+    config_registry.register(
+        ConfigSpec(
+            config_id="runtime",
+            version=version,
+            settings=settings,
+            content_hash=compute_config_hash(settings),
+        )
+    )
+    return config_registry, prompt_registry
 
 
 @pytest.fixture

@@ -23,7 +23,9 @@ class AgentExecutionResult(BaseModel, Generic[OutputT]):
     """Auditable record of one agent execution through the runtime."""
 
     agent_name: str
+    config_id: str
     config_version: str
+    config_hash: str
     status: ExecutionStatus
     attempts: int
     started_at: datetime
@@ -31,6 +33,7 @@ class AgentExecutionResult(BaseModel, Generic[OutputT]):
     output: Optional[OutputT] = None
     error: Optional[str] = None
     used_fallback: bool = False
+    prompt_hash: Optional[str] = None
 
     @computed_field
     @property

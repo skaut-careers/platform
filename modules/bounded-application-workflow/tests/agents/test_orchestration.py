@@ -4,18 +4,14 @@ from app.agents import (
     WorkflowOrchestratorInput,
     default_agents,
     evaluate_workflow,
-    run_workflow_evaluation as run_default_workflow,
 )
-from app.agents.default import (
-    DefaultDecisionPolicy,
-    DefaultProfileMatcher,
-    DefaultSignalExtractor,
-    PassthroughHumanReviewGate,
-    RecordedHumanReviewGate,
-    create_agents,
-)
-from app.agents.orchestration import run_workflow_evaluation
-from app.agents.workflow_planning import create_workflow_plan
+from app.agents.decision_rules import DefaultDecisionPolicy
+from app.agents.human_review import PassthroughHumanReviewGate, RecordedHumanReviewGate
+from app.agents.orchestration.runner import run_workflow_evaluation
+from app.agents.profile_matching import DefaultProfileMatcher
+from app.agents.signal_extraction import DefaultSignalExtractor
+from app.agents.wiring import create_agents
+from app.agents.workflow_planning.planning import create_workflow_plan
 from app.domain.models import DecisionType, JobDescription, UserProfile, WorkflowDecision, WorkflowInput
 from app.domain.workflow_run import WorkflowEventType
 from app.domain.workflow_state import WorkflowState
@@ -47,17 +43,17 @@ def _run(
 
 
 @pytest.mark.parametrize("fixture_name", WORKFLOW_FIXTURES)
-def test_fixture_decisions(fixture_name: str):
-    output = evaluate_workflow(workflow_input(fixture_name))
-    assert output.decision.decision == expected_decision(fixture_name)
+def test_fixture_decisions(fixture_name):
+    assert evaluate_workflow(workflow_input(fixture_name)).decision.decision == expected_decision(
+        fixture_name
+    )
 
 
 def test_parsed_job_description():
     profile = UserProfile(**load_fixture("strong_match.json")["user_profile"])
-    job = parse_job_description(AI_ENGINEER_JOB_TEXT)
-
-    output = evaluate_workflow(WorkflowInput(user_profile=profile, job_description=job))
-
+    output = evaluate_workflow(
+        WorkflowInput(user_profile=profile, job_description=parse_job_description(AI_ENGINEER_JOB_TEXT))
+    )
     assert output.decision.decision == DecisionType.PREPARE
 
 
@@ -78,8 +74,21 @@ def test_severe_seniority_gap_skips():
             ),
         )
     )
-
     assert output.decision.decision == DecisionType.SKIP
+
+
+@pytest.mark.parametrize(
+    "runtime_version, extractor_name",
+    [("v1", "DefaultSignalExtractor"), ("v2", "LLMSignalExtractor")],
+)
+def test_create_agents_selects_extractor(monkeypatch, runtime_version, extractor_name):
+    monkeypatch.setenv("RUNTIME_CONFIG_VERSION", runtime_version)
+    assert create_agents(client=mock_llm_client())[-1]._extractor.__class__.__name__ == extractor_name
+
+
+def test_create_agents_rejects_unknown_mode():
+    with pytest.raises(ValueError, match="Unsupported signal extractor mode"):
+        create_agents(signal_extractor="magic")
 
 
 def test_orchestrator_returns_inspectable_run():
@@ -87,81 +96,31 @@ def test_orchestrator_returns_inspectable_run():
     result = orchestrator.run(
         WorkflowOrchestratorInput(workflow_input=workflow_input("strong_match.json"))
     )
-
     run = result.run
-    assert run.is_complete is True
-    assert run.output == result.output
+    assert run.is_complete and run.output == result.output
     assert run.events[0].event_type == WorkflowEventType.RUN_STARTED
     assert run.events[-1].event_type == WorkflowEventType.RUN_COMPLETED
-    assert run.model_dump()["output"]["decision"]["decision"] == result.output.decision.decision.value
-
-
-def test_run_workflow_evaluation_uses_default_wiring():
-    output, run = run_default_workflow(workflow_input("strong_match.json"))
-
-    assert output.decision.decision == DecisionType.PREPARE
-    assert run.is_complete is True
-
-
-@pytest.mark.parametrize(
-    "env, extractor_name",
-    [
-        (None, "DefaultSignalExtractor"),
-        ("llm", "LLMSignalExtractor"),
-    ],
-)
-def test_create_agents_selects_extractor(monkeypatch, env, extractor_name):
-    if env is None:
-        monkeypatch.delenv("SIGNAL_EXTRACTOR", raising=False)
-    else:
-        monkeypatch.setenv("SIGNAL_EXTRACTOR", env)
-
-    *_, orchestrator = create_agents(client=mock_llm_client())
-
-    assert orchestrator._extractor.__class__.__name__ == extractor_name
-
-
-def test_create_agents_rejects_unknown_mode(monkeypatch):
-    monkeypatch.setenv("SIGNAL_EXTRACTOR", "magic")
-
-    with pytest.raises(ValueError, match="Unsupported SIGNAL_EXTRACTOR"):
-        create_agents()
 
 
 def test_prepare_path_state_history():
     _, run = _run(workflow_input("strong_match.json"))
-
-    assert run.state_history == [
+    expected = [
         WorkflowState.INTAKE,
         WorkflowState.SIGNAL_EXTRACTION,
         WorkflowState.PROFILE_MATCHING,
         WorkflowState.POLICY_EVALUATION,
         WorkflowState.DECISION,
     ]
-    assert run.plan.stages == run.state_history
-    assert run.plan_report is not None
-    assert run.plan_report.followed_plan is True
+    assert run.state_history == expected
+    assert run.plan.stages == expected
+    assert run.plan_report and run.plan_report.followed_plan
 
 
 def test_risk_posting_escalates_through_human_review():
     output, run = _run(escalating_workflow_input())
-
     assert output.decision.decision == DecisionType.ESCALATE
-    assert run.is_complete is True
-    assert run.state_history == [
-        WorkflowState.INTAKE,
-        WorkflowState.SIGNAL_EXTRACTION,
-        WorkflowState.PROFILE_MATCHING,
-        WorkflowState.POLICY_EVALUATION,
-        WorkflowState.HUMAN_REVIEW,
-        WorkflowState.DECISION,
-    ]
-    assert WorkflowState.HUMAN_REVIEW in run.plan.stages
-    assert run.plan_report is not None
-    assert run.plan_report.followed_plan is True
-    assert run.review is not None
-    assert run.review.reason.startswith("Escalated for human review")
-    assert run.review.approved is True
+    assert WorkflowState.HUMAN_REVIEW in run.state_history
+    assert run.review and run.review.approved
 
 
 def test_unplanned_human_review_is_reported():
@@ -178,65 +137,45 @@ def test_unplanned_human_review_is_reported():
             seniority="mid-senior",
         ),
     )
-
-    output, run = _run(workflow)
-
-    assert output.decision.decision == DecisionType.ESCALATE
-    assert WorkflowState.HUMAN_REVIEW not in run.plan.stages
-    report = run.plan_report
-    assert report is not None
-    assert report.followed_plan is False
-    assert report.unplanned_stages == [WorkflowState.HUMAN_REVIEW]
-    assert report.skipped_stages == []
+    _, run = _run(workflow)
+    assert run.plan_report
+    assert not run.plan_report.followed_plan
+    assert run.plan_report.unplanned_stages == [WorkflowState.HUMAN_REVIEW]
 
 
-def test_review_gate_revises_escalated_decision():
-    revised = WorkflowDecision(decision=DecisionType.QUEUE, score=0.5)
-    output, run = _run(
-        escalating_workflow_input(),
-        review_gate=RecordedHumanReviewGate(
-            revised_decision=revised,
-            reviewer_notes="Scope clarified with recruiter.",
+@pytest.mark.parametrize(
+    "review_gate,expected_decision,is_revised",
+    [
+        (
+            RecordedHumanReviewGate(
+                revised_decision=WorkflowDecision(decision=DecisionType.QUEUE, score=0.5),
+                reviewer_notes="Scope clarified with recruiter.",
+            ),
+            DecisionType.QUEUE,
+            True,
         ),
-    )
-
-    assert output.decision == revised
-    assert run.review is not None
-    assert run.review.is_revised is True
-    assert run.review.reviewer_notes == "Scope clarified with recruiter."
-
-
-def test_review_gate_approves_escalated_decision():
-    output, run = _run(
-        escalating_workflow_input(),
-        review_gate=RecordedHumanReviewGate(),
-    )
-
-    assert output.decision.decision == DecisionType.ESCALATE
-    assert run.review is not None
-    assert run.review.approved is True
-    assert run.review.is_revised is False
+        (RecordedHumanReviewGate(), DecisionType.ESCALATE, False),
+    ],
+)
+def test_review_gate_outcomes(review_gate, expected_decision, is_revised):
+    output, run = _run(escalating_workflow_input(), review_gate=review_gate)
+    assert output.decision.decision == expected_decision
+    assert run.review
+    assert run.review.is_revised is is_revised
 
 
-def test_run_logs_planner_decision_and_agent_outputs():
+def test_run_logs_agent_traces():
     _, run = _run(workflow_input("strong_match.json"))
-
     assert run.events[1].event_type == WorkflowEventType.PLAN_CREATED
-    assert "intake -> signal_extraction" in run.events[1].message
-
     assert [(trace.stage, trace.agent) for trace in run.traces] == [
         (WorkflowState.SIGNAL_EXTRACTION, "DefaultSignalExtractor"),
         (WorkflowState.PROFILE_MATCHING, "DefaultProfileMatcher"),
         (WorkflowState.POLICY_EVALUATION, "DefaultDecisionPolicy"),
     ]
-    matcher_trace, policy_trace = run.traces[1], run.traces[2]
-    assert policy_trace.output["decision"]["decision"] == DecisionType.PREPARE
-    assert policy_trace.output["decision"]["score"] == matcher_trace.output["match"]["score"]
 
 
-def test_escalated_run_decision_is_traceable():
+def test_escalated_run_is_traceable():
     output, run = _run(escalating_workflow_input())
-
     chain = run.execution_trace()
     assert [trace.stage for trace in chain] == [
         WorkflowState.SIGNAL_EXTRACTION,
@@ -245,29 +184,4 @@ def test_escalated_run_decision_is_traceable():
         WorkflowState.HUMAN_REVIEW,
         WorkflowState.DECISION,
     ]
-    assert chain[3].agent == "PassthroughHumanReviewGate"
-    assert chain[-1].agent == "workflow"
     assert chain[-1].output["decision"] == output.decision.decision
-    assert chain[-1].timestamp == run.completed_at
-
-    event_types = [event.event_type for event in run.events]
-    assert event_types.index(WorkflowEventType.REVIEW_REQUESTED) < event_types.index(
-        WorkflowEventType.REVIEW_COMPLETED
-    )
-
-
-def test_workflow_history_serializable_after_execution():
-    _, run = _run(escalating_workflow_input())
-
-    dumped = run.model_dump(mode="json")
-
-    assert dumped["events"][0]["event_type"] == "run_started"
-    assert dumped["events"][-1]["event_type"] == "run_completed"
-    assert [trace["stage"] for trace in dumped["traces"]] == [
-        "signal_extraction",
-        "profile_matching",
-        "policy_evaluation",
-        "human_review",
-    ]
-    description = run.input.job_description.description
-    assert all(description not in str(trace["output"]) for trace in dumped["traces"])

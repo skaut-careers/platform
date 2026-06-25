@@ -2,7 +2,7 @@ from unittest.mock import MagicMock
 
 from fastapi.testclient import TestClient
 
-from app.agents.default import create_agents
+from app.agents.wiring import create_agents
 from app.api.main import create_app
 from tests.conftest import load_fixture, mock_llm_client
 
@@ -32,7 +32,7 @@ def test_run_workflow_rejects_invalid_payload(api_client):
 
 
 def test_run_workflow_with_llm_orchestrator(monkeypatch):
-    monkeypatch.setenv("SIGNAL_EXTRACTOR", "llm")
+    monkeypatch.setenv("RUNTIME_CONFIG_VERSION", "v2")
     skill_fixture = load_fixture("skill_extraction.json")
     strong_fixture = load_fixture("strong_match.json")
 

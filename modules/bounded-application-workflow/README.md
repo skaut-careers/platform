@@ -29,6 +29,9 @@ Agentic workflow:
 
 - Agent runtime — bounded, observable execution path for LLM-backed agents behind the existing contracts (`AgentRuntime`, `BoundedAgentRuntime`, `RuntimeConfig`, `AgentExecutionResult`), with runtime-level validation, retry, and fallback policies (`PydanticOutputValidator`, `RetryPolicy`)
 - LLM signal extractor — `LLMSignalExtractor` behind the `SignalExtractor` protocol, with versioned prompts and deterministic fallback to `DefaultSignalExtractor`
+- Prompt registry — prompts live in each runtime agent package under `app/agents/{agent}/prompts/{version}.txt`; loaded via `PromptRegistry` / `PromptSpec`; traced on each execution as `prompt_hash`
+- Runtime config registry — versioned bundles in `app/runtime/configs/` (`runtime_{version}.json`) with flat agent settings (no per-agent keys); applied to discovered runtime agents (packages with a `prompts/` folder); loaded via `load_runtime_config`; traced as `config_id`, `config_version`, `config_hash`
+- Agent layout — each agent lives in its own package under `app/agents/` (e.g. `signal_extraction/`, `profile_matching/`); deterministic logic lives in a sibling module (e.g. `deterministic.py`) with a thin `Default*` adapter in `__init__.py`; LLM-backed agents add `llm.py` (e.g. `LLMSignalExtractor`), versioned prompts under `prompts/`, and run through `BoundedAgentRuntime`; `wiring.py` selects deterministic vs. LLM wiring from the runtime config
 
 ## Run locally
 
@@ -38,7 +41,22 @@ poetry run uvicorn app.api.main:app --reload
 poetry run pytest
 ```
 
-Set `SIGNAL_EXTRACTOR=llm` to use the LLM-backed signal extractor (falls back to deterministic rules when the provider is unavailable). Optional: `LLM_SIGNAL_MODEL` (default `gpt-5-mini`), `OPENAI_API_KEY` for live OpenAI Responses API calls.
+Environment variables:
+
+| Variable | Default | When needed |
+|----------|---------|-------------|
+| `RUNTIME_CONFIG_VERSION` | `v1` | Always optional. `v1` = deterministic extractor; `v2`/`v3` = LLM-backed extractor (see `runtime_v*.json`) |
+| `OPENAI_API_KEY` | — | Required only for live LLM calls with `RUNTIME_CONFIG_VERSION=v2` or `v3` |
+
+```bash
+# deterministic (default) — no env vars required
+poetry run uvicorn app.api.main:app --reload
+
+# LLM-backed signal extraction
+export RUNTIME_CONFIG_VERSION=v2
+export OPENAI_API_KEY=sk-...
+poetry run uvicorn app.api.main:app --reload
+```
 
 ## API
 

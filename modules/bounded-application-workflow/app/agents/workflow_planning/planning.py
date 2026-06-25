@@ -1,4 +1,4 @@
-from app.agents.signal_extraction import extract_job_signals
+from app.agents.signal_extraction.deterministic import extract_job_signals
 from app.domain.job_signals import JobSignals
 from app.domain.models import WorkflowInput
 from app.domain.workflow_run import WorkflowPlan

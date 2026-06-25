@@ -1,7 +1,6 @@
 from datetime import datetime, timezone
 from typing import Protocol, runtime_checkable
 
-from app.runtime.config import RuntimeConfig
 from app.runtime.policies import OutputValidator, RetryPolicy
 from app.runtime.result import (
     AgentExecutionResult,
@@ -9,6 +8,7 @@ from app.runtime.result import (
     InputT,
     OutputT,
 )
+from app.runtime.runtime_config import RuntimeConfig
 
 
 class AgentOperation(Protocol[InputT, OutputT]):
@@ -25,7 +25,8 @@ class AgentRuntime(Protocol):
         self,
         operation: AgentOperation[InputT, OutputT],
         agent_input: InputT,
-        config: RuntimeConfig,
+        runtime_config: RuntimeConfig,
+        agent_name: str,
         *,
         validator: OutputValidator[OutputT] | None = None,
         fallback: AgentOperation[InputT, OutputT] | None = None,
@@ -40,12 +41,14 @@ class BoundedAgentRuntime:
         self,
         operation: AgentOperation[InputT, OutputT],
         agent_input: InputT,
-        config: RuntimeConfig,
+        runtime_config: RuntimeConfig,
+        agent_name: str,
         *,
         validator: OutputValidator[OutputT] | None = None,
         fallback: AgentOperation[InputT, OutputT] | None = None,
         retry_policy: RetryPolicy | None = None,
     ) -> AgentExecutionResult[OutputT]:
+        agent_config = runtime_config.agent_config(agent_name)
         started_at = datetime.now(timezone.utc)
         policy = retry_policy or RetryPolicy()
         attempts = 0
@@ -53,7 +56,7 @@ class BoundedAgentRuntime:
         last_error: str | None = None
         status = ExecutionStatus.FAILED
 
-        while attempts < config.max_attempts:
+        while attempts < agent_config.max_attempts:
             attempts += 1
             try:
                 candidate = operation(agent_input)
@@ -71,7 +74,8 @@ class BoundedAgentRuntime:
 
         if status == ExecutionStatus.SUCCESS:
             return self._result(
-                config,
+                runtime_config,
+                agent_name,
                 started_at,
                 status=status,
                 attempts=attempts,
@@ -85,7 +89,8 @@ class BoundedAgentRuntime:
                 pass
             else:
                 return self._result(
-                    config,
+                    runtime_config,
+                    agent_name,
                     started_at,
                     status=ExecutionStatus.SUCCESS,
                     attempts=attempts,
@@ -95,7 +100,8 @@ class BoundedAgentRuntime:
                 )
 
         return self._result(
-            config,
+            runtime_config,
+            agent_name,
             started_at,
             status=status,
             attempts=attempts,
@@ -104,7 +110,8 @@ class BoundedAgentRuntime:
 
     @staticmethod
     def _result(
-        config: RuntimeConfig,
+        runtime_config: RuntimeConfig,
+        agent_name: str,
         started_at: datetime,
         *,
         status: ExecutionStatus,
@@ -113,9 +120,12 @@ class BoundedAgentRuntime:
         error: str | None = None,
         used_fallback: bool = False,
     ) -> AgentExecutionResult[OutputT]:
+        agent_config = runtime_config.agent_config(agent_name)
+        prompt_trace: dict[str, str] = {}
+        if agent_config.prompt is not None:
+            prompt_trace = {"prompt_hash": agent_config.prompt.content_hash}
         return AgentExecutionResult[OutputT](
-            agent_name=config.agent_name,
-            config_version=config.config_version,
+            agent_name=agent_name,
             status=status,
             attempts=attempts,
             started_at=started_at,
@@ -123,4 +133,6 @@ class BoundedAgentRuntime:
             output=output,
             error=error,
             used_fallback=used_fallback,
+            **runtime_config.execution_snapshot(),
+            **prompt_trace,
         )

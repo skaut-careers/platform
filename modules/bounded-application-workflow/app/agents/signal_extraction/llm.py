@@ -1,5 +1,3 @@
-from functools import lru_cache
-from pathlib import Path
 from typing import Any
 
 from app.agents.contracts import (
@@ -17,9 +15,8 @@ from app.runtime import (
     PydanticOutputValidator,
     RetryPolicy,
 )
-from app.runtime.signal_extractor_config import SignalExtractorRuntimeConfig
-
-_PROMPTS_DIR = Path(__file__).resolve().parent / "prompts"
+from app.runtime.agent_identity import agent_name_for
+from app.runtime.runtime_config import RuntimeConfig
 
 
 class SignalExtractionError(Exception):
@@ -28,16 +25,6 @@ class SignalExtractionError(Exception):
 
 class SignalExtractionLLMError(SignalExtractionError):
     """The LLM provider failed during signal extraction."""
-
-
-@lru_cache
-def load_system_prompt(config_version: str) -> str:
-    prompt_path = _PROMPTS_DIR / f"signal_extraction_{config_version}.txt"
-    if not prompt_path.is_file():
-        raise FileNotFoundError(
-            f"No signal extraction prompt for config version '{config_version}'"
-        )
-    return prompt_path.read_text(encoding="utf-8").strip()
 
 
 def job_signals_schema() -> dict[str, Any]:
@@ -67,22 +54,28 @@ class LLMSignalExtractor:
         self,
         *,
         client: LLMClient,
-        config: SignalExtractorRuntimeConfig | None = None,
+        runtime_config: RuntimeConfig | None = None,
         runtime: AgentRuntime | None = None,
         fallback: SignalExtractor | None = None,
     ) -> None:
-        from app.agents.default import DefaultSignalExtractor
+        from app.agents.signal_extraction import DefaultSignalExtractor
 
         self._client = client
-        self._config = config or SignalExtractorRuntimeConfig()
+        agent_type = type(self)
+        self._agent_name = agent_name_for(agent_type)
+        self._runtime_config = runtime_config or RuntimeConfig.build()
+        self._agent_config = self._runtime_config.agent_for(agent_type)
         self._runtime = runtime or BoundedAgentRuntime()
         self._fallback = fallback or DefaultSignalExtractor()
+        if self._agent_config.prompt is None:
+            raise SignalExtractionError("LLM signal extraction requires a resolved prompt")
 
     def run(self, agent_input: SignalExtractorInput) -> SignalExtractorOutput:
         result = self._runtime.execute(
             self._extract_with_llm,
             agent_input,
-            self._config,
+            self._runtime_config,
+            self._agent_name,
             validator=PydanticOutputValidator(SignalExtractorOutput),
             fallback=self._fallback.run,
             retry_policy=RetryPolicy(
@@ -99,7 +92,7 @@ class LLMSignalExtractor:
     ) -> SignalExtractorOutput:
         try:
             payload = self._client.complete_json(
-                system=load_system_prompt(self._config.config_version),
+                system=self._agent_config.prompt.content,
                 user=format_job_for_prompt(agent_input.job_description),
                 response_schema=job_signals_schema(),
             )
@@ -109,3 +102,4 @@ class LLMSignalExtractor:
         return SignalExtractorOutput(
             signals=JobSignals.model_construct(**payload),
         )
+

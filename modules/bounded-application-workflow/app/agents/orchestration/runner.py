@@ -8,7 +8,7 @@ from app.agents.contracts import (
     SignalExtractor,
     SignalExtractorInput,
 )
-from app.agents.decision_rules import review_reason
+from app.agents.decision_rules.rules import review_reason
 from app.domain.models import (
     DecisionType,
     JobDescription,
