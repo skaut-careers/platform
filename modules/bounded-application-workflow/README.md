@@ -24,13 +24,14 @@ Agentic workflow:
 - Orchestrator — state-managed execution of the agent pipeline
 - Human review path — escalated decisions approved or revised (`HumanReviewRecord`)
 - Audit trail — timestamped events and per-agent traces (`WorkflowEvent`, `AgentTrace`)
+- Execution tracing — LLM runtime metadata on each agent invocation (`AgentExecutionResult` on `SignalExtractorOutput.execution`, nested in workflow `AgentTrace`); captures config/prompt hashes, attempt count, retry/fallback outcome, and timing
 
 ## In progress — Milestone 4
 
 - Agent runtime — bounded, observable execution path for LLM-backed agents behind the existing contracts (`AgentRuntime`, `BoundedAgentRuntime`, `RuntimeConfig`, `AgentExecutionResult`), with runtime-level validation, retry, and fallback policies (`PydanticOutputValidator`, `RetryPolicy`)
 - LLM signal extractor — `LLMSignalExtractor` behind the `SignalExtractor` protocol, with versioned prompts and deterministic fallback to `DefaultSignalExtractor`
-- Prompt registry — prompts live in each runtime agent package under `app/agents/{agent}/prompts/{version}.txt`; loaded via `PromptRegistry` / `PromptSpec`; traced on each execution as `prompt_hash`
-- Runtime config registry — versioned bundles in `app/runtime/configs/` (`runtime_{version}.json`) with flat agent settings (no per-agent keys); applied to discovered runtime agents (packages with a `prompts/` folder); loaded via `load_runtime_config`; traced as `config_id`, `config_version`, `config_hash`
+- Prompt registry — prompts live in each runtime agent package under `app/agents/{agent}/prompts/{version}.txt`; loaded via `PromptRegistry` / `PromptSpec`
+- Runtime config registry — versioned bundles in `app/runtime/configs/` (`runtime_{version}.json`) with flat agent settings (no per-agent keys); applied to discovered runtime agents (packages with a `prompts/` folder); loaded via `load_runtime_config`
 - Agent layout — each agent lives in its own package under `app/agents/` (e.g. `signal_extraction/`, `profile_matching/`); deterministic logic lives in a sibling module (e.g. `deterministic.py`) with a thin `Default*` adapter in `__init__.py`; LLM-backed agents add `llm.py` (e.g. `LLMSignalExtractor`), versioned prompts under `prompts/`, and run through `BoundedAgentRuntime`; `wiring.py` selects deterministic vs. LLM wiring from the runtime config
 
 ## Run locally
