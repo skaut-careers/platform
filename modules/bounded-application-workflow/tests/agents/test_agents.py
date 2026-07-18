@@ -18,17 +18,18 @@ from app.domain.models import (
     UserProfile,
 )
 from app.domain.workflow_state import WorkflowState
-from app.llm.client import LLMClientError
+from pydantic_ai.exceptions import ModelHTTPError
 from app.runtime import ExecutionStatus, RuntimeConfig, default_prompt_registry
 from tests.conftest import (
     SIGNAL_EXTRACTION_FIXTURES,
     SIGNAL_FIELDS,
+    RecordingSignalModel,
     escalating_workflow_input,
     load_signal_fixture,
     load_fixture,
-    mock_llm_client,
     sample_signal_extractor_input,
     signals_payload,
+    signals_test_model,
     workflow_input,
 )
 
@@ -166,9 +167,7 @@ def test_prompt_and_schema():
 
 def test_llm_extractor_success():
     output = LLMSignalExtractor(
-        client=mock_llm_client(
-            signals_payload(required_skills=["Python"], preferred_skills=["FastAPI"])
-        ),
+        model=signals_test_model(required_skills=["Python"], preferred_skills=["FastAPI"]),
     ).run(sample_signal_extractor_input())
 
     assert output.signals.required_skills == ["Python"]
@@ -177,13 +176,16 @@ def test_llm_extractor_success():
     assert output.execution.prompt_hash
 
 
+def _provider_error() -> ModelHTTPError:
+    return ModelHTTPError(status_code=503, model_name="test", body="down")
+
+
 @pytest.mark.parametrize(
     "responses, used_fallback, attempts, error_prefix",
     [
-        ([LLMClientError("down")], True, 1, "SignalExtractionLLMError"),
-        ([signals_payload(required_skills="Python")], True, 1, "OutputValidationError"),
+        ([_provider_error()], True, 1, "SignalExtractionLLMError"),
         (
-            [LLMClientError("retry"), signals_payload(required_skills=["Python"])],
+            [_provider_error(), signals_payload(required_skills=["Python"])],
             False,
             2,
             None,
@@ -192,7 +194,7 @@ def test_llm_extractor_success():
 )
 def test_llm_extractor_runtime_paths(responses, used_fallback, attempts, error_prefix):
     output = LLMSignalExtractor(
-        client=mock_llm_client(*responses),
+        model=RecordingSignalModel(*responses).as_model(),
         runtime_config=RuntimeConfig.build(max_attempts=attempts),
     ).run(sample_signal_extractor_input())
 

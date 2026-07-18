@@ -17,9 +17,10 @@ from app.agents.signal_extraction import DefaultSignalExtractor, LLMSignalExtrac
 from app.agents.workflow_planning import DefaultWorkflowPlanner
 from app.domain.models import WorkflowInput, WorkflowOutput
 from app.domain.workflow_run import WorkflowRun
-from app.llm.client import LLMClient, OpenAILLMClient
 from app.runtime import BoundedAgentRuntime, RuntimeConfig
 from app.runtime.config_loader import load_runtime_config
+
+from pydantic_ai.models import Model
 
 
 def default_agents() -> tuple[
@@ -47,7 +48,7 @@ def default_agents() -> tuple[
 
 def llm_agents(
     *,
-    client: LLMClient | None = None,
+    model: Model | str | None = None,
     config: RuntimeConfig | None = None,
 ) -> tuple[
     WorkflowPlanner,
@@ -57,13 +58,11 @@ def llm_agents(
     HumanReviewGate,
     WorkflowOrchestrator,
 ]:
-    """Wire the workflow with an LLM-backed signal extractor and deterministic fallback."""
+    """Wire the workflow with a Pydantic AI signal extractor and deterministic fallback."""
     config = config or load_runtime_config()
     planner = DefaultWorkflowPlanner()
     extractor = LLMSignalExtractor(
-        client=client or OpenAILLMClient(
-            model=config.agent_for(LLMSignalExtractor).model
-        ),
+        model=model,
         runtime_config=config,
         runtime=BoundedAgentRuntime(),
         fallback=DefaultSignalExtractor(),
@@ -85,7 +84,7 @@ def create_agents(
     *,
     signal_extractor: str | None = None,
     runtime_config: RuntimeConfig | None = None,
-    client: LLMClient | None = None,
+    model: Model | str | None = None,
 ) -> tuple[
     WorkflowPlanner,
     SignalExtractor,
@@ -104,7 +103,7 @@ def create_agents(
             "expected 'deterministic' or 'llm'"
         )
     if mode == "llm":
-        return llm_agents(client=client, config=config)
+        return llm_agents(model=model, config=config)
     return default_agents()
 
 

@@ -1,10 +1,14 @@
-from unittest.mock import MagicMock
-
 from fastapi.testclient import TestClient
+from pydantic_ai.exceptions import ModelHTTPError
 
 from app.agents.wiring import create_agents
 from app.api.main import create_app
-from tests.conftest import load_fixture, load_signal_fixture, mock_llm_client, runtime_config
+from tests.conftest import (
+    RecordingSignalModel,
+    load_fixture,
+    load_signal_fixture,
+    runtime_config,
+)
 
 
 def test_health(api_client):
@@ -36,10 +40,12 @@ def test_run_workflow_with_llm_orchestrator():
     skill_fixture = load_signal_fixture("skill_extraction.json")
     strong_fixture = load_fixture("strong_match.json")
 
-    mock_client = mock_llm_client(skill_fixture["expected_signals"])
+    recording_model = RecordingSignalModel(skill_fixture["expected_signals"])
     api = TestClient(
         create_app(
-            orchestrator=create_agents(client=mock_client, runtime_config=llm_config)[-1]
+            orchestrator=create_agents(
+                model=recording_model.as_model(), runtime_config=llm_config
+            )[-1]
         )
     )
     response = api.post(
@@ -51,18 +57,19 @@ def test_run_workflow_with_llm_orchestrator():
     )
 
     assert response.status_code == 200
-    assert mock_client.complete_json.call_count == 1
+    assert recording_model.call_count == 1
     assert (
         response.json()["job_signals"]["required_skills"]
         == skill_fixture["expected_signals"]["required_skills"]
     )
 
-    failing_client = MagicMock()
-    failing_client.complete_json.side_effect = RuntimeError("offline")
+    failing_model = RecordingSignalModel(
+        ModelHTTPError(status_code=503, model_name="test", body="offline")
+    )
     api = TestClient(
         create_app(
             orchestrator=create_agents(
-                client=failing_client, runtime_config=llm_config
+                model=failing_model.as_model(), runtime_config=llm_config
             )[-1]
         )
     )

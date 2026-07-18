@@ -1,10 +1,19 @@
 import json
 from pathlib import Path
 from typing import Any
-from unittest.mock import MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
+from pydantic_ai.messages import (
+    ModelMessage,
+    ModelResponse,
+    SystemPromptPart,
+    ToolCallPart,
+    UserPromptPart,
+)
+from pydantic_ai.models import Model
+from pydantic_ai.models.function import AgentInfo, FunctionModel
+from pydantic_ai.models.test import TestModel
 
 from app.agents.contracts import SignalExtractorInput
 from app.domain.job_signals import SIGNAL_FIELDS
@@ -94,15 +103,48 @@ def sample_signal_extractor_input() -> SignalExtractorInput:
     )
 
 
-def mock_llm_client(*responses: dict[str, Any] | BaseException) -> MagicMock:
-    client = MagicMock()
-    if not responses:
-        return client
-    if len(responses) == 1 and not isinstance(responses[0], BaseException):
-        client.complete_json.return_value = responses[0]
-    else:
-        client.complete_json.side_effect = list(responses)
-    return client
+def signals_test_model(**overrides: list[str]) -> TestModel:
+    """A Pydantic AI TestModel that returns a fixed JobSignals payload."""
+    return TestModel(custom_output_args=signals_payload(**overrides))
+
+
+class RecordingSignalModel:
+    """Scripted FunctionModel that records prompts and replays signal responses.
+
+    Each positional response is either a ``JobSignals`` payload dict (returned as
+    the agent's structured output) or an exception instance (raised to simulate a
+    provider failure). Responses are consumed by call index; the final response is
+    reused once exhausted, so a single payload is returned for every call.
+    """
+
+    def __init__(self, *responses: dict[str, Any] | BaseException) -> None:
+        self._responses: list[dict[str, Any] | BaseException] = list(responses) or [
+            signals_payload()
+        ]
+        self.system_prompts: list[str] = []
+        self.user_prompts: list[str] = []
+        self.call_count = 0
+
+    def as_model(self) -> Model:
+        return FunctionModel(self._respond)
+
+    def _respond(
+        self, messages: list[ModelMessage], info: AgentInfo
+    ) -> ModelResponse:
+        for message in messages:
+            for part in message.parts:
+                if isinstance(part, SystemPromptPart):
+                    self.system_prompts.append(part.content)
+                elif isinstance(part, UserPromptPart):
+                    self.user_prompts.append(part.content)
+
+        response = self._responses[min(self.call_count, len(self._responses) - 1)]
+        self.call_count += 1
+        if isinstance(response, BaseException):
+            raise response
+
+        output_tool = info.output_tools[0].name
+        return ModelResponse(parts=[ToolCallPart(output_tool, dict(response))])
 
 
 def runtime_config(version: str | None = None, **env: str):

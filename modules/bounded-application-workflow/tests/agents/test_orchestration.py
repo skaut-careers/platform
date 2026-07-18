@@ -23,9 +23,8 @@ from tests.conftest import (
     escalating_workflow_input,
     expected_decision,
     load_fixture,
-    mock_llm_client,
     runtime_config,
-    signals_payload,
+    signals_test_model,
     workflow_input,
 )
 
@@ -87,7 +86,7 @@ def test_severe_seniority_gap_skips():
 def test_create_agents_selects_extractor(runtime_version, extractor_name):
     config = runtime_config(version=runtime_version)
     assert (
-        create_agents(client=mock_llm_client(), runtime_config=config)[-1]
+        create_agents(model=signals_test_model(), runtime_config=config)[-1]
         ._extractor.__class__.__name__
         == extractor_name
     )
@@ -187,11 +186,9 @@ def test_llm_run_trace_includes_execution_metadata():
         workflow,
         plan=create_workflow_plan(workflow),
         extractor=LLMSignalExtractor(
-            client=mock_llm_client(
-                signals_payload(
-                    required_skills=["Python", "LLM applications"],
-                    preferred_skills=["research background"],
-                )
+            model=signals_test_model(
+                required_skills=["Python", "LLM applications"],
+                preferred_skills=["research background"],
             ),
             runtime_config=RuntimeConfig.build(),
         ),

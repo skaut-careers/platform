@@ -38,7 +38,7 @@ def _assert_llm_backed(run) -> None:
 
 @pytest.mark.llm
 def test_llm_signal_extractor_v4_against_golden_dataset(openai_api_key):
-    run = run_evaluation(runtime_version="v4")
+    run = run_evaluation(runtime_version="v4", progress=True)
     report = format_report(run)
     print(f"\n{report}")
     _assert_llm_backed(run)
@@ -47,8 +47,8 @@ def test_llm_signal_extractor_v4_against_golden_dataset(openai_api_key):
 
 @pytest.mark.llm
 def test_llm_prompt_v3_vs_v2_comparison(openai_api_key):
-    baseline = run_evaluation(label="prompt_v2", runtime_version="v3")
-    candidate = run_evaluation(label="prompt_v3", runtime_version="v4")
+    baseline = run_evaluation(label="prompt_v2", runtime_version="v3", progress=True)
+    candidate = run_evaluation(label="prompt_v3", runtime_version="v4", progress=True)
     comparison = compare_runs(baseline, candidate)
     report = format_comparison_report(baseline, candidate, comparison)
     print(f"\n{report}")

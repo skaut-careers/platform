@@ -17,7 +17,7 @@ from app.runtime.prompt_registry import (
     default_prompt_registry,
 )
 from tests.conftest import (
-    mock_llm_client,
+    RecordingSignalModel,
     register_runtime_bundle,
     runtime_config,
     sample_signal_extractor_input,
@@ -155,9 +155,9 @@ def test_execution_links_config_and_prompt_metadata():
         prompt_version="v9",
         prompt_content="registry prompt v9",
     )
-    client = mock_llm_client(signals_payload(required_skills=["Python"]))
+    model = RecordingSignalModel(signals_payload(required_skills=["Python"]))
     output = LLMSignalExtractor(
-        client=client,
+        model=model.as_model(),
         runtime_config=load_runtime_config(
             env={"RUNTIME_CONFIG_VERSION": "bundle_v9"},
             config_registry=config_registry,
@@ -168,25 +168,23 @@ def test_execution_links_config_and_prompt_metadata():
     assert output.execution
     assert output.execution.config_version == "bundle_v9"
     assert output.execution.config_hash == compute_config_hash(settings)
-    assert client.complete_json.call_args.kwargs["system"] == "registry prompt v9"
+    assert model.system_prompts[-1] == "registry prompt v9"
 
 
 def test_runtime_version_switch_changes_prompt_and_settings():
-    client = mock_llm_client(signals_payload(required_skills=["Python"]))
-
+    model_v2 = RecordingSignalModel(signals_payload(required_skills=["Python"]))
     LLMSignalExtractor(
-        client=client,
+        model=model_v2.as_model(),
         runtime_config=runtime_config("v2"),
     ).run(sample_signal_extractor_input())
-    prompt_from_runtime_v2 = client.complete_json.call_args.kwargs["system"]
+    prompt_from_runtime_v2 = model_v2.system_prompts[-1]
 
-    client.reset_mock()
-    client.complete_json.return_value = signals_payload(required_skills=["Python"])
+    model_v3 = RecordingSignalModel(signals_payload(required_skills=["Python"]))
     output = LLMSignalExtractor(
-        client=client,
+        model=model_v3.as_model(),
         runtime_config=runtime_config("v3"),
     ).run(sample_signal_extractor_input())
-    prompt_from_runtime_v3 = client.complete_json.call_args.kwargs["system"]
+    prompt_from_runtime_v3 = model_v3.system_prompts[-1]
 
     assert "(v2)" not in prompt_from_runtime_v2
     assert "(v2)" in prompt_from_runtime_v3
