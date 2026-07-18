@@ -70,7 +70,7 @@ poetry run pytest -m llm -s    # golden eval (needs OPENAI_API_KEY in .env)
 
 ## CI
 
-GitHub Actions runs `poetry run pytest` on pushes and PRs to `main`, across Python 3.11–3.14.
+GitHub Actions runs `poetry run pytest` on pushes and PRs to `main` (Python 3.14).
 
 Workflow: [`.github/workflows/bounded-application-workflow.yml`](../../.github/workflows/bounded-application-workflow.yml)
 
