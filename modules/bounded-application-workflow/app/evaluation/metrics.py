@@ -28,6 +28,7 @@ class CaseResult(BaseModel):
     field_metrics: list[FieldMetrics] = Field(default_factory=list)
     macro_f1: float = Field(ge=0.0, le=1.0)
     exact_match: bool
+    used_fallback: bool = False
 
 
 class AggregateMetrics(BaseModel):
@@ -35,6 +36,7 @@ class AggregateMetrics(BaseModel):
     exact_match_rate: float = Field(ge=0.0, le=1.0)
     macro_f1: float = Field(ge=0.0, le=1.0)
     field_macro_f1: dict[str, float] = Field(default_factory=dict)
+    fallback_count: int = 0
 
 
 def _field_metrics(
@@ -74,7 +76,12 @@ def _field_metrics(
     )
 
 
-def score_case(case: EvalCase, predicted: JobSignals) -> CaseResult:
+def score_case(
+    case: EvalCase,
+    predicted: JobSignals,
+    *,
+    used_fallback: bool = False,
+) -> CaseResult:
     field_metrics = [
         _field_metrics(
             field,
@@ -92,6 +99,7 @@ def score_case(case: EvalCase, predicted: JobSignals) -> CaseResult:
         field_metrics=field_metrics,
         macro_f1=macro_f1,
         exact_match=all(metric.exact_match for metric in field_metrics),
+        used_fallback=used_fallback,
     )
 
 
@@ -116,4 +124,5 @@ def aggregate_metrics(case_results: list[CaseResult]) -> AggregateMetrics:
         / case_count,
         macro_f1=sum(result.macro_f1 for result in case_results) / case_count,
         field_macro_f1=field_macro_f1,
+        fallback_count=sum(result.used_fallback for result in case_results),
     )

@@ -57,15 +57,15 @@ def run_evaluation(
     resolved_label = label or runtime_config_label(config)
 
     loaded_cases = cases if cases is not None else load_eval_cases(dataset_dir)
-    case_results = [
-        score_case(
-            case,
-            extractor.run(
-                SignalExtractorInput(job_description=case.job_description)
-            ).signals,
+    case_results: list[CaseResult] = []
+    for case in loaded_cases:
+        output = extractor.run(
+            SignalExtractorInput(job_description=case.job_description)
         )
-        for case in loaded_cases
-    ]
+        used_fallback = bool(output.execution and output.execution.used_fallback)
+        case_results.append(
+            score_case(case, output.signals, used_fallback=used_fallback)
+        )
 
     return EvalRun(
         label=resolved_label,

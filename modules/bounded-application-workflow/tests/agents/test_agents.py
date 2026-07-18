@@ -157,7 +157,11 @@ def test_workflow_plan_stages(workflow, includes_review):
 def test_prompt_and_schema():
     prompt = default_prompt_registry().get_for(LLMSignalExtractor, "v1")
     assert "required_skills" in prompt.content
-    assert set(job_signals_schema()["properties"]) == set(signals_payload())
+    schema = job_signals_schema()
+    properties = set(schema["properties"])
+    assert properties == set(signals_payload())
+    assert schema["additionalProperties"] is False
+    assert set(schema["required"]) == properties
 
 
 def test_llm_extractor_success():

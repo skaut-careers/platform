@@ -1,0 +1,6 @@
+{
+  "mode": "llm",
+  "model": "gpt-5-mini",
+  "max_attempts": 3,
+  "prompt_version": "v3"
+}

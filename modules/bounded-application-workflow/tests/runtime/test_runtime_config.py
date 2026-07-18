@@ -29,7 +29,7 @@ _AGENT = agent_name_for(LLMSignalExtractor)
 
 def test_default_config_registry():
     registry = default_config_registry()
-    assert registry.list_versions() == ["v1", "v2", "v3"]
+    assert registry.list_versions() == ["v1", "v2", "v3", "v4"]
 
     spec = registry.get("v2")
     assert spec.settings == {
@@ -43,7 +43,7 @@ def test_default_config_registry():
 
 def test_default_prompt_registry():
     registry = default_prompt_registry()
-    assert registry.list_versions(_AGENT) == ["v1", "v2"]
+    assert registry.list_versions(_AGENT) == ["v1", "v2", "v3"]
 
     spec = registry.get(_AGENT, "v1")
     assert "required_skills" in spec.content
