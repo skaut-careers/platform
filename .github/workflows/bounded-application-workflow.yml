@@ -3,14 +3,8 @@ name: Bounded Application Workflow CI
 on:
   push:
     branches: [main]
-    paths:
-      - "modules/bounded-application-workflow/**"
-      - ".github/workflows/bounded-application-workflow.yml"
   pull_request:
     branches: [main]
-    paths:
-      - "modules/bounded-application-workflow/**"
-      - ".github/workflows/bounded-application-workflow.yml"
 
 permissions:
   contents: read
