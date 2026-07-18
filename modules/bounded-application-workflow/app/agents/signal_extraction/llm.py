@@ -15,7 +15,7 @@ from app.agents.contracts import (
     SignalExtractorInput,
     SignalExtractorOutput,
 )
-from app.domain.job_signals import JobSignals
+from app.domain.job_signals import SIGNAL_FIELDS, JobSignals
 from app.domain.models import JobDescription
 from app.local_env import get_local_env
 from app.runtime import (
@@ -46,6 +46,8 @@ class SignalExtractionLLMError(SignalExtractionError):
 def job_signals_schema() -> dict[str, Any]:
     schema = JobSignals.model_json_schema()
     schema["additionalProperties"] = False
+    # OpenAI strict structured output requires every property in `required`.
+    schema["required"] = list(SIGNAL_FIELDS)
     return schema
 
 

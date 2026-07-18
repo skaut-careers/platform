@@ -32,6 +32,7 @@ def format_report(run: EvalRun) -> str:
             "Aggregate",
             "---------",
             f"Cases:              {run.aggregate.case_count}",
+            f"Fallback:           {run.aggregate.fallback_count}/{run.aggregate.case_count}",
             f"Exact match rate:   {_pct(run.aggregate.exact_match_rate)}",
             f"Macro F1:           {_pct(run.aggregate.macro_f1)}",
             "",
@@ -47,8 +48,10 @@ def format_report(run: EvalRun) -> str:
     lines.extend(["", "Cases", "-----"])
     for result in run.case_results:
         status = "PASS" if result.exact_match else "FAIL"
+        fallback = " fallback" if result.used_fallback else ""
         lines.append(
-            f"  [{status}] {result.case_id:<24} macro_f1={_pct(result.macro_f1)}"
+            f"  [{status}] {result.case_id:<24} "
+            f"macro_f1={_pct(result.macro_f1)}{fallback}"
         )
         if not result.exact_match:
             for metric in result.field_metrics:

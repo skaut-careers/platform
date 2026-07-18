@@ -79,12 +79,11 @@ def run_evaluation(
                 f"{index - 1}/{total} running {case.id}...",
                 flush=True,
             )
-        result = score_case(
-            case,
-            extractor.run(
-                SignalExtractorInput(job_description=case.job_description)
-            ).signals,
+        output = extractor.run(
+            SignalExtractorInput(job_description=case.job_description)
         )
+        used_fallback = bool(output.execution and output.execution.used_fallback)
+        result = score_case(case, output.signals, used_fallback=used_fallback)
         case_results.append(result)
         if progress:
             print(
