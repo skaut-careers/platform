@@ -1,52 +1,13 @@
 from app.agents.contracts import (
     DecisionPolicy,
-    DecisionPolicyInput,
     HumanReviewGate,
-    HumanReviewGateInput,
     ProfileMatcher,
-    ProfileMatcherInput,
     SignalExtractor,
-    SignalExtractorInput,
 )
-from app.agents.decision_rules.rules import review_reason
-from app.domain.models import (
-    DecisionType,
-    JobDescription,
-    UserProfile,
-    WorkflowInput,
-    WorkflowOutput,
-)
-from app.domain.workflow_run import WorkflowEventType, WorkflowPlan, WorkflowRun
-from app.domain.workflow_state import WorkflowState
-
-_NEXT_STEPS: dict[DecisionType, list[str]] = {
-    DecisionType.PREPARE: [
-        "Tailor your CV to highlight matched skills and role alignment.",
-        "Draft a concise cover letter addressing any remaining gaps.",
-        "Prepare talking points for interviews based on the job description.",
-    ],
-    DecisionType.QUEUE: [
-        "Save this opportunity for a later review cycle.",
-        "Note what would need to change before actively pursuing it.",
-        "Re-run evaluation if your profile or priorities shift.",
-    ],
-    DecisionType.ESCALATE: [
-        "Review the opportunity manually before investing application time.",
-        "Clarify ambiguous requirements with the recruiter or hiring team.",
-        "Fill in missing profile or job signals, then re-evaluate.",
-    ],
-    DecisionType.SKIP: [
-        "Record why this opportunity is not a fit for future reference.",
-        "Focus search effort on roles that align with your target profile.",
-    ],
-}
-
-
-def _input_summary(profile: UserProfile, job: JobDescription) -> str:
-    company = job.company or "an unspecified company"
-    return (
-        f"{profile.name} is being evaluated for {job.title} at {company}."
-    )
+from app.agents.orchestration.graph import compile_workflow_graph
+from app.agents.orchestration.state import WorkflowGraphState
+from app.domain.models import WorkflowInput, WorkflowOutput
+from app.domain.workflow_run import WorkflowPlan, WorkflowRun
 
 
 def execute_workflow_pipeline(
@@ -58,69 +19,29 @@ def execute_workflow_pipeline(
     policy: DecisionPolicy,
     review_gate: HumanReviewGate | None = None,
 ) -> tuple[WorkflowOutput, WorkflowRun]:
-    profile = workflow_input.user_profile
-    job = workflow_input.job_description
+
     run = WorkflowRun(input=workflow_input, plan=plan)
-    run.record_event(
-        WorkflowEventType.RUN_STARTED,
-        WorkflowState.INTAKE,
-        "Workflow run started.",
+    graph = compile_workflow_graph(
+        extractor=extractor,
+        matcher=matcher,
+        policy=policy,
+        review_gate=review_gate,
+        run=run,
     )
-    run.record_plan()
-
-    run.transition_to(WorkflowState.SIGNAL_EXTRACTION)
-    extractor_output = extractor.run(
-        SignalExtractorInput(job_description=job)
+    initial = WorkflowGraphState.from_workflow_input(
+        workflow_input,
+        plan,
+        workflow_id=run.workflow_id,
     )
-    run.record_agent_trace(type(extractor).__name__, extractor_output)
-    signals = extractor_output.signals
-
-    run.transition_to(WorkflowState.PROFILE_MATCHING)
-    matcher_output = matcher.run(
-        ProfileMatcherInput(
-            user_profile=profile,
-            job_description=job,
-            signals=signals,
-        )
+    result = graph.invoke(
+        initial,
+        {"configurable": {"thread_id": run.workflow_id}},
     )
-    run.record_agent_trace(type(matcher).__name__, matcher_output)
-    match = matcher_output.match
-
-    run.transition_to(WorkflowState.POLICY_EVALUATION)
-    policy_output = policy.run(
-        DecisionPolicyInput(match=match, signals=signals)
+    state = (
+        result
+        if isinstance(result, WorkflowGraphState)
+        else WorkflowGraphState.model_validate(result)
     )
-    run.record_agent_trace(type(policy).__name__, policy_output)
-    decision = policy_output.decision
-
-    if decision.decision == DecisionType.ESCALATE:
-        reason = review_reason(decision)
-        run.transition_to(WorkflowState.HUMAN_REVIEW, reason)
-        run.request_review(reason, decision)
-        if review_gate is not None:
-            gate_output = review_gate.run(
-                HumanReviewGateInput(
-                    decision=decision,
-                    match=match,
-                    signals=signals,
-                    reason=reason,
-                )
-            )
-            run.record_agent_trace(type(review_gate).__name__, gate_output)
-            review = run.resolve_review(
-                final_decision=gate_output.decision,
-                approved=gate_output.approved,
-                reviewer_notes=gate_output.reviewer_notes,
-            )
-            decision = review.final_decision or decision
-
-    run.transition_to(WorkflowState.DECISION)
-
-    output = WorkflowOutput(
-        input_summary=_input_summary(profile, job),
-        decision=decision,
-        job_signals=signals,
-        recommended_next_steps=list(_NEXT_STEPS[decision.decision]),
-    )
-    run.complete(output)
-    return output, run
+    if state.output is None or run.output is None:
+        raise RuntimeError("Workflow graph completed without producing output")
+    return run.output, run
