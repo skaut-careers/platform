@@ -9,8 +9,8 @@ Loaded as a [Pydantic Evals](https://pydantic.dev/docs/ai/evals/) `Dataset` with
 ## Run
 
 ```bash
-poetry run pytest tests/eval/           # dataset load + deterministic parity
-poetry run pytest -m llm -s             # live LLM eval (OPENAI_API_KEY in .env)
+poetry run pytest tests/eval/           # golden dataset (v1 deterministic extractor)
+poetry run pytest -m llm -s             # golden dataset (live LLM; OPENAI_API_KEY in .env)
 ```
 
 Default `poetry run pytest` excludes `@pytest.mark.llm` tests.

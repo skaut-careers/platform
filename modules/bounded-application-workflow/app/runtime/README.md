@@ -1,6 +1,6 @@
 # Agent Runtime
 
-Reusable execution path for agents behind the workflow's `Protocol` contracts. Wraps a single agent operation in a bounded, observable lifecycle so LLM-backed agents stay as safe to run as deterministic ones. The orchestrator and workflow state machine are unaware of it.
+Reusable execution path for agents behind the workflow's `Protocol` contracts. Wraps a single agent operation (including Pydantic AI calls) in a bounded, observable lifecycle so LLM-backed agents stay as safe to run as deterministic ones. The LangGraph orchestrator is unaware of it.
 
 ## Execute
 

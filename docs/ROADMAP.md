@@ -10,25 +10,22 @@ Structured signals from job descriptions and profiles: skills, seniority, produc
 
 ## Milestone 3 — Agentic Workflow Layer — completed
 
-Bounded agentic orchestration: planning/execution separation, agent contracts, explicit workflow states, human review on escalation, auditable transitions.
-
-**Done when:** state machine is explicit; each agent has I/O contract; escalation routes to human review; transitions and outputs are logged and inspectable.
+Bounded orchestration: agent contracts, planning/execution separation, explicit states, human review, auditable transitions.
 
 ## Milestone 4 — LLM-Backed Agent Runtime — completed
 
-LLM implementations behind existing Protocol contracts with typed fallbacks and auditable execution.
+LLM agents behind Protocol contracts with typed fallbacks, versioned prompts/configs, eval set, and auditable execution.
 
-**Focus:** structured extraction · versioned prompts/configs · tool-ready interface · fallback/retry · Pydantic validation · eval set · tracing.
+## Milestone 5 — Framework Migration — completed
 
-**Done when:** ≥1 LLM-backed agent with schema validation, deterministic fallback, versioned configs, eval set, and full traceability.
+Migrate onto LangGraph · Pydantic AI · Logfire · Pydantic Evals behind existing contracts. See [ADR 0001](adr/0001-adopt-modern-agent-stack.md). Output parity preserved.
 
-## Milestone 5 — Framework Migration
-
-Adopt the 2026 agent stack behind the existing contracts and decision policy, replacing the hand-built primitives from M1–M4. See [ADR 0001](adr/0001-adopt-modern-agent-stack.md).
-
-**Focus:** Pydantic AI (agents) · LangGraph (orchestration/state + human-in-the-loop) · Pydantic Logfire (observability) · Pydantic Evals (evaluation) · dependency/tooling modernization.
-
-**Done when:** agents run on Pydantic AI with typed outputs and deterministic fallback; orchestration and state run on LangGraph with escalation via interrupts; runs are traced in Logfire; evaluation runs on Pydantic Evals; dependencies are current; output parity with the pre-migration workflow is preserved.
+| Before | After |
+|--------|-------|
+| `BoundedAgentRuntime` (LLM calls) | Pydantic AI (+ thin `BoundedAgentRuntime` for retry / fallback / provenance) |
+| `WorkflowStateMachine` / `WorkflowRun` | LangGraph |
+| `AgentTrace` | Logfire |
+| Custom eval harness | Pydantic Evals |
 
 ## Milestone 6 — User-Facing Demo
 
