@@ -6,7 +6,6 @@ from uuid import uuid4
 from pydantic import BaseModel, Field
 
 from app.agents.orchestration.audit import (
-    AgentTrace,
     HumanReviewRecord,
     WorkflowEvent,
     WorkflowEventType,
@@ -39,7 +38,6 @@ class WorkflowGraphState(BaseModel):
     review: HumanReviewRecord | None = None
 
     events: list[WorkflowEvent] = Field(default_factory=list)
-    traces: list[AgentTrace] = Field(default_factory=list)
     completed_at: datetime | None = None
     plan_report: PlanExecutionReport | None = None
 
