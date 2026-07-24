@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from uuid import uuid4
 
+from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.types import Command
@@ -13,6 +14,10 @@ from app.domain.models import WorkflowInput
 from app.agents.workflow_planning.plan import WorkflowPlan
 
 
+def _thread_config(workflow_id: str) -> RunnableConfig:
+    return {"configurable": {"thread_id": workflow_id}}
+
+
 @dataclass(frozen=True)
 class WorkflowPipelineResult:
     """Invoke handle: compiled graph + thread id, plus interrupt side-channel if paused."""
@@ -23,9 +28,7 @@ class WorkflowPipelineResult:
 
     @property
     def state(self) -> WorkflowGraphState:
-        snapshot = self.graph.get_state(
-            {"configurable": {"thread_id": self.workflow_id}}
-        )
+        snapshot = self.graph.get_state(_thread_config(self.workflow_id))
         return WorkflowGraphState.model_validate(snapshot.values)
 
     @property
@@ -37,8 +40,7 @@ def _result_from_graph(
     compiled: CompiledStateGraph,
     workflow_id: str,
 ) -> WorkflowPipelineResult:
-    config = {"configurable": {"thread_id": workflow_id}}
-    snapshot = compiled.get_state(config)
+    snapshot = compiled.get_state(_thread_config(workflow_id))
     interrupts = list(snapshot.interrupts)
     if interrupts:
         return WorkflowPipelineResult(
@@ -73,8 +75,7 @@ def execute_workflow_pipeline(
         plan,
         workflow_id=workflow_id,
     )
-    config = {"configurable": {"thread_id": workflow_id}}
-    compiled.invoke(initial, config)
+    compiled.invoke(initial, _thread_config(workflow_id))
     return _result_from_graph(compiled, workflow_id)
 
 
@@ -85,9 +86,8 @@ def resume_workflow_pipeline(
     """Apply an approve/revise Command and continue to the final decision."""
     if not pipeline.is_interrupted:
         raise RuntimeError("Pipeline is not waiting for human review")
-    config = {"configurable": {"thread_id": pipeline.workflow_id}}
     pipeline.graph.invoke(
         Command(resume=resume.model_dump(mode="json")),
-        config,
+        _thread_config(pipeline.workflow_id),
     )
     return _result_from_graph(pipeline.graph, pipeline.workflow_id)

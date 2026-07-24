@@ -33,7 +33,7 @@ Agent runtime:
 - Agent layout — each agent lives in its own package under `app/agents/` (e.g. `signal_extraction/`, `profile_matching/`); deterministic logic lives in a sibling module (e.g. `deterministic.py`) with a thin `Default*` adapter in `__init__.py`; LLM-backed agents add `llm.py` (e.g. `LLMSignalExtractor`), versioned prompts under `prompts/`, and run through `BoundedAgentRuntime`; `wiring.py` selects deterministic vs. LLM wiring from the runtime config
 - Execution provenance — LLM runtime metadata on each agent invocation (`AgentExecutionResult` on `SignalExtractorOutput.execution`, nested in workflow `AgentTrace`); captures config/prompt hashes, attempt count, retry/fallback outcome, and timing
 - Observability — Logfire instruments FastAPI, Pydantic AI, and LangGraph (via LangSmith OTel); see [Observability](#observability)
-- Signal extractor evaluation — golden dataset in `eval/dataset/` (LLM eval), see [`eval/README.md`](eval/README.md)
+- Signal extractor evaluation — golden dataset in `eval/dataset/` scored via Pydantic Evals (precision/recall/F1); `pytest -m llm` runs experiments (visible in Logfire when `LOGFIRE_TOKEN` is set); see [`eval/README.md`](eval/README.md)
 
 ## Run locally
 
@@ -74,6 +74,7 @@ Pydantic Logfire (`app/observability.py`) adds full-stack OpenTelemetry tracing 
 | HTTP request → graph → agent → model spans; tokens, cost, latency, model settings | Logfire Live view (with `LOGFIRE_TOKEN`) or local console / any OTel backend |
 | Plan vs execution, lifecycle events, HITL approve/revise, structured agent outputs | Thin audit on checkpointed `WorkflowGraphState` (`events`, `traces`, `human_review`) via `result.run` / `graph.get_state` |
 | Config/prompt hashes, attempts, fallback | `AgentExecutionResult` nested on LLM agent output / `AgentTrace` |
+| Golden-dataset precision / recall / F1 experiments | Pydantic Evals (`app/evaluation/`) → Logfire Evals UI when `LOGFIRE_TOKEN` is set |
 
 `logfire.configure(send_to_logfire="if-token-present")` runs on app import. FastAPI is instrumented in `create_app()`; Pydantic AI + HTTPX are instrumented process-wide; LangGraph spans use LangSmith's OTel export (`LANGSMITH_OTEL_*`, set before `langgraph` import).
 
@@ -84,7 +85,7 @@ Pydantic Logfire (`app/observability.py`) adds full-stack OpenTelemetry tracing 
 
 ## CI
 
-GitHub Actions runs `poetry run pytest` on pushes and PRs to `main` (Python 3.14).
+GitHub Actions runs `poetry run pyright` then `poetry run pytest` on pushes and PRs to `main` (Python 3.14).
 
 Workflow: [`.github/workflows/bounded-application-workflow.yml`](../../.github/workflows/bounded-application-workflow.yml)
 
