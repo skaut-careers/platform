@@ -6,7 +6,7 @@ Evaluates whether a professional opportunity is worth pursuing from structured s
 
 Supports deliberate, high-quality career decisions — not application volume or autonomous actions. First executable Skaut Careers module.
 
-**Phase:** Milestones 1–4 complete — LLM-Backed Agent Runtime delivered. See [ARCHITECTURE.md](./ARCHITECTURE.md) for workflow states and agent boundaries.
+**Phase:** Milestones 1–5 complete.
 
 ---
 
@@ -32,15 +32,7 @@ The module **evaluates** (prepare, queue, skip, escalate). It does **not** apply
 
 ## Milestone 3 — Agentic Workflow Layer (delivered)
 
-Evolved the engine into bounded agentic orchestration with explicit states, specialized agents, and human oversight.
-
-**Requirements (all met):**
-
-- planning and execution are separate stages
-- each agent has a defined input/output contract
-- workflow state is explicit and persisted
-- escalation routes to human review before final decision
-- state transitions and agent outputs are logged and inspectable
+Bounded orchestration: planning/execution separation, typed agent contracts, explicit states, human review on escalation, auditable transitions.
 
 **Non-goals:** unconstrained multi-agent autonomy; LLM overrides without policy bounds.
 
@@ -48,17 +40,17 @@ Evolved the engine into bounded agentic orchestration with explicit states, spec
 
 ## Milestone 4 — LLM-Backed Agent Runtime (delivered)
 
-Added a shared runtime so agents can be LLM-backed behind the same contracts, without changing the orchestrator or state machine.
-
-**Requirements (all met):**
-
-- at least one LLM-backed agent behind an existing `Protocol` contract
-- schema-validated outputs with deterministic fallback on failure
-- bounded, retryable execution with contained errors
-- versioned prompts and runtime configs, selected per run
-- execution tracing and an evaluation dataset for measurable quality
+LLM agents behind the same `Protocol` contracts: schema-validated outputs, deterministic fallback, bounded retry, versioned prompts/configs, execution provenance, evaluation dataset.
 
 **Non-goals:** autonomous actions; unbounded retries; LLM output accepted without validation or fallback.
+
+---
+
+## Milestone 5 — Framework Migration (delivered)
+
+Migrated onto LangGraph · Pydantic AI · Logfire · Pydantic Evals per [ADR 0001](./adr/0001-adopt-modern-agent-stack.md). Contracts and decision policy unchanged; **output parity** preserved.
+
+**Non-goals:** changing decision policy; user-facing demo (Milestone 6).
 
 ---
 
@@ -108,7 +100,7 @@ Deterministic and simple. Risk-based escalation via workflow plan and decision r
 
 ## Technical Scope
 
-Python · FastAPI · deterministic and LLM-backed agents behind typed contracts · bounded agentic orchestration · runtime validation/fallback · versioned prompts and configs · modular domain layer · tests · CI.
+Python · FastAPI · LangGraph · Pydantic AI · Logfire · Pydantic Evals · typed agent contracts · bounded runtime (retry / fallback / provenance) · versioned prompts and configs · modular domain layer · tests · CI.
 
 Implementation details: [module README](../modules/bounded-application-workflow/README.md).
 
@@ -118,9 +110,11 @@ Implementation details: [module README](../modules/bounded-application-workflow/
 
 **Milestones 1–2:** core evaluation engine shipped.
 
-**Milestone 3:** delivered — explicit logged states · planning/execution separation · human review on escalation · inspectable transitions · foundation for user-facing demo (Milestone 5).
+**Milestone 3:** explicit states · planning/execution separation · human review · inspectable transitions.
 
-**Milestone 4:** delivered — ≥1 LLM-backed agent behind existing contracts · schema validation · deterministic fallback · versioned prompts/configs · execution tracing · evaluation dataset.
+**Milestone 4:** ≥1 LLM-backed agent · schema validation · deterministic fallback · versioned prompts/configs · provenance · eval dataset.
+
+**Milestone 5:** LangGraph orchestration · Pydantic AI agents · Logfire traces · Pydantic Evals · output parity · see [ARCHITECTURE](./ARCHITECTURE.md).
 
 ---
 

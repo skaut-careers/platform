@@ -10,7 +10,7 @@ Skaut Careers is a modular career platform for deliberate professional decisions
 
 **[Bounded Application Workflow](modules/bounded-application-workflow/)** — evaluates job opportunities against a user profile and returns a bounded decision (`prepare`, `queue`, `skip`, `escalate`). Human-controlled; no autonomous applications.
 
-**Phase:** Milestones 1–4 complete — LLM-Backed Agent Runtime delivered.
+**Phase:** Milestones 1–5 complete — Framework Migration delivered.
 
 ## Principles
 
@@ -21,8 +21,9 @@ Bounded autonomy · human-in-the-loop · policy-gated actions · reviewable runt
 | Doc | Contents |
 | --- | -------- |
 | [PRD](docs/PRD.md) | Problem, users, I/O contract, decision policy |
-| [ARCHITECTURE](docs/ARCHITECTURE.md) | Workflow states, agent boundaries, principles |
-| [ROADMAP](docs/ROADMAP.md) | Milestones 1–12 |
+| [ARCHITECTURE](docs/ARCHITECTURE.md) | Current stack, orchestration, agents, observability |
+| [ROADMAP](docs/ROADMAP.md) | Milestones |
+| [ADR 0001](docs/adr/0001-adopt-modern-agent-stack.md) | Stack decision (LangGraph · Pydantic AI · Logfire · Evals) |
 
 ## Repository
 

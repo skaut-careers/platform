@@ -1,16 +1,10 @@
 # Architecture — Bounded Application Workflow
 
-Specialized bounded agents behind typed contracts. Priorities: bounded execution · explicit state transitions · observable decisions · human oversight.
+Bounded agents behind typed contracts. Priorities: bounded execution · explicit state transitions · observable decisions · human oversight.
 
-<p align="center">
-  <img src="./images/runtime.png" width="500">
-</p>
+Stack: **LangGraph** (orchestration) · **Pydantic AI** (agents) · **Logfire** (observability) · **Pydantic Evals** (evaluation). 
 
----
-
-## Workflow — Milestone 3 (completed)
-
-M1–2 delivered the evaluation engine and signal extraction; M3 adds bounded orchestration on top. Each state has one responsible agent with a typed input/output contract, planning is separated from execution, and transitions are explicit and logged.
+## Orchestration
 
 ```mermaid
 stateDiagram-v2
@@ -24,19 +18,15 @@ stateDiagram-v2
     decision --> [*]
 ```
 
-Pipeline: `signal_extraction` → `JobSignals` → `profile_matching` → `ProfileMatchResult` → `policy_evaluation` → `WorkflowDecision`, escalating to `human_review` before the final `decision`.
+LangGraph `StateGraph` nodes: `signal_extraction` → `JobSignals` → `profile_matching` → `ProfileMatchResult` → `policy_evaluation` → `WorkflowDecision`. Escalation via `interrupt`; approve/revise via `Command`. Checkpointed `WorkflowGraphState` holds data plus thin audit (`events`, `human_review`); plan vs execution via `WorkflowPlan` / `PlanExecutionReport`.
 
-Every run is reconstructable from `WorkflowRun` (input, plan, events, traces, review, output) via `WorkflowPlan`/`PlanExecutionReport`, `WorkflowEvent`, `AgentTrace`, and `HumanReviewRecord`.
+## Agents
 
----
-
-## Agent Runtime — Milestone 4 (completed)
-
-Shared execution path for LLM-backed agents behind the same `Protocol` contracts — the orchestrator and state machine stay unchanged. An agent's LLM call is wrapped by `BoundedAgentRuntime`, which runs it through a bounded, observable lifecycle and returns an `AgentExecutionResult`; the runtime itself never raises — every outcome, success or failure, comes back as a result. A fallback lets a failing agent degrade to a deterministic result. How a `FAILED` result is handled is the caller's choice: `LLMSignalExtractor` unwraps it, so a run breaks only if the LLM and its deterministic fallback both fail.
+Each stage is a typed `Protocol`. LLM agents (e.g. `LLMSignalExtractor`) use Pydantic AI for structured outputs; `BoundedAgentRuntime` bounds attempts, deterministic fallback, and `AgentExecutionResult` provenance. Prompts and runtime settings are versioned (`RUNTIME_CONFIG_VERSION`).
 
 ```mermaid
 flowchart TD
-    op["LLM operation"] --> attempts{"attempts left?"}
+    op["Pydantic AI operation"] --> attempts{"attempts left?"}
     attempts -- yes --> run["run + validate"]
     run -- ok --> success["SUCCESS"]
     run -- error --> retry{"retryable?"}
@@ -47,31 +37,16 @@ flowchart TD
     fb -- no --> failed["FAILED (contained)"]
 ```
 
-How the pieces fit together:
+## Observability & evaluation
 
-- **Execution** — `BoundedAgentRuntime` runs the operation up to `max_attempts` (from the agent's `RuntimeConfig`), timing each run and recording status, attempts, and typed output or contained error.
-- **Validation** — a `PydanticOutputValidator` re-validates each candidate output against its schema; invalid output fails the attempt.
-- **Fallback & retry** — a `RetryPolicy` decides which errors are retryable; once attempts are exhausted, a deterministic fallback (e.g. `DefaultSignalExtractor`) produces a typed result instead.
-- **Versioning** — prompts (`PromptRegistry`, `app/agents/{agent}/prompts/{version}.txt`) and runtime settings (`ConfigRegistry`, `app/runtime/configs/runtime_{version}.json`) are versioned and content-hashed, selected by `RUNTIME_CONFIG_VERSION`.
-- **Tracing** — each `AgentExecutionResult` carries `config_version`, `config_hash`, `prompt_hash`, attempts, timing, and the fallback flag on the LLM agent output; full-stack spans live in Logfire. Graph state keeps thin lifecycle `events` and HITL records so a run stays reconstructable for plan-vs-execution and review.
-- **Evaluation** — a Pydantic Evals golden dataset scores extraction quality (precision/recall/F1) per config version, making prompt/config changes measurable.
+- **Logfire** — OTel spans across FastAPI, LangGraph, and Pydantic AI (`app/observability.py`). Optional `LOGFIRE_TOKEN`.
+- **Evals** — golden dataset via Pydantic Evals (precision / recall / F1); `pytest -m llm`.
 
-Details: [runtime](../modules/bounded-application-workflow/app/runtime/README.md) · [agent guide](../modules/bounded-application-workflow/app/agents/README.md) · [evaluation](../modules/bounded-application-workflow/eval/README.md).
+Details: [module README](../modules/bounded-application-workflow/README.md) · [runtime](../modules/bounded-application-workflow/app/runtime/README.md) · [agents](../modules/bounded-application-workflow/app/agents/README.md) · [eval](../modules/bounded-application-workflow/eval/README.md).
 
----
-
-## Framework Migration — Milestone 5
-
-Migrates the M1–M4 backend onto the stack in [ADR 0001](adr/0001-adopt-modern-agent-stack.md): Pydantic AI (agents), LangGraph (orchestration / state / HITL), Pydantic Logfire (observability), Pydantic Evals (evaluation). Contracts and decision policy stay the same; hand-built primitives are replaced behind them.
-
-**Observability (Logfire):** OpenTelemetry traces across FastAPI, LangGraph, and Pydantic AI (`app/observability.py`) capture per-request / per-node / per-agent latency, tokens, cost, model settings, and agent I/O. Domain audit on checkpointed graph state stays thin (`events` for plan-vs-execution / lifecycle, `human_review` for HITL). Optional `LOGFIRE_TOKEN` in the module `.env` — works without a token via console / OTel fallback. Details: [module README](../modules/bounded-application-workflow/README.md#observability).
-
-**Evaluation (Pydantic Evals):** The golden signal-extractor dataset (`eval/dataset/*.json`) loads as a Pydantic Evals `Dataset` with a custom evaluator that reproduces set-based precision / recall / F1 (and macro F1). `pytest -m llm` runs experiments via `Dataset.evaluate_sync`; with `LOGFIRE_TOKEN`, results appear in the Logfire Evals UI. Details: [evaluation](../modules/bounded-application-workflow/eval/README.md).
-
----
 
 ## Influences
 
 - [OpenClaw](https://github.com/openclaw/openclaw)
 - [LangGraph](https://github.com/langchain-ai/langgraph)
-- [OpenAI Agents SDK](https://github.com/openai/openai-agents-python)
+- [Pydantic AI](https://ai.pydantic.dev/)

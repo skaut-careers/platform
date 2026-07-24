@@ -1,6 +1,6 @@
 # Agents
 
-Each workflow stage is an agent behind a typed `Protocol` contract in [`contracts.py`](contracts.py). The orchestrator ([`orchestration/`](orchestration/)) drives them through the workflow state machine; [`wiring.py`](wiring.py) selects concrete implementations from the runtime config.
+Each workflow stage is an agent behind a typed `Protocol` contract in [`contracts.py`](contracts.py). LangGraph orchestration ([`orchestration/`](orchestration/)) drives them; [`wiring.py`](wiring.py) selects concrete implementations from the runtime config.
 
 ## Layout
 
@@ -25,9 +25,9 @@ The package directory name is the agent's registry name (`agent_name_for`), used
 
 1. Add `llm.py` with an `LLM{Agent}` that:
    - resolves its `AgentRuntimeConfig` via `config.agent_for(type(self))`;
-   - calls the LLM inside an operation that raises typed errors;
-   - runs through `BoundedAgentRuntime.execute` with a `PydanticOutputValidator`, a deterministic `fallback`, and a `RetryPolicy`;
-   - attaches `result.without_output()` to its output's `execution` field for tracing.
+   - builds a Pydantic AI `Agent` with typed `output_type` and versioned system prompt;
+   - runs it through `BoundedAgentRuntime.execute` with a deterministic `fallback` and `RetryPolicy`;
+   - attaches `result.without_output()` to its output's `execution` field for provenance.
 2. Add versioned prompts under `prompts/{version}.txt`.
 3. Add a runtime bundle in [`app/runtime/configs/`](../runtime/configs/) with `mode: llm` and a `prompt_version`.
 4. Select deterministic vs. LLM wiring in `wiring.py` from the agent's `mode`.
@@ -39,7 +39,7 @@ The package directory name is the agent's registry name (`agent_name_for`), used
 | Agent | Stage | Modes |
 |-------|-------|-------|
 | `workflow_planning` | plan | deterministic |
-| `signal_extraction` | extract signals | deterministic · llm |
+| `signal_extraction` | extract signals | deterministic · llm (Pydantic AI) |
 | `profile_matching` | score alignment | deterministic |
 | `decision_rules` | apply policy | deterministic |
 | `human_review` | escalation interrupt | LangGraph `interrupt` / `Command` resume |
