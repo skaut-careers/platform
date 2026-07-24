@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Optional
 
 from pydantic import BaseModel
 
@@ -22,15 +22,6 @@ class WorkflowEvent(BaseModel):
     stage: str
     timestamp: datetime
     message: str = ""
-
-
-class AgentTrace(BaseModel):
-    """Inspectable record of a single agent invocation within a run."""
-
-    stage: str
-    agent: str
-    output: dict[str, Any]
-    timestamp: datetime
 
 
 class HumanReviewRecord(BaseModel):
@@ -57,7 +48,6 @@ class HumanReviewRecord(BaseModel):
 
 
 __all__ = [
-    "AgentTrace",
     "HumanReviewRecord",
     "WorkflowEvent",
     "WorkflowEventType",

@@ -22,13 +22,22 @@ packages = [{ include = "app" }]
 [tool.poetry.group.dev.dependencies]
 pytest = "^9.0"
 httpx = "^0.28"
+pyright = "^1.1.411"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-m 'not llm'"
 markers = [
-    "llm: live OpenAI signal extraction eval (requires OPENAI_API_KEY; run with: pytest -m llm)",
+    "llm: live OpenAI signal extraction eval via Pydantic Evals (requires OPENAI_API_KEY; run with: pytest -m llm)",
 ]
+
+[tool.pyright]
+include = ["app"]
+pythonVersion = "3.14"
+typeCheckingMode = "basic"
+# Lazy __getattr__ re-exports are intentional for import-cycle control.
+reportUnsupportedDunderAll = false
+reportInvalidTypeVarUse = false
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

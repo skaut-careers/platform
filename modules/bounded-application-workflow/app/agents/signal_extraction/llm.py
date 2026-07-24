@@ -96,8 +96,10 @@ class LLMSignalExtractor:
         self._agent_config = self._runtime_config.agent_for(agent_type)
         self._runtime = runtime or BoundedAgentRuntime()
         self._fallback = fallback or DefaultSignalExtractor()
-        if self._agent_config.prompt is None:
+        prompt = self._agent_config.prompt
+        if prompt is None:
             raise SignalExtractionError("LLM signal extraction requires a resolved prompt")
+        self._prompt = prompt
 
         self._model = model
         self._agent = agent
@@ -123,7 +125,7 @@ class LLMSignalExtractor:
         return Agent(
             model,
             output_type=JobSignals,
-            system_prompt=self._agent_config.prompt.content,
+            system_prompt=self._prompt.content,
         )
 
     def _get_agent(self) -> Agent[None, JobSignals]:

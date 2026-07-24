@@ -31,6 +31,7 @@ from app.agents.workflow_planning.plan import (
     SIGNAL_EXTRACTION,
 )
 from app.runtime import RuntimeConfig
+from app.runtime.result import ExecutionStatus
 from app.parser import parse_job_description
 from tests.conftest import (
     AI_ENGINEER_JOB_TEXT,
@@ -251,53 +252,50 @@ def test_escalation_pauses_before_decision():
     ).next == (HUMAN_REVIEW,)
 
 
-def test_run_logs_agent_traces():
+def test_run_logs_agent_completed_events():
     _, run = _run(workflow_input("strong_match.json"))
     assert run.events[1].event_type == WorkflowEventType.PLAN_CREATED
-    assert [(trace.stage, trace.agent) for trace in run.traces] == [
-        (SIGNAL_EXTRACTION, "DefaultSignalExtractor"),
-        (PROFILE_MATCHING, "DefaultProfileMatcher"),
-        (POLICY_EVALUATION, "DefaultDecisionPolicy"),
+    agent_events = [
+        (event.stage, event.message)
+        for event in run.events
+        if event.event_type == WorkflowEventType.AGENT_COMPLETED
+    ]
+    assert agent_events == [
+        (SIGNAL_EXTRACTION, "Agent 'DefaultSignalExtractor' completed."),
+        (PROFILE_MATCHING, "Agent 'DefaultProfileMatcher' completed."),
+        (POLICY_EVALUATION, "Agent 'DefaultDecisionPolicy' completed."),
     ]
 
 
-def test_llm_run_trace_includes_execution_metadata():
-    workflow = workflow_input("strong_match.json")
-    result = execute_workflow_pipeline(
-        workflow,
-        plan=create_workflow_plan(workflow),
-        extractor=LLMSignalExtractor(
-            model=signals_test_model(
-                required_skills=["Python", "LLM applications"],
-                preferred_skills=["research background"],
-            ),
-            runtime_config=RuntimeConfig.build(),
+def test_llm_signal_extractor_includes_execution_metadata():
+    from app.agents.contracts import SignalExtractorInput
+
+    extractor = LLMSignalExtractor(
+        model=signals_test_model(
+            required_skills=["Python", "LLM applications"],
+            preferred_skills=["research background"],
         ),
-        matcher=DefaultProfileMatcher(),
-        policy=DefaultDecisionPolicy(),
+        runtime_config=RuntimeConfig.build(),
     )
-    assert result.state.output is not None
-    run = result.state
-
-    extractor_trace = run.traces[0]
-    assert extractor_trace.agent == "LLMSignalExtractor"
-    execution = extractor_trace.output["execution"]
-    assert execution is not None
-    assert execution["prompt_hash"]
-    assert execution["config_version"]
-    assert execution["config_hash"]
-    assert execution["attempts"] == 1
-    assert execution["used_fallback"] is False
-    assert execution["status"] == "success"
+    output = extractor.run(
+        SignalExtractorInput(job_description=workflow_input("strong_match.json").job_description)
+    )
+    assert output.execution is not None
+    assert output.execution.prompt_hash
+    assert output.execution.config_version
+    assert output.execution.config_hash
+    assert output.execution.attempts == 1
+    assert output.execution.used_fallback is False
+    assert output.execution.status == ExecutionStatus.SUCCESS
 
 
-def test_escalated_run_is_traceable():
+def test_escalated_run_is_auditable():
     output, run = _run(escalating_workflow_input())
-    assert [trace.stage for trace in run.traces] == [
-        SIGNAL_EXTRACTION,
-        PROFILE_MATCHING,
-        POLICY_EVALUATION,
-    ]
+    assert [
+        event.stage
+        for event in run.events
+        if event.event_type == WorkflowEventType.AGENT_COMPLETED
+    ] == [SIGNAL_EXTRACTION, PROFILE_MATCHING, POLICY_EVALUATION]
     assert [
         event.event_type
         for event in run.events

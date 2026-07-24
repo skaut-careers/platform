@@ -24,7 +24,6 @@ from app.agents.human_review import (
     parse_review_resume,
 )
 from app.agents.orchestration.audit import (
-    AgentTrace,
     HumanReviewRecord,
     WorkflowEvent,
     WorkflowEventType,
@@ -87,7 +86,6 @@ _CHECKPOINT_TYPES = (
     WorkflowPlan,
     WorkflowEvent,
     WorkflowEventType,
-    AgentTrace,
     HumanReviewRecord,
     HumanReviewInterrupt,
     HumanReviewResume,
@@ -139,34 +137,20 @@ def _enter_stage(
     return [*events, _event(WorkflowEventType.STAGE_ENTERED, stage, message)]
 
 
-def _record_agent(
-    traces: list[AgentTrace],
+def _record_agent_completed(
     events: list[WorkflowEvent],
     *,
     stage: str,
     agent: str,
-    output: Any,
-) -> tuple[list[AgentTrace], list[WorkflowEvent]]:
-    timestamp = _now()
-    traces = [
-        *traces,
-        AgentTrace(
-            stage=stage,
-            agent=agent,
-            output=output.model_dump(),
-            timestamp=timestamp,
-        ),
-    ]
-    events = [
+) -> list[WorkflowEvent]:
+    return [
         *events,
         _event(
             WorkflowEventType.AGENT_COMPLETED,
             stage,
             f"Agent '{agent}' completed.",
-            timestamp=timestamp,
         ),
     ]
-    return traces, events
 
 
 def build_workflow_graph(
@@ -195,17 +179,14 @@ def build_workflow_graph(
         output = extractor.run(
             SignalExtractorInput(job_description=state.job_description)
         )
-        traces, events = _record_agent(
-            state.traces,
+        events = _record_agent_completed(
             events,
             stage=SIGNAL_EXTRACTION,
             agent=type(extractor).__name__,
-            output=output,
         )
         return {
             "signals": output.signals,
             "events": events,
-            "traces": traces,
         }
 
     def profile_matching(state: WorkflowGraphState) -> dict[str, Any]:
@@ -219,17 +200,14 @@ def build_workflow_graph(
                 signals=state.signals,
             )
         )
-        traces, events = _record_agent(
-            state.traces,
+        events = _record_agent_completed(
             events,
             stage=PROFILE_MATCHING,
             agent=type(matcher).__name__,
-            output=output,
         )
         return {
             "match": output.match,
             "events": events,
-            "traces": traces,
         }
 
     def policy_evaluation(state: WorkflowGraphState) -> dict[str, Any]:
@@ -239,17 +217,14 @@ def build_workflow_graph(
         output = policy.run(
             DecisionPolicyInput(match=state.match, signals=state.signals)
         )
-        traces, events = _record_agent(
-            state.traces,
+        events = _record_agent_completed(
             events,
             stage=POLICY_EVALUATION,
             agent=type(policy).__name__,
-            output=output,
         )
         return {
             "decision": output.decision,
             "events": events,
-            "traces": traces,
         }
 
     def route_after_policy(
