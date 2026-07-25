@@ -55,7 +55,7 @@ The migration is the backend foundation for the wider product stack:
 
 | Layer | Direction |
 | --- | --- |
-| Frontend & UI | Next.js + CopilotKit (stream LangGraph agent state into the app UI) |
+| Frontend & UI | Next.js + CopilotKit (stream LangGraph agent state into the app UI) — local demo in M6; public Azure demo in M7 |
 | Backend & API | FastAPI (Python) |
 | Orchestration | LangGraph |
 | Agents | Pydantic AI (model-agnostic; route a high-capability model for decisions and a cheaper model for subtasks) |
@@ -64,7 +64,8 @@ The migration is the backend foundation for the wider product stack:
 | Observability | Pydantic Logfire + Pydantic Evals (OpenTelemetry) |
 
 Only the backend agent runtime, orchestration, and observability/eval land in this milestone;
-frontend (M6 demo), tooling/MCP, and memory/pgvector arrive in their own milestones.
+the local demo UI (M6), Azure public demo (M7), tooling/MCP, and memory/pgvector arrive in
+their own milestones.
 
 ## Consequences
 

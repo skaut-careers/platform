@@ -2,7 +2,7 @@
 
 Evaluates whether an opportunity is worth pursuing from user profile + job description. Decisions: `prepare` · `queue` · `skip` · `escalate`. No autonomous applications.
 
-**Phase:** Milestones 1–5 complete — Framework Migration delivered. See [ROADMAP](../../docs/ROADMAP.md).
+**Phase:** Milestones 1–5 complete — next: M6 Demo-ready application (local end-to-end demo), then M7 Public demo on Azure. See [ROADMAP](../../docs/ROADMAP.md).
 
 ## Implemented
 

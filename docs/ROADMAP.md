@@ -27,39 +27,43 @@ Migrate onto LangGraph · Pydantic AI · Logfire · Pydantic Evals behind existi
 | `AgentTrace` | Logfire |
 | Custom eval harness | Pydantic Evals |
 
-## Milestone 6 — User-Facing Demo
+## Milestone 6 — Demo-ready application
 
-Paste job description → evaluate → show score, decision, missing signals, risks, reasoning. Built on the migrated stack — Next.js + CopilotKit streaming the LangGraph agent state into the UI.
+Local end-to-end demo: paste job description → evaluate → show score, decision, missing signals, risks, reasoning. Next.js + CopilotKit over the FastAPI / LangGraph backend. Azure deploy is Milestone 7.
 
-## Milestone 7 — Early Reliability Baseline
+## Milestone 7 — Public demo on Azure
 
-Schema validation, execution tracing, prompt versioning, benchmark fixtures — built on Logfire traces and Pydantic Evals. Continues in Milestone 10.
+Deploy the demo to Azure with a minimal managed setup, public HTTPS access, secure config, and a repeatable deploy process.
+
+## Milestone 8 — Early Reliability Baseline
+
+Schema validation, execution tracing, prompt versioning, benchmark fixtures — built on Logfire traces and Pydantic Evals. Continues in Milestone 11.
 
 **Done when:** all outputs Pydantic-validated; runs inspectable via Logfire/LangGraph checkpoints; versioned configs; starter benchmark set.
 
-## Milestone 8 — Retrieval & Tooling
+## Milestone 9 — Retrieval & Tooling
 
 Tool registry, contracts, retriever abstraction, vector search, tool selection, schema-validated invocation via Pydantic AI tools / MCP.
 
-## Milestone 9 — Agent Memory & Context
+## Milestone 10 — Agent Memory & Context
 
 Short-term/working memory, artifacts, context windows, persistence, pruning — via LangGraph checkpointers and state reducers, backed by PostgreSQL + `pgvector`.
 
-## Milestone 10 — Evaluation & Reliability
+## Milestone 11 — Evaluation & Reliability
 
 Golden datasets, agent/workflow evals, regression tests, confidence scoring, fallback policies, failure analysis, cost tracking — on Pydantic Evals + Logfire.
 
 **Done when:** changes measured against benchmarks; prompts have regression suite; failures classified and actionable.
 
-## Milestone 11 — Multi-Agent Collaboration
+## Milestone 12 — Multi-Agent Collaboration
 
 Planner, executor, critic, review agents under orchestrator control with handoffs and shared artifacts — as LangGraph subgraphs.
 
-## Milestone 12 — Learning & Policy Adaptation
+## Milestone 13 — Learning & Policy Adaptation
 
 Outcome tracking, threshold adaptation, feedback loops, decision calibration.
 
-## Milestone 13 — Production AI Platform
+## Milestone 14 — Production AI Platform
 
 Observability dashboards, cost/latency monitoring, trace explorer, run replay, versioned workflows/prompts, A/B testing — on Logfire.
 

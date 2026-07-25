@@ -6,7 +6,7 @@ Evaluates whether a professional opportunity is worth pursuing from structured s
 
 Supports deliberate, high-quality career decisions — not application volume or autonomous actions. First executable Skaut Careers module.
 
-**Phase:** Milestones 1–5 complete.
+**Phase:** Milestones 1–5 complete — next: Milestone 6 (local demo-ready application), then Milestone 7 (public demo on Azure).
 
 ---
 
@@ -50,7 +50,23 @@ LLM agents behind the same `Protocol` contracts: schema-validated outputs, deter
 
 Migrated onto LangGraph · Pydantic AI · Logfire · Pydantic Evals per [ADR 0001](./adr/0001-adopt-modern-agent-stack.md). Contracts and decision policy unchanged; **output parity** preserved.
 
-**Non-goals:** changing decision policy; user-facing demo (Milestone 6).
+**Non-goals:** changing decision policy; user-facing demo (Milestones 6–7).
+
+---
+
+## Milestone 6 — Demo-ready application (planned)
+
+Local end-to-end demo on the migrated stack: Next.js + CopilotKit UI over the FastAPI / LangGraph backend. Paste or load a job description, run evaluation, and see score, decision, missing signals, risks, and reasoning — with seed data, UX states, verification, and setup docs.
+
+**Non-goals:** Azure / cloud deployment (Milestone 7); new evaluation logic; autonomous actions.
+
+---
+
+## Milestone 7 — Public demo on Azure (planned)
+
+Deploy the M6 demo to Azure with a minimal managed architecture, public HTTPS access, secure configuration, repeatable deploy (GitHub Actions or documented process), and basic ops docs (logging, health, cost, troubleshooting, cleanup).
+
+**Non-goals:** Kubernetes, complex networking, production multi-tenant hardening, or introducing Postgres/`pgvector` memory (later milestones).
 
 ---
 
@@ -100,7 +116,7 @@ Deterministic and simple. Risk-based escalation via workflow plan and decision r
 
 ## Technical Scope
 
-Python · FastAPI · LangGraph · Pydantic AI · Logfire · Pydantic Evals · typed agent contracts · bounded runtime (retry / fallback / provenance) · versioned prompts and configs · modular domain layer · tests · CI.
+Python · FastAPI · LangGraph · Pydantic AI · Logfire · Pydantic Evals · typed agent contracts · bounded runtime (retry / fallback / provenance) · versioned prompts and configs · modular domain layer · tests · CI. Planned product surface: Next.js + CopilotKit (M6 local demo; M7 Azure).
 
 Implementation details: [module README](../modules/bounded-application-workflow/README.md).
 
@@ -115,6 +131,10 @@ Implementation details: [module README](../modules/bounded-application-workflow/
 **Milestone 4:** ≥1 LLM-backed agent · schema validation · deterministic fallback · versioned prompts/configs · provenance · eval dataset.
 
 **Milestone 5:** LangGraph orchestration · Pydantic AI agents · Logfire traces · Pydantic Evals · output parity · see [ARCHITECTURE](./ARCHITECTURE.md).
+
+**Milestone 6:** main demo journey works locally · frontend connected to real backend · loading/empty/validation/success/error states · seed data · verification · local docs · deploy-ready but not cloud-deployed.
+
+**Milestone 7:** public HTTPS demo on Azure · secure env/secrets · required persistence decided · repeatable deploy · basic logging/health/cost/troubleshooting docs.
 
 ---
 
