@@ -4,5 +4,7 @@ __pycache__
 .pytest_cache
 .env
 .venv/
-.env.local
+node_modules/
+.next/
+.pnpm-store/
 

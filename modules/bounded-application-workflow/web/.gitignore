@@ -1,0 +1,25 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# next.js
+.next/
+out/
+
+# build / cache
+dist/
+build/
+*.tsbuildinfo
+next-env.d.ts
+
+# env
+.env
+
+# debug / os
+npm-debug.log*
+pnpm-debug.log*
+.DS_Store
+
+# tooling
+.eslintcache
+.turbo/
