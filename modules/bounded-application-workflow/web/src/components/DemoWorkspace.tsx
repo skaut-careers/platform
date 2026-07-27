@@ -119,7 +119,7 @@ export function DemoWorkspace() {
       <section className="relative flex min-h-[100svh] flex-col items-center justify-center px-6 text-center">
         <div className="soft-rise flex max-w-4xl flex-col items-center">
           <Image
-            src="/logo.png"
+            src="/logo.svg"
             alt="Skaut Careers"
             width={120}
             height={120}
@@ -157,7 +157,7 @@ export function DemoWorkspace() {
             ref={productRef}
             className="font-display scroll-mt-6 text-3xl font-semibold tracking-tight text-forest md:text-4xl"
           >
-            Is the role worth applying for?
+            Is this role worth applying for?
           </h2>
           <p className="mt-2 text-sm text-muted">Three quick stops on the trail.</p>
         </div>

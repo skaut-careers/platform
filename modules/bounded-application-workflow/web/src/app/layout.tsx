@@ -21,8 +21,11 @@ export const metadata: Metadata = {
   description:
     "Navigate your professional life with clarity. Evaluate IT job postings against your profile — deliberate decisions, not application volume.",
   icons: {
-    icon: "/logo.png",
-    apple: "/logo.png",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon.png", type: "image/png", sizes: "512x512" },
+    ],
+    apple: "/favicon.png",
   },
 };
 
