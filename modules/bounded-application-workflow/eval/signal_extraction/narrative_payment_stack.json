@@ -1,0 +1,45 @@
+{
+  "id": "narrative_payment_stack",
+  "description": "Skills buried in prose sentences without bullet lists",
+  "tags": [
+    "prose-skills",
+    "no-bullets",
+    "hard"
+  ],
+  "job_description": {
+    "title": "Backend Engineer",
+    "company": "PayRail",
+    "location": "Berlin, Germany",
+    "description": "We're looking for someone who has spent years shipping payment APIs in Python and Go, with solid PostgreSQL modeling and Redis for hot paths. Kafka experience for event-driven settlement is expected. Familiarity with Kubernetes and Terraform is welcome but not required. You will own services end to end with our platform team.",
+    "seniority": "Mid",
+    "employment_type": "Full-time"
+  },
+  "expected_signals": {
+    "required_skills": [
+      "Python",
+      "Go",
+      "PostgreSQL",
+      "Redis",
+      "Kafka"
+    ],
+    "preferred_skills": [
+      "Kubernetes",
+      "Terraform"
+    ],
+    "seniority_signals": [
+      "Mid"
+    ],
+    "production_expectations": [],
+    "work_arrangements": [],
+    "location_signals": [
+      "Berlin",
+      "Germany"
+    ],
+    "risk_indicators": [],
+    "missing_signals": [
+      "remote policy",
+      "salary range",
+      "team size"
+    ]
+  }
+}

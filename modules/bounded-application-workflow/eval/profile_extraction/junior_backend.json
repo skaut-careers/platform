@@ -1,0 +1,15 @@
+{
+  "id": "junior_backend",
+  "description": "Clean frontend fields with two work preferences",
+  "tags": ["frontend", "clean"],
+  "raw_text": "seniority: junior\nlocation: Belgrade\ntarget_roles: Backend Engineer\nskills: Go, Kubernetes, PostgreSQL\nwork_preferences: hybrid, onsite",
+  "expected_profile": {
+    "target_roles": ["Backend Engineer"],
+    "skills": ["Go", "Kubernetes", "PostgreSQL"],
+    "experience_summary": "",
+    "location": "Belgrade",
+    "seniority": "junior",
+    "production_experience": [],
+    "work_preferences": ["hybrid", "onsite"]
+  }
+}

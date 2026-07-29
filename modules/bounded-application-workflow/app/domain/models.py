@@ -14,7 +14,6 @@ class DecisionType(str, Enum):
 
 
 class UserProfile(BaseModel):
-    name: str
     target_roles: List[str] = Field(default_factory=list)
     skills: List[str] = Field(default_factory=list)
     experience_summary: str = ""
@@ -61,6 +60,8 @@ class ProfileMatchResult(BaseModel):
     production_expectations_matched: List[str] = Field(default_factory=list)
     production_expectations_missing: List[str] = Field(default_factory=list)
     role_aligned: bool = False
+    work_arrangement_aligned: bool = False
+    location_aligned: bool = False
     severe_seniority_mismatch: bool = False
     reasons: List[str] = Field(default_factory=list)
     risks: List[str] = Field(default_factory=list)

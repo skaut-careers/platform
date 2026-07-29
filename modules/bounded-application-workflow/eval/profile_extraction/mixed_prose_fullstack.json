@@ -1,0 +1,15 @@
+{
+  "id": "mixed_prose_fullstack",
+  "description": "Frontend fields with a free-text skills value mixing 'and' and a semicolon",
+  "tags": ["frontend", "messy-value"],
+  "raw_text": "seniority: mid\nlocation: Madrid\ntarget_roles: Fullstack Engineer\nskills: Node.js and React; some Postgres\nwork_preferences: onsite",
+  "expected_profile": {
+    "target_roles": ["Fullstack Engineer"],
+    "skills": ["Node.js", "React", "Postgres"],
+    "experience_summary": "",
+    "location": "Madrid",
+    "seniority": "mid",
+    "production_experience": [],
+    "work_preferences": ["onsite"]
+  }
+}

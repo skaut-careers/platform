@@ -4,13 +4,12 @@ Reusable execution path for agents behind the workflow's `Protocol` contracts. W
 
 ## Execute
 
-`BoundedAgentRuntime.execute(operation, agent_input, runtime_config, agent_name, *, validator, fallback, retry_policy)` returns an `AgentExecutionResult[Output]`:
+`BoundedAgentRuntime.execute(operation, agent_input, runtime_config, agent_name, *, fallback, retry_policy)` returns an `AgentExecutionResult[Output]`:
 
 1. Run `operation(agent_input)` up to the agent's `max_attempts`.
-2. If a `validator` is set, re-validate each candidate output; invalid output fails the attempt.
-3. On a retryable error (`RetryPolicy.should_retry`), try again; otherwise stop.
-4. If no attempt succeeds and a `fallback` is set, run it and mark `used_fallback=True`.
-5. Always return a result — errors are contained in `error`, never raised.
+2. On a retryable error (`RetryPolicy.should_retry`), try again; otherwise stop.
+3. If no attempt succeeds and a `fallback` is set, run it and mark `used_fallback=True`.
+4. Always return a result — errors are contained in `error`, never raised.
 
 ## Result
 
@@ -43,7 +42,6 @@ Flat settings (no per-agent keys) apply to every discovered runtime agent — a 
 
 ## Policies
 
-- `PydanticOutputValidator(Model)` — re-validate output against a Pydantic model, raising `OutputValidationError` on mismatch.
 - `RetryPolicy(retryable=(...))` — which exception types are worth another attempt.
 
 ## Files
@@ -55,5 +53,5 @@ Flat settings (no per-agent keys) apply to every discovered runtime agent — a 
 | `runtime_config.py` | `RuntimeConfig` · `AgentRuntimeConfig` |
 | `config_registry.py` · `config_loader.py` | versioned config bundles |
 | `prompt_registry.py` | versioned prompts (`PromptSpec`) |
-| `policies.py` | validation and retry policies |
+| `policies.py` | retry policy |
 | `agent_identity.py` | agent discovery and registry names |

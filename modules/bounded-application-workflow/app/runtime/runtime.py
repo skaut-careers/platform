@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from typing import Protocol, runtime_checkable
 
-from app.runtime.policies import OutputValidator, RetryPolicy
+from app.runtime.policies import RetryPolicy
 from app.runtime.result import (
     AgentExecutionResult,
     ExecutionStatus,
@@ -28,7 +28,6 @@ class AgentRuntime(Protocol):
         runtime_config: RuntimeConfig,
         agent_name: str,
         *,
-        validator: OutputValidator[OutputT] | None = None,
         fallback: AgentOperation[InputT, OutputT] | None = None,
         retry_policy: RetryPolicy | None = None,
     ) -> AgentExecutionResult[OutputT]: ...
@@ -44,7 +43,6 @@ class BoundedAgentRuntime:
         runtime_config: RuntimeConfig,
         agent_name: str,
         *,
-        validator: OutputValidator[OutputT] | None = None,
         fallback: AgentOperation[InputT, OutputT] | None = None,
         retry_policy: RetryPolicy | None = None,
     ) -> AgentExecutionResult[OutputT]:
@@ -59,10 +57,7 @@ class BoundedAgentRuntime:
         while attempts < agent_config.max_attempts:
             attempts += 1
             try:
-                candidate = operation(agent_input)
-                if validator is not None:
-                    candidate = validator.validate(candidate)
-                output = candidate
+                output = operation(agent_input)
             except Exception as exc:  # bounded: contain, optionally retry
                 last_error = f"{type(exc).__name__}: {exc}"
                 if not policy.should_retry(exc):

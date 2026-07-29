@@ -1,0 +1,15 @@
+{
+  "id": "labeled_data_engineer",
+  "description": "Clean frontend fields (deterministic parser handles this fully)",
+  "tags": ["frontend", "clean"],
+  "raw_text": "seniority: mid\nlocation: Amsterdam\ntarget_roles: Data Engineer\nskills: Python, SQL, Airflow\nwork_preferences: remote",
+  "expected_profile": {
+    "target_roles": ["Data Engineer"],
+    "skills": ["Python", "SQL", "Airflow"],
+    "experience_summary": "",
+    "location": "Amsterdam",
+    "seniority": "mid",
+    "production_experience": [],
+    "work_preferences": ["remote"]
+  }
+}

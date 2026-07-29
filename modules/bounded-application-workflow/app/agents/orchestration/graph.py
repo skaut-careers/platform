@@ -109,7 +109,7 @@ def _now() -> datetime:
 def _input_summary(state: WorkflowGraphState) -> str:
     company = state.job_description.company or "an unspecified company"
     return (
-        f"{state.user_profile.name} is being evaluated for "
+        f"Profile is being evaluated for "
         f"{state.job_description.title} at {company}."
     )
 

@@ -1,0 +1,45 @@
+{
+  "id": "nyc_onsite_alias",
+  "description": "Profile location NYC vs job place New York — onsite role needs place aliasing",
+  "tags": ["location", "synonym"],
+  "user_profile": {
+    "target_roles": ["Backend Engineer"],
+    "skills": ["Python", "Django"],
+    "experience_summary": "Backend engineer building web APIs.",
+    "location": "NYC",
+    "seniority": "senior",
+    "production_experience": [],
+    "work_preferences": ["onsite"]
+  },
+  "job_description": {
+    "title": "Backend Engineer",
+    "company": "AdTech",
+    "location": "New York, NY",
+    "description": "Build Python and Django services from our New York office.",
+    "seniority": "senior",
+    "employment_type": "full-time"
+  },
+  "signals": {
+    "required_skills": ["Python", "Django"],
+    "preferred_skills": [],
+    "seniority_signals": ["senior"],
+    "production_expectations": [],
+    "work_arrangements": ["onsite"],
+    "location_signals": ["New York"],
+    "risk_indicators": [],
+    "missing_signals": []
+  },
+  "expected": {
+    "score_min": 0.6,
+    "score_max": 1.0,
+    "role_aligned": true,
+    "work_arrangement_aligned": true,
+    "location_aligned": true,
+    "severe_seniority_mismatch": false,
+    "required_skills_matched": ["Python", "Django"],
+    "required_skills_missing": [],
+    "preferred_skills_matched": [],
+    "production_expectations_matched": [],
+    "production_expectations_missing": []
+  }
+}

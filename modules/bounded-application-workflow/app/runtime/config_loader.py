@@ -8,12 +8,23 @@ from app.runtime.runtime_config import RuntimeConfig
 
 def load_runtime_config(
     *,
+    version: str | None = None,
     env: Mapping[str, str] | None = None,
     config_registry: ConfigRegistry | None = None,
     prompt_registry: PromptRegistry | None = None,
 ) -> RuntimeConfig:
-    """Load the versioned runtime config bundle from the registry."""
-    resolved_env = dict(env) if env is not None else local_env()
+    """Load the versioned runtime config bundle from the registry.
+
+    If ``version`` is set, it overrides ``RUNTIME_CONFIG_VERSION`` in ``env``.
+    If both ``version`` and ``env`` are omitted, reads from ``local_env()``.
+    """
+    if env is not None or version is not None:
+        resolved_env = dict(env) if env is not None else {}
+        if version is not None:
+            resolved_env = {"RUNTIME_CONFIG_VERSION": version, **resolved_env}
+    else:
+        resolved_env = local_env()
+
     resolved_config_registry = config_registry or default_config_registry()
     resolved_prompt_registry = prompt_registry or default_prompt_registry()
 

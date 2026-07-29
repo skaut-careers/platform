@@ -3,7 +3,7 @@
     "title": "Machine Learning Product Engineer",
     "company": "Career Tech Platform",
     "location": "London, UK",
-    "description": "ML product role in career tech. Unclear signals: no explicit remote policy; seniority level unclear; production AI ownership unclear.\n\n- Python\n- ML models\n- product analytics\n- cross-functional collaboration\n\n+ LLM experience\n+ career-tech experience"
+    "description": "Join our career-tech team building ML-powered product features. Day-to-day ownership is still a bit vague while we shape the roadmap with design and growth.\n\nRequirements:\n• Python\n• ML models\n• product analytics\n• cross-functional collaboration\n\nNice to have:\n• LLM experience\n• career-tech experience"
   },
   "expected_signals": {
     "required_skills": [
@@ -22,11 +22,15 @@
       "ambiguous scope"
     ],
     "missing_signals": [
-      "remote policy",
       "seniority level",
+      "remote policy",
       "salary range",
       "team size",
       "employment type"
+    ],
+    "work_arrangements": [],
+    "location_signals": [
+      "London UK"
     ]
   }
 }

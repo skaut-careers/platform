@@ -28,9 +28,7 @@ from app.agents.signal_extraction import DefaultSignalExtractor, LLMSignalExtrac
 from app.agents.workflow_planning import DefaultWorkflowPlanner
 from app.agents.wiring import (
     create_agents,
-    default_agents,
     evaluate_workflow,
-    llm_agents,
     run_workflow_evaluation,
 )
 
@@ -60,9 +58,7 @@ __all__ = [
     "WorkflowPlannerOutput",
     "approve_escalation",
     "create_agents",
-    "default_agents",
     "evaluate_workflow",
-    "llm_agents",
     "revise_escalation",
     "run_workflow_evaluation",
 ]

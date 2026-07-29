@@ -1,0 +1,6 @@
+{
+  "raw_text": "Seniority: junior",
+  "expected_profile": {
+    "seniority": "junior"
+  }
+}

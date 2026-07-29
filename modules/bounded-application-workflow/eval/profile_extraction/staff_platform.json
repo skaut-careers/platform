@@ -1,0 +1,15 @@
+{
+  "id": "staff_platform",
+  "description": "Frontend fields with a slash-separated skills value (no commas to split on)",
+  "tags": ["frontend", "messy-value", "production"],
+  "raw_text": "seniority: staff\nlocation: London\ntarget_roles: Platform Engineer\nskills: Terraform / AWS / Kubernetes\nexperience_summary: Owned reliability and scaled systems to millions of users.\nproduction_experience: reliability, scale\nwork_preferences: remote",
+  "expected_profile": {
+    "target_roles": ["Platform Engineer"],
+    "skills": ["Terraform", "AWS", "Kubernetes"],
+    "experience_summary": "Owned reliability and scaled systems to millions of users.",
+    "location": "London",
+    "seniority": "staff",
+    "production_experience": ["reliability", "scale"],
+    "work_preferences": ["remote"]
+  }
+}

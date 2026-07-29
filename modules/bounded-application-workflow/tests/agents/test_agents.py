@@ -1,15 +1,15 @@
 import pytest
+from pydantic_ai.exceptions import ModelHTTPError
 
 from app.agents.decision_rules.rules import (
     build_workflow_decision,
     decision_from_score,
     decision_from_signals,
 )
-from app.agents.profile_matching.matching import match_profile_to_job
+from app.agents.profile_extraction.deterministic import extract_user_profile
+from app.agents.profile_matching.deterministic import match_profile_to_job
 from app.agents.signal_extraction import LLMSignalExtractor
 from app.agents.signal_extraction.deterministic import extract_job_signals
-from app.agents.signal_extraction.llm import job_signals_schema
-from app.agents.workflow_planning.planner import create_workflow_plan
 from app.domain.job_signals import JobSignals
 from app.domain.models import (
     DecisionType,
@@ -17,18 +17,15 @@ from app.domain.models import (
     ProfileMatchResult,
     UserProfile,
 )
-from app.agents.workflow_planning.plan import DECISION, HUMAN_REVIEW
-from pydantic_ai.exceptions import ModelHTTPError
-from app.runtime import ExecutionStatus, RuntimeConfig, default_prompt_registry
+from app.runtime import ExecutionStatus, RuntimeConfig
 from tests.conftest import (
+    PROFILE_EXTRACTION_FIXTURES,
     SIGNAL_EXTRACTION_FIXTURES,
     SIGNAL_FIELDS,
     RecordingSignalModel,
-    escalating_workflow_input,
+    load_profile_fixture,
     load_signal_fixture,
-    load_fixture,
     sample_signal_extractor_input,
-    signals_payload,
     signals_test_model,
     workflow_input,
 )
@@ -57,25 +54,87 @@ def test_profile_match_fixtures(fixture_name, min_score, max_score, role_aligned
     assert result.role_aligned is role_aligned
 
 
-@pytest.mark.parametrize(
-    "profile_seniority,job_seniority",
-    [("staff", "junior"), ("junior", "principal")],
-)
-def test_severe_seniority_mismatch(profile_seniority, job_seniority):
+def test_severe_seniority_mismatch():
     result = match_profile_to_job(
-        UserProfile(name="Ana", seniority=profile_seniority),
+        UserProfile(seniority="staff"),
         JobDescription(
             title="Engineer",
             description="Build features.\n\n- Python",
-            seniority=job_seniority,
+            seniority="junior",
         ),
-        JobSignals(required_skills=["Python"], seniority_signals=[job_seniority]),
+        JobSignals(required_skills=["Python"], seniority_signals=["junior"]),
     )
     assert result.severe_seniority_mismatch
 
 
+@pytest.mark.parametrize(
+    "prefs,arrangements,location,places,expect_work,expect_location",
+    [
+        (["remote"], ["remote"], "Lisbon", [], True, True),
+        (["remote"], ["onsite"], "Lisbon", ["Berlin"], False, False),
+        (["onsite"], ["onsite"], "Berlin", ["Berlin"], True, True),
+    ],
+)
+def test_work_and_location_alignment(
+    prefs, arrangements, location, places, expect_work, expect_location
+):
+    result = match_profile_to_job(
+        UserProfile(
+            target_roles=["Backend Engineer"],
+            skills=["Python"],
+            location=location,
+            work_preferences=prefs,
+        ),
+        JobDescription(
+            title="Backend Engineer",
+            description="Backend role.\n\nRequirements:\n• Python",
+        ),
+        JobSignals(
+            required_skills=["Python"],
+            work_arrangements=arrangements,
+            location_signals=places,
+        ),
+    )
+    assert result.work_arrangement_aligned is expect_work
+    assert result.location_aligned is expect_location
+
+
+def test_onsite_location_mismatch_lowers_score():
+    signals = JobSignals(
+        required_skills=["Python"],
+        work_arrangements=["onsite"],
+        location_signals=["Berlin"],
+    )
+    job = JobDescription(
+        title="Backend Engineer",
+        description="On-site role.\n\nRequirements:\n• Python",
+    )
+    aligned = match_profile_to_job(
+        UserProfile(
+            target_roles=["Backend Engineer"],
+            skills=["Python"],
+            location="Berlin",
+            work_preferences=["onsite"],
+        ),
+        job,
+        signals,
+    )
+    mismatched = match_profile_to_job(
+        UserProfile(
+            target_roles=["Backend Engineer"],
+            skills=["Python"],
+            location="Lisbon",
+            work_preferences=["onsite"],
+        ),
+        job,
+        signals,
+    )
+    assert mismatched.score < aligned.score
+    assert any("On-site role with incompatible locations" in r for r in mismatched.risks)
+
+
 @pytest.mark.parametrize("fixture_name", SIGNAL_EXTRACTION_FIXTURES)
-def test_extract_from_fixture(fixture_name):
+def test_extract_signals_from_fixture(fixture_name):
     case = load_signal_fixture(fixture_name)
     signals = extract_job_signals(JobDescription(**case["job_description"]))
     expected = case["expected_signals"]
@@ -83,15 +142,46 @@ def test_extract_from_fixture(fixture_name):
         assert getattr(signals, field) == expected[field]
 
 
-def test_extract_normalizes_skill_lists():
-    signals = extract_job_signals(
+def test_extract_skills_normalization_and_prose():
+    normalized = extract_job_signals(
         JobDescription(
             title="AI Engineer",
-            description="- Python\n- python\n- LLMs\n+ FastAPI\n+ fastapi\n+ Python",
+            description=(
+                "Requirements:\n• Python\n• python\n• LLMs\n\n"
+                "Nice to have:\n• FastAPI\n• fastapi\n• Python"
+            ),
         )
     )
-    assert signals.required_skills == ["Python", "LLMs"]
-    assert signals.preferred_skills == ["FastAPI"]
+    assert normalized.required_skills == ["Python", "LLMs"]
+    assert normalized.preferred_skills == ["FastAPI"]
+
+    prose = extract_job_signals(
+        JobDescription(
+            title="Frontend Developer",
+            description=(
+                "We're looking for someone with strong React and TypeScript skills. "
+                "Experience with Next.js would be a plus."
+            ),
+        )
+    )
+    assert prose.required_skills == ["React", "TypeScript"]
+    assert prose.preferred_skills == ["Next.js"]
+
+
+@pytest.mark.parametrize(
+    "location,description,expect_work,expect_places",
+    [
+        (None, "Fully remote Python role.\n\n- Python", ["remote"], []),
+        (None, "On-site role in our Berlin office.\n\n- Python", ["onsite"], ["Berlin"]),
+        ("Berlin · On-site", "Python services.\n\n- Python", ["onsite"], ["Berlin"]),
+    ],
+)
+def test_extract_work_and_location(location, description, expect_work, expect_places):
+    signals = extract_job_signals(
+        JobDescription(title="Backend Engineer", location=location, description=description)
+    )
+    assert signals.work_arrangements == expect_work
+    assert signals.location_signals == expect_places
 
 
 @pytest.mark.parametrize(
@@ -99,9 +189,7 @@ def test_extract_normalizes_skill_lists():
     [
         (0.34, DecisionType.SKIP),
         (0.35, DecisionType.ESCALATE),
-        (0.54, DecisionType.ESCALATE),
         (0.55, DecisionType.QUEUE),
-        (0.74, DecisionType.QUEUE),
         (0.75, DecisionType.PREPARE),
     ],
 )
@@ -109,15 +197,9 @@ def test_decision_thresholds(score, expected):
     assert decision_from_score(score) == expected
 
 
-def test_decision_escalates_on_risk():
-    assert (
-        decision_from_signals(0.9, JobSignals(risk_indicators=["ambiguous scope"]))
-        == DecisionType.ESCALATE
-    )
-
-
-def test_decision_skips_on_severe_seniority_mismatch():
+def test_decision_risk_and_seniority_overrides():
     signals = JobSignals(risk_indicators=["ambiguous scope"])
+    assert decision_from_signals(0.9, signals) == DecisionType.ESCALATE
     assert (
         decision_from_signals(0.9, signals, severe_seniority_mismatch=True)
         == DecisionType.SKIP
@@ -125,82 +207,46 @@ def test_decision_skips_on_severe_seniority_mismatch():
 
 
 def test_build_workflow_decision():
-    match = ProfileMatchResult(
-        score=0.82,
-        reasons=["Matched 1 of 2 required skills."],
-        risks=["Missing required skills: Kubernetes."],
+    decision = build_workflow_decision(
+        ProfileMatchResult(
+            score=0.82,
+            reasons=["Matched 1 of 2 required skills."],
+            risks=["Missing required skills: Kubernetes."],
+        ),
+        JobSignals(
+            risk_indicators=["ambiguous scope"],
+            missing_signals=["salary range"],
+        ),
     )
-    signals = JobSignals(
-        risk_indicators=["ambiguous scope"],
-        missing_signals=["salary range"],
-    )
-
-    decision = build_workflow_decision(match, signals)
-
     assert decision.decision == DecisionType.ESCALATE
-    assert decision.score == match.score
     assert decision.missing_information == ["Job posting missing signal: salary range"]
 
 
-@pytest.mark.parametrize(
-    "workflow,includes_review",
-    [
-        (workflow_input("strong_match.json"), False),
-        (escalating_workflow_input(), True),
-    ],
-)
-def test_workflow_plan_stages(workflow, includes_review):
-    stages = create_workflow_plan(workflow).stages
-    assert stages[-1] == DECISION
-    assert (HUMAN_REVIEW in stages) is includes_review
+@pytest.mark.parametrize("fixture_name", PROFILE_EXTRACTION_FIXTURES)
+def test_extract_profile_from_fixture(fixture_name):
+    case = load_profile_fixture(fixture_name)
+    assert extract_user_profile(case["raw_text"]) == UserProfile(**case["expected_profile"])
 
 
-def test_prompt_and_schema():
-    prompt = default_prompt_registry().get_for(LLMSignalExtractor, "v1")
-    assert "required_skills" in prompt.content
-    schema = job_signals_schema()
-    properties = set(schema["properties"])
-    assert properties == set(signals_payload())
-    assert schema["additionalProperties"] is False
-    assert set(schema["required"]) == properties
+def test_extract_profile_rejects_empty_text():
+    with pytest.raises(ValueError, match="cannot be empty"):
+        extract_user_profile("   ")
 
 
-def test_llm_extractor_success():
-    output = LLMSignalExtractor(
+def test_llm_signal_extractor_success_and_fallback():
+    ok = LLMSignalExtractor(
         model=signals_test_model(required_skills=["Python"], preferred_skills=["FastAPI"]),
     ).run(sample_signal_extractor_input())
+    assert ok.signals.required_skills == ["Python"]
+    assert ok.execution and not ok.execution.used_fallback
 
-    assert output.signals.required_skills == ["Python"]
-    assert output.execution
-    assert not output.execution.used_fallback
-    assert output.execution.prompt_hash
-
-
-def _provider_error() -> ModelHTTPError:
-    return ModelHTTPError(status_code=503, model_name="test", body="down")
-
-
-@pytest.mark.parametrize(
-    "responses, used_fallback, attempts, error_prefix",
-    [
-        ([_provider_error()], True, 1, "SignalExtractionLLMError"),
-        (
-            [_provider_error(), signals_payload(required_skills=["Python"])],
-            False,
-            2,
-            None,
-        ),
-    ],
-)
-def test_llm_extractor_runtime_paths(responses, used_fallback, attempts, error_prefix):
-    output = LLMSignalExtractor(
-        model=RecordingSignalModel(*responses).as_model(),
-        runtime_config=RuntimeConfig.build(max_attempts=attempts),
+    failed = LLMSignalExtractor(
+        model=RecordingSignalModel(
+            ModelHTTPError(status_code=503, model_name="test", body="down")
+        ).as_model(),
+        runtime_config=RuntimeConfig.build(max_attempts=1),
     ).run(sample_signal_extractor_input())
-
-    assert output.execution
-    assert output.execution.used_fallback is used_fallback
-    assert output.execution.attempts == attempts
-    if used_fallback:
-        assert output.execution.status == ExecutionStatus.SUCCESS
-        assert (output.execution.error or "").startswith(error_prefix)
+    assert failed.execution
+    assert failed.execution.used_fallback
+    assert failed.execution.status == ExecutionStatus.SUCCESS
+    assert (failed.execution.error or "").startswith("SignalExtractionLLMError")

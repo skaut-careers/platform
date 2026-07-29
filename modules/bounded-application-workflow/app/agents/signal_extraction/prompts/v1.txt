@@ -5,12 +5,21 @@ Return JSON with exactly these fields (each value is a list of short strings):
 - preferred_skills: nice-to-have skills that are not already required
 - seniority_signals: seniority level, years of experience, ownership scope
 - production_expectations: on-call, reliability, deployment, scale, observability
+- work_arrangements: remote / hybrid / onsite from Location metadata, or from the description when metadata lacks it
+- location_signals: place names from Location metadata, or from the description when Location is empty
 - risk_indicators: ambiguity, unrealistic expectations, vague scope, overloaded roles
-- missing_signals: important information absent from the posting (e.g. remote policy, salary range, team size, employment type, seniority level)
+- missing_signals: important information absent from the posting (remote policy, salary range, team size, employment type, seniority level)
 
 Rules:
-- Use concise phrases, not full sentences.
+- Use short canonical phrases, not full sentences.
 - Do not duplicate the same signal across categories.
 - Preferred skills must not repeat required skills.
-- Infer missing_signals when the posting omits common hiring details.
+- Do not extract soft skills or personality traits as skills.
+- Extract skills from prose, numbered lists, and bullets; return atomic names, not whole sentences.
+- Treat optional phrasing as preferred; treat expected/must-have phrasing as required.
+- Prefer Location metadata for work_arrangements and location_signals; fall back to clear description cues when metadata is empty or silent, including soft remote/hybrid cues.
+- For work_arrangements use only: remote, hybrid, onsite. Map common synonyms into those three labels; never return the synonym phrase itself.
+- Split multi-part places into separate short location_signals when both city and country/region appear.
+- Credit production expectations only when operational ownership is clear; map clear operational euphemisms to short canonical labels.
+- Infer missing_signals when the posting omits common hiring details; if seniority or remote policy is evidenced, do not mark them missing.
 - Base every signal on the provided job text; do not invent company facts.

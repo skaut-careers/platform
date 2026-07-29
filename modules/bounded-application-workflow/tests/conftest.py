@@ -15,14 +15,17 @@ from pydantic_ai.models import Model
 from pydantic_ai.models.function import AgentInfo, FunctionModel
 from pydantic_ai.models.test import TestModel
 
-from app.agents.contracts import SignalExtractorInput
+from app.agents.contracts import (
+    ProfileExtractorInput,
+    ProfileExtractorOutput,
+    SignalExtractorInput,
+)
 from app.domain.job_signals import SIGNAL_FIELDS
 from app.domain.models import DecisionType, JobDescription, UserProfile, WorkflowInput
 
-MODULE_ROOT = Path(__file__).parent.parent
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 SIGNAL_FIXTURES_DIR = FIXTURES_DIR / "signal"
-EVAL_DATASET_DIR = MODULE_ROOT / "eval" / "dataset"
+PROFILE_FIXTURES_DIR = FIXTURES_DIR / "profile"
 
 
 def load_fixture(name: str) -> dict:
@@ -33,8 +36,8 @@ def load_signal_fixture(name: str) -> dict:
     return json.loads((SIGNAL_FIXTURES_DIR / name).read_text())
 
 
-def load_eval_case(name: str) -> dict:
-    return json.loads((EVAL_DATASET_DIR / name).read_text())
+def load_profile_fixture(name: str) -> dict:
+    return json.loads((PROFILE_FIXTURES_DIR / name).read_text())
 
 
 WORKFLOW_FIXTURES = (
@@ -47,25 +50,9 @@ SIGNAL_EXTRACTION_FIXTURES = tuple(
     path.name for path in sorted(SIGNAL_FIXTURES_DIR.glob("*.json"))
 )
 
-AI_ENGINEER_JOB_TEXT = """
-AI Engineer
-
-Company: Frontier AI Startup
-Location: Remote Europe
-Seniority: mid-senior
-Employment Type: full-time
-
-- Python
-- LLM applications
-- evaluation pipelines
-- agentic workflows
-- product ownership
-
-+ research background
-+ startup experience
-
-Build and own LLM-based product workflows.
-"""
+PROFILE_EXTRACTION_FIXTURES = tuple(
+    path.name for path in sorted(PROFILE_FIXTURES_DIR.glob("*.json"))
+)
 
 
 def expected_decision(fixture_name: str) -> DecisionType:
@@ -98,7 +85,11 @@ def sample_signal_extractor_input() -> SignalExtractorInput:
     return SignalExtractorInput(
         job_description=JobDescription(
             title="AI Engineer",
-            description="- Python\n+ FastAPI",
+            description=(
+                "Build LLM product workflows.\n\n"
+                "Requirements:\n• Python\n\n"
+                "Nice to have:\n• FastAPI"
+            ),
         )
     )
 
@@ -108,15 +99,19 @@ def signals_test_model(**overrides: list[str]) -> TestModel:
     return TestModel(custom_output_args=signals_payload(**overrides))
 
 
+class StubProfileExtractor:
+    """ProfileExtractor stub returning a fixed profile and recording raw inputs."""
+
+    def __init__(self, profile: UserProfile) -> None:
+        self._profile = profile
+        self.calls: list[str] = []
+
+    def run(self, agent_input: ProfileExtractorInput) -> ProfileExtractorOutput:
+        self.calls.append(agent_input.raw_text)
+        return ProfileExtractorOutput(profile=self._profile)
+
+
 class RecordingSignalModel:
-    """Scripted FunctionModel that records prompts and replays signal responses.
-
-    Each positional response is either a ``JobSignals`` payload dict (returned as
-    the agent's structured output) or an exception instance (raised to simulate a
-    provider failure). Responses are consumed by call index; the final response is
-    reused once exhausted, so a single payload is returned for every call.
-    """
-
     def __init__(self, *responses: dict[str, Any] | BaseException) -> None:
         self._responses: list[dict[str, Any] | BaseException] = list(responses) or [
             signals_payload()
@@ -154,50 +149,19 @@ def runtime_config(version: str | None = None, **env: str):
     """
     from app.runtime.config_loader import load_runtime_config
 
-    if version is not None:
-        env = {"RUNTIME_CONFIG_VERSION": version, **env}
-    return load_runtime_config(env=env)
-
-
-def register_runtime_bundle(
-    *,
-    version: str,
-    settings: dict[str, Any],
-    prompt_version: str,
-    prompt_content: str,
-):
-    from app.agents.signal_extraction import LLMSignalExtractor
-    from app.runtime.agent_identity import agent_name_for
-    from app.runtime.config_registry import ConfigRegistry, ConfigSpec, compute_config_hash
-    from app.runtime.prompt_registry import PromptRegistry, PromptSpec, compute_content_hash
-
-    agent_name = agent_name_for(LLMSignalExtractor)
-    prompt_registry = PromptRegistry()
-    prompt_registry.register(
-        PromptSpec(
-            agent_name=agent_name,
-            version=prompt_version,
-            content=prompt_content,
-            content_hash=compute_content_hash(prompt_content),
-        )
-    )
-    config_registry = ConfigRegistry()
-    config_registry.register(
-        ConfigSpec(
-            version=version,
-            settings=settings,
-            content_hash=compute_config_hash(settings),
-        )
-    )
-    return config_registry, prompt_registry
+    return load_runtime_config(version=version, env=env)
 
 
 @pytest.fixture
 def api_client() -> TestClient:
     """HTTP client over a v1 (deterministic) app — independent of local `.env`."""
-    from app.agents.wiring import create_agents
+    from app.agents.wiring import create_agents, create_profile_extractor
     from app.api.main import create_app
 
+    config = runtime_config(version="v1")
     return TestClient(
-        create_app(orchestrator=create_agents(runtime_config=runtime_config(version="v1"))[-1])
+        create_app(
+            orchestrator=create_agents(runtime_config=config)[-1],
+            profile_extractor=create_profile_extractor(runtime_config=config),
+        )
     )

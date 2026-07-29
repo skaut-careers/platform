@@ -1,16 +1,27 @@
-# Signal Extractor Evaluation
+# Agent Evaluation
 
-Golden dataset in [`dataset/`](dataset/) — human-curated `expected_signals` per job posting.
+Human-curated golden datasets, one directory per LLM-backed agent:
 
-Each case JSON: `id`, `job_description`, `expected_signals` (+ optional `description`, `tags`).
+| Dataset | Directory | Case JSON | Metric |
+|---------|-----------|-----------|--------|
+| Signal extractor | [`signal_extraction/`](signal_extraction/) | `job_description`, `expected_signals` | set-based P/R/F1 per signal field + macro F1 |
+| Profile extractor | [`profile_extraction/`](profile_extraction/) | `raw_text`, `expected_profile` | set-based F1 per profile field + macro F1 |
+| Profile matcher | [`profile_matching/`](profile_matching/) | `user_profile`, `job_description`, `signals`, `expected` | score band + role/work/location/seniority flags + required/preferred/production set F1 |
 
-Loaded as a [Pydantic Evals](https://pydantic.dev/docs/ai/evals/) `Dataset` with `SignalExtractionEvaluator` (set-based precision / recall / F1).
+Each agent has exactly **seven** golden cases.
+
+Signal goldens are intentionally hard for regex baselines: prose/numbered skills, soft remote/hybrid cues, PagerDuty→on-call, risk without the word “vague”, and decade-tenure seniority. Prefer empty lists when evidence is weak.
+
+Matching goldens stress semantic bridges the deterministic matcher misses: skill aliases (`k8s`/`GCP`/`ML`), Frontend↔UI role titles, NYC↔New York place aliasing, `wfh`↔remote preferences, plus one severe seniority negative.
+
+Each case also carries optional `id`, `description`, `tags`. Datasets load as
+[Pydantic Evals](https://pydantic.dev/docs/ai/evals/) `Dataset`s with a matching evaluator.
 
 ## Run
 
 ```bash
-poetry run pytest tests/eval/           # golden dataset (v1 deterministic extractor)
-poetry run pytest -m llm -s             # golden dataset (live LLM; OPENAI_API_KEY in .env)
+poetry run pytest tests/eval/           # golden datasets (v1 deterministic agents)
+poetry run pytest -m llm -s             # live LLM; prints Rich report + macro_f1 (-s recommended)
 ```
 
 Default `poetry run pytest` excludes `@pytest.mark.llm` tests.
@@ -21,9 +32,10 @@ With `LOGFIRE_TOKEN` in `.env`, experiments appear in the Logfire Evals UI.
 
 | Module | Role |
 |--------|------|
-| `app/evaluation/dataset.py` | JSON → `Case` / `Dataset` |
-| `app/evaluation/metrics.py` | Field precision / recall / F1 |
-| `app/evaluation/evaluators.py` | Pydantic Evals evaluator |
-| `app/evaluation/runner.py` | `run_evaluation()` → `EvaluationReport` |
+| `app/evaluation/dataset.py` | JSON → `Case` / `Dataset` for every agent |
+| `app/evaluation/metrics.py` | set precision / recall / F1 (`score_field`, `score_signals`, `score_profile`) |
+| `app/evaluation/evaluators.py` | Pydantic Evals evaluators |
+| `app/evaluation/runner.py` | `run_*_evaluation()` → `EvaluationReport` |
+| `app/evaluation/report.py` | shared harness + report helpers |
 
 Runtime configs: `v1` deterministic · `v2` LLM+prompt v1 · `v3` LLM+prompt v2.

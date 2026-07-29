@@ -1,0 +1,15 @@
+{
+  "id": "contract_designer",
+  "description": "Clean frontend fields for a product designer",
+  "tags": ["frontend", "clean"],
+  "raw_text": "seniority: mid\nlocation: Lisbon\ntarget_roles: Product Designer\nskills: Figma, Prototyping\nwork_preferences: remote",
+  "expected_profile": {
+    "target_roles": ["Product Designer"],
+    "skills": ["Figma", "Prototyping"],
+    "experience_summary": "",
+    "location": "Lisbon",
+    "seniority": "mid",
+    "production_experience": [],
+    "work_preferences": ["remote"]
+  }
+}

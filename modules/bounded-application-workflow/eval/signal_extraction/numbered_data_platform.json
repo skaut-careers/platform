@@ -1,0 +1,44 @@
+{
+  "id": "numbered_data_platform",
+  "description": "Numbered requirement sentences with 'familiarity' / 'nice to have' preferred cues",
+  "tags": [
+    "numbered-list",
+    "preferred-cues",
+    "hard"
+  ],
+  "job_description": {
+    "title": "Data Platform Engineer",
+    "company": "Lakehouse Co",
+    "location": "Remote US",
+    "description": "What you will bring:\n1. Strong experience with Python for data pipelines\n2. Hands-on Spark and Airflow in production\n3. Comfortable with AWS (S3, EMR, IAM)\n4. Familiarity with dbt is a plus\n5. Snowflake experience is nice to have\n\nYou will help scale our analytics warehouse and keep batch jobs reliable.",
+    "seniority": "Senior",
+    "employment_type": "Full-time"
+  },
+  "expected_signals": {
+    "required_skills": [
+      "Python",
+      "Spark",
+      "Airflow",
+      "AWS"
+    ],
+    "preferred_skills": [
+      "dbt",
+      "Snowflake"
+    ],
+    "seniority_signals": [
+      "Senior"
+    ],
+    "production_expectations": [],
+    "work_arrangements": [
+      "remote"
+    ],
+    "location_signals": [
+      "US"
+    ],
+    "risk_indicators": [],
+    "missing_signals": [
+      "salary range",
+      "team size"
+    ]
+  }
+}

@@ -130,14 +130,15 @@ def _coverage_ratio(matched_count: int, total_count: int) -> float:
     return matched_count / total_count
 
 
-# Score weights sum to 1.0 — production and seniority are lighter than required skills.
-_REQUIRED_WEIGHT = 0.57
+# Score weights sum to 1.0.
+_REQUIRED_WEIGHT = 0.48
 _PREFERRED_WEIGHT = 0.10
-_ROLE_WEIGHT = 0.15
+_ROLE_WEIGHT = 0.14
 _PRODUCTION_WEIGHT = 0.08
 _SENIORITY_WEIGHT = 0.10
+_WORK_ARRANGEMENT_WEIGHT = 0.05
+_LOCATION_WEIGHT = 0.05
 _PRODUCTION_RISK_MIN_MISSING = 2
-
 
 _SENIORITY_RANKS: list[tuple[str, int]] = [
     ("mid-senior", 3),
@@ -221,6 +222,94 @@ def _production_gap_is_material(matched: list[str], missing: list[str]) -> bool:
         return True
 
     return len(missing) > total / 2
+
+
+def _locations_compatible(profile_location: str, job_location: str) -> bool:
+    if not profile_location.strip() or not job_location.strip():
+        return True
+    left = profile_location.casefold()
+    right = job_location.casefold()
+    if left in right or right in left:
+        return True
+    return bool(_tokens(profile_location) & _tokens(job_location))
+
+
+def _work_arrangement_aligned(
+    profile: UserProfile, job_modes: set[str]
+) -> bool:
+    prefs = set(profile.work_preferences)
+    if not job_modes or not prefs:
+        return True
+    return bool(prefs & job_modes)
+
+
+def _location_aligned(
+    profile: UserProfile,
+    job_modes: set[str],
+    job_place: str,
+) -> bool:
+    profile_location = profile.location.strip()
+
+    if "remote" in job_modes and "onsite" not in job_modes:
+        return True
+
+    if "onsite" in job_modes or (not job_modes and job_place):
+        return _locations_compatible(profile_location, job_place)
+
+    if "hybrid" in job_modes:
+        return _locations_compatible(profile_location, job_place)
+
+    return True
+
+
+def _assess_work_and_location_alignment(
+    profile: UserProfile,
+    job_modes: set[str],
+    job_place: str,
+    *,
+    work_arrangement_aligned: bool,
+    location_aligned: bool,
+) -> tuple[list[str], list[str]]:
+    reasons: list[str] = []
+    risks: list[str] = []
+    prefs = sorted(profile.work_preferences) or ["unspecified"]
+    modes = sorted(job_modes) or ["unspecified"]
+    profile_location = profile.location.strip() or "unspecified"
+    job_location = job_place or "unspecified"
+
+    if work_arrangement_aligned:
+        reasons.append(
+            "Work arrangement aligns "
+            f"(profile prefs: {', '.join(prefs)}; job: {', '.join(modes)})."
+        )
+    else:
+        risks.append(
+            "Work arrangement mismatch "
+            f"(profile prefs: {', '.join(prefs)}; job: {', '.join(modes)})."
+        )
+
+    if location_aligned:
+        if "remote" in job_modes and "onsite" not in job_modes:
+            reasons.append(
+                "Job is remote-capable; candidate location is not a hard constraint "
+                f"(profile: {profile_location}; job: {job_location})."
+            )
+        else:
+            reasons.append(
+                "Location aligns "
+                f"(profile: {profile_location}; job: {job_location})."
+            )
+    else:
+        severity = (
+            "On-site role with incompatible locations"
+            if "onsite" in job_modes
+            else "Location mismatch"
+        )
+        risks.append(
+            f"{severity} "
+            f"(profile: {profile_location}; job: {job_location})."
+        )
+    return reasons, risks
 
 
 def _assess_seniority_alignment(
@@ -358,6 +447,12 @@ def match_profile_to_job(
     seniority_ratio = _seniority_alignment_ratio(
         user_profile, job_description, signals
     )
+    job_modes = set(signals.work_arrangements)
+    job_place = " ".join(signals.location_signals).strip()
+    work_arrangement_aligned = _work_arrangement_aligned(user_profile, job_modes)
+    location_aligned = _location_aligned(user_profile, job_modes, job_place)
+    work_ratio = 1.0 if work_arrangement_aligned else 0.0
+    location_ratio = 1.0 if location_aligned else 0.0
 
     score = min(
         1.0,
@@ -365,7 +460,9 @@ def match_profile_to_job(
         + _PREFERRED_WEIGHT * preferred_ratio
         + _ROLE_WEIGHT * role_ratio
         + _PRODUCTION_WEIGHT * production_ratio
-        + _SENIORITY_WEIGHT * seniority_ratio,
+        + _SENIORITY_WEIGHT * seniority_ratio
+        + _WORK_ARRANGEMENT_WEIGHT * work_ratio
+        + _LOCATION_WEIGHT * location_ratio,
     )
 
     reasons: list[str] = []
@@ -405,6 +502,16 @@ def match_profile_to_job(
     reasons.extend(production_reasons)
     risks.extend(production_risks)
 
+    location_reasons, location_risks = _assess_work_and_location_alignment(
+        user_profile,
+        job_modes,
+        job_place,
+        work_arrangement_aligned=work_arrangement_aligned,
+        location_aligned=location_aligned,
+    )
+    reasons.extend(location_reasons)
+    risks.extend(location_risks)
+
     for indicator in signals.risk_indicators:
         risks.append(f"Job posting risk: {indicator}")
 
@@ -416,6 +523,8 @@ def match_profile_to_job(
         production_expectations_matched=production_matched,
         production_expectations_missing=production_missing,
         role_aligned=role_aligned,
+        work_arrangement_aligned=work_arrangement_aligned,
+        location_aligned=location_aligned,
         severe_seniority_mismatch=severe_seniority_mismatch,
         reasons=reasons,
         risks=risks,
