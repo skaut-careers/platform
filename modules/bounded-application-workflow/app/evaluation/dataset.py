@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from typing import cast
 
 from pydantic import BaseModel, Field
 from pydantic_evals import Case, Dataset
@@ -105,13 +106,18 @@ def load_match_cases(dataset_dir: Path | None = None) -> list[MatchCase]:
     for path in sorted(root.glob("*.json")):
         payload = json.loads(path.read_text())
         cases.append(
-            Case(
-                name=payload["id"],
-                inputs=_match_input(payload),
-                expected_output=MatchExpectation.model_validate(payload["expected"]),
-                metadata=CaseMetadata(
-                    description=payload.get("description", ""),
-                    tags=payload.get("tags", []),
+            cast(
+                MatchCase,
+                Case(
+                    name=payload["id"],
+                    inputs=_match_input(payload),
+                    expected_output=MatchExpectation.model_validate(
+                        payload["expected"]
+                    ),
+                    metadata=CaseMetadata(
+                        description=payload.get("description", ""),
+                        tags=payload.get("tags", []),
+                    ),
                 ),
             )
         )

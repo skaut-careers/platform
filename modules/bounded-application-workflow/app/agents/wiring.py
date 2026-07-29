@@ -1,7 +1,7 @@
 """Compose the workflow pipeline from concrete agent implementations."""
 
 from collections.abc import Callable
-from typing import TypeVar
+from typing import Any, TypeVar, cast
 
 from pydantic_ai.models import Model
 
@@ -56,11 +56,16 @@ def _create_agent(
     config = runtime_config or load_runtime_config()
     resolved = _resolve_mode(mode or config.agent_for(llm_type).mode)
     if resolved == "llm":
-        return llm_type(
-            model=model,
-            runtime_config=config,
-            runtime=BoundedAgentRuntime(),
-            fallback=default_factory(),
+        # type[_AgentT] does not expose BoundedLLMAgent.__init__ kwargs to the checker.
+        agent_cls = cast(Any, llm_type)
+        return cast(
+            _AgentT,
+            agent_cls(
+                model=model,
+                runtime_config=config,
+                runtime=BoundedAgentRuntime(),
+                fallback=default_factory(),
+            ),
         )
     return default_factory()
 
