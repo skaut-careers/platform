@@ -1,0 +1,15 @@
+{
+  "id": "senior_ml_oncall",
+  "description": "Frontend fields where the skills value is free text a comma-split mishandles",
+  "tags": ["frontend", "messy-value", "production"],
+  "raw_text": "seniority: senior\nlocation: Zurich\ntarget_roles: ML Engineer\nskills: Python and PyTorch, plus some MLOps\nproduction_experience: on-call, monitoring\nwork_preferences: hybrid",
+  "expected_profile": {
+    "target_roles": ["ML Engineer"],
+    "skills": ["Python", "PyTorch", "MLOps"],
+    "experience_summary": "",
+    "location": "Zurich",
+    "seniority": "senior",
+    "production_experience": ["on-call", "monitoring"],
+    "work_preferences": ["hybrid"]
+  }
+}

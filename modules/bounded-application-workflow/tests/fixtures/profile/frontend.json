@@ -1,0 +1,8 @@
+{
+  "raw_text": "Roles: Frontend Engineer\nSkills: TypeScript, React\nLocation: Berlin",
+  "expected_profile": {
+    "target_roles": ["Frontend Engineer"],
+    "skills": ["TypeScript", "React"],
+    "location": "Berlin"
+  }
+}

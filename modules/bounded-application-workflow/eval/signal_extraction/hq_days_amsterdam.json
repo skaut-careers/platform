@@ -1,0 +1,44 @@
+{
+  "id": "hq_days_amsterdam",
+  "description": "Hybrid implied by occasional HQ days; place and observability without the words hybrid/on-call",
+  "tags": [
+    "soft-hybrid",
+    "hq-place",
+    "observability",
+    "hard"
+  ],
+  "job_description": {
+    "title": "Platform Engineer",
+    "company": "NoordStack",
+    "location": "",
+    "description": "Most of the week you can work from home; we ask for two days a month at our Amsterdam HQ for planning. You will run Kubernetes clusters, write Go services, and improve CI with GitHub Actions. Observability with Prometheus is part of the job.",
+    "seniority": "Senior",
+    "employment_type": "Full-time"
+  },
+  "expected_signals": {
+    "required_skills": [
+      "Kubernetes",
+      "Go",
+      "GitHub Actions",
+      "Prometheus"
+    ],
+    "preferred_skills": [],
+    "seniority_signals": [
+      "Senior"
+    ],
+    "production_expectations": [
+      "observability"
+    ],
+    "work_arrangements": [
+      "hybrid"
+    ],
+    "location_signals": [
+      "Amsterdam"
+    ],
+    "risk_indicators": [],
+    "missing_signals": [
+      "salary range",
+      "team size"
+    ]
+  }
+}

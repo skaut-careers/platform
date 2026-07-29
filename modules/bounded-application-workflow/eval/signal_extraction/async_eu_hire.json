@@ -1,0 +1,42 @@
+{
+  "id": "async_eu_hire",
+  "description": "Empty Location; remote implied by async / no-commute language only",
+  "tags": [
+    "soft-remote",
+    "empty-location",
+    "hard"
+  ],
+  "job_description": {
+    "title": "Full Stack Engineer",
+    "company": "Async Labs",
+    "location": "",
+    "description": "We hire across EU timezones and work asynchronously \u2014 no commuting, no fixed office days. Stack is TypeScript, React, and Node.js. Experience with Postgres and GraphQL is required. Docker knowledge helps.",
+    "seniority": "Mid",
+    "employment_type": "Full-time"
+  },
+  "expected_signals": {
+    "required_skills": [
+      "TypeScript",
+      "React",
+      "Node.js",
+      "Postgres",
+      "GraphQL"
+    ],
+    "preferred_skills": [
+      "Docker"
+    ],
+    "seniority_signals": [
+      "Mid"
+    ],
+    "production_expectations": [],
+    "work_arrangements": [
+      "remote"
+    ],
+    "location_signals": [],
+    "risk_indicators": [],
+    "missing_signals": [
+      "salary range",
+      "team size"
+    ]
+  }
+}

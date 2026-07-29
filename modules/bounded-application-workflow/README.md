@@ -35,7 +35,7 @@ poetry run pytest -m llm -s    # golden eval
 ## API
 
 - `GET /health`
-- `POST /workflow/run` — `WorkflowInput` → `WorkflowOutput`
+- `POST /workflow/run` — raw `profile_text` + `job_description` → `WorkflowOutput` (profile is extracted server-side, then evaluated)
 
 ## CI
 

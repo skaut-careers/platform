@@ -6,7 +6,7 @@ from app.domain.models import DecisionType, UserProfile, WorkflowDecision
 
 def test_user_profile_rejects_null_list_fields():
     with pytest.raises(ValidationError):
-        UserProfile(name="Ana", skills=None)
+        UserProfile(skills=None)
 
 
 def test_workflow_decision_rejects_invalid_score():

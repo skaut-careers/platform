@@ -1,0 +1,15 @@
+{
+  "id": "frontend_remote",
+  "description": "Clean frontend form fields serialised as labelled lines",
+  "tags": ["frontend", "clean"],
+  "raw_text": "seniority: mid\nlocation: Berlin\ntarget_roles: Frontend Engineer\nskills: React, Next.js, TypeScript, CSS\nwork_preferences: remote",
+  "expected_profile": {
+    "target_roles": ["Frontend Engineer"],
+    "skills": ["React", "Next.js", "TypeScript", "CSS"],
+    "experience_summary": "",
+    "location": "Berlin",
+    "seniority": "mid",
+    "production_experience": [],
+    "work_preferences": ["remote"]
+  }
+}

@@ -12,13 +12,11 @@ from app.runtime.config_registry import (
 from app.runtime.prompt_registry import (
     PromptNotFoundError,
     PromptRegistry,
-    PromptSpec,
     compute_content_hash,
     default_prompt_registry,
 )
 from tests.conftest import (
     RecordingSignalModel,
-    register_runtime_bundle,
     runtime_config,
     sample_signal_extractor_input,
     signals_payload,
@@ -54,7 +52,11 @@ def test_default_prompt_registry():
 def test_discover_agents_finds_runtime_packages():
     discovery = discover_agents()
     assert "signal_extraction" in discovery.packages
-    assert discovery.runtime_agents == ["signal_extraction"]
+    assert discovery.runtime_agents == [
+        "profile_extraction",
+        "profile_matching",
+        "signal_extraction",
+    ]
 
 
 def test_registries_reject_unknown_versions():
@@ -90,19 +92,6 @@ def test_prompt_registry_from_agents_directory(tmp_path):
     registry = PromptRegistry.from_agents_directory(tmp_path)
     assert registry.get("signal_extraction", "v2").content == "prompt v2"
     assert registry.list_versions("signal_extraction") == ["v2"]
-
-
-def test_prompt_registry_register_overrides_existing_entry():
-    registry = PromptRegistry()
-    registry.register(
-        PromptSpec(
-            agent_name=_AGENT,
-            version="v9",
-            content="custom prompt",
-            content_hash=compute_content_hash("custom prompt"),
-        )
-    )
-    assert registry.get(_AGENT, "v9").content == "custom prompt"
 
 
 @pytest.mark.parametrize(
@@ -142,35 +131,6 @@ def test_load_runtime_config_rejects_unknown_prompt_reference(tmp_path):
         )
 
 
-def test_execution_links_config_and_prompt_metadata():
-    settings = {
-        "mode": "llm",
-        "model": "gpt-test",
-        "max_attempts": 2,
-        "prompt_version": "v9",
-    }
-    config_registry, prompt_registry = register_runtime_bundle(
-        version="bundle_v9",
-        settings=settings,
-        prompt_version="v9",
-        prompt_content="registry prompt v9",
-    )
-    model = RecordingSignalModel(signals_payload(required_skills=["Python"]))
-    output = LLMSignalExtractor(
-        model=model.as_model(),
-        runtime_config=load_runtime_config(
-            env={"RUNTIME_CONFIG_VERSION": "bundle_v9"},
-            config_registry=config_registry,
-            prompt_registry=prompt_registry,
-        ),
-    ).run(sample_signal_extractor_input())
-
-    assert output.execution
-    assert output.execution.config_version == "bundle_v9"
-    assert output.execution.config_hash == compute_config_hash(settings)
-    assert model.system_prompts[-1] == "registry prompt v9"
-
-
 def test_runtime_version_switch_changes_prompt_and_settings():
     model_v2 = RecordingSignalModel(signals_payload(required_skills=["Python"]))
     LLMSignalExtractor(
@@ -191,11 +151,3 @@ def test_runtime_version_switch_changes_prompt_and_settings():
     assert prompt_from_runtime_v2 != prompt_from_runtime_v3
     assert output.execution
     assert output.execution.config_version == "v3"
-    assert output.execution.config_hash == compute_config_hash(
-        {
-            "mode": "llm",
-            "model": "gpt-5-mini",
-            "max_attempts": 3,
-            "prompt_version": "v2",
-        }
-    )

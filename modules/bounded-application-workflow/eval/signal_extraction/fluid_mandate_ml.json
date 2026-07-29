@@ -1,0 +1,43 @@
+{
+  "id": "fluid_mandate_ml",
+  "description": "Overloaded / shifting scope without using the word vague; seniority field empty",
+  "tags": [
+    "risk-without-keyword",
+    "missing-seniority",
+    "hard"
+  ],
+  "job_description": {
+    "title": "ML Engineer",
+    "company": "OmniSense",
+    "location": "Hybrid - Berlin",
+    "description": "You will wear many hats: train models in PyTorch, ship features in Python services, talk to customers about roadmap priorities, and occasionally own hiring for the pod. Scope evolves week to week depending on what the business needs. Experience with FastAPI and AWS is required.",
+    "seniority": "",
+    "employment_type": "Full-time"
+  },
+  "expected_signals": {
+    "required_skills": [
+      "PyTorch",
+      "Python",
+      "FastAPI",
+      "AWS"
+    ],
+    "preferred_skills": [],
+    "seniority_signals": [],
+    "production_expectations": [],
+    "work_arrangements": [
+      "hybrid"
+    ],
+    "location_signals": [
+      "Berlin"
+    ],
+    "risk_indicators": [
+      "ambiguous scope",
+      "overloaded role"
+    ],
+    "missing_signals": [
+      "seniority level",
+      "salary range",
+      "team size"
+    ]
+  }
+}

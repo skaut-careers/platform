@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, Protocol
+from typing import TYPE_CHECKING, Any, Optional, Protocol
 
 from pydantic import BaseModel
 
@@ -18,6 +18,12 @@ from app.runtime.result import AgentExecutionResult
 
 if TYPE_CHECKING:
     from app.agents.orchestration.state import WorkflowGraphState
+
+
+class AgentOutput(BaseModel):
+    """Base for LLM-backed agent outputs carrying execution provenance."""
+
+    execution: Optional[AgentExecutionResult[Any]] = None
 
 
 class WorkflowPlannerInput(BaseModel):
@@ -42,15 +48,30 @@ class SignalExtractorInput(BaseModel):
     job_description: JobDescription
 
 
-class SignalExtractorOutput(BaseModel):
+class SignalExtractorOutput(AgentOutput):
     signals: JobSignals
-    execution: Optional[AgentExecutionResult["SignalExtractorOutput"]] = None
 
 
 class SignalExtractor(Protocol):
     """Parse job descriptions into structured signal categories."""
 
     def run(self, agent_input: SignalExtractorInput) -> SignalExtractorOutput: ...
+
+
+class ProfileExtractorInput(BaseModel):
+    """Raw candidate text (concatenated form fields or free text) to structure."""
+
+    raw_text: str
+
+
+class ProfileExtractorOutput(AgentOutput):
+    profile: UserProfile
+
+
+class ProfileExtractor(Protocol):
+    """Parse raw candidate text into a structured UserProfile."""
+
+    def run(self, agent_input: ProfileExtractorInput) -> ProfileExtractorOutput: ...
 
 
 class ProfileMatcherInput(BaseModel):
@@ -61,7 +82,7 @@ class ProfileMatcherInput(BaseModel):
     signals: JobSignals
 
 
-class ProfileMatcherOutput(BaseModel):
+class ProfileMatcherOutput(AgentOutput):
     match: ProfileMatchResult
 
 

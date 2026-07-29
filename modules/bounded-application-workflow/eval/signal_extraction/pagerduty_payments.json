@@ -1,0 +1,44 @@
+{
+  "id": "pagerduty_payments",
+  "description": "On-call stated only via PagerDuty rotation; deployment via runbooks",
+  "tags": [
+    "pagerduty",
+    "production-euphemism",
+    "hard"
+  ],
+  "job_description": {
+    "title": "SRE",
+    "company": "ClearLedger",
+    "location": "London, UK",
+    "description": "Keep payment clearing highly available. You will participate in the PagerDuty rotation, own deployment runbooks, and chase p95 latency on critical paths. Strong Linux, Terraform, and Kubernetes background required. Python scripting is expected.",
+    "seniority": "Senior",
+    "employment_type": "Full-time"
+  },
+  "expected_signals": {
+    "required_skills": [
+      "Linux",
+      "Terraform",
+      "Kubernetes",
+      "Python"
+    ],
+    "preferred_skills": [],
+    "seniority_signals": [
+      "Senior"
+    ],
+    "production_expectations": [
+      "on-call rotation",
+      "deployment"
+    ],
+    "work_arrangements": [],
+    "location_signals": [
+      "London",
+      "UK"
+    ],
+    "risk_indicators": [],
+    "missing_signals": [
+      "remote policy",
+      "salary range",
+      "team size"
+    ]
+  }
+}

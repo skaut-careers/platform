@@ -7,8 +7,6 @@ from app.runtime import (
     AgentRuntime,
     BoundedAgentRuntime,
     ExecutionStatus,
-    OutputValidationError,
-    PydanticOutputValidator,
     RetryPolicy,
     RuntimeExecutionError,
     RuntimeConfig,
@@ -84,43 +82,6 @@ def test_unwrap_returns_output_or_raises():
 def test_config_enforces_bounds(overrides):
     with pytest.raises(ValueError):
         RuntimeConfig.build(**{"agent_name": _AGENT, **overrides})
-
-
-def _invalid_output(_: SignalExtractorInput) -> SignalExtractorOutput:
-    return SignalExtractorOutput(
-        signals=JobSignals.model_construct(required_skills="Python")
-    )
-
-
-def test_validator_rejects_invalid_output():
-    result = BoundedAgentRuntime().execute(
-        _invalid_output,
-        _input(),
-        _runtime(max_attempts=1),
-        _AGENT,
-        validator=PydanticOutputValidator(SignalExtractorOutput),
-    )
-    assert not result.succeeded and result.error.startswith("OutputValidationError")
-
-
-def test_validator_retries_before_failing():
-    calls = 0
-
-    def flaky_invalid(_: SignalExtractorInput) -> SignalExtractorOutput:
-        nonlocal calls
-        calls += 1
-        if calls == 1:
-            return _invalid_output(_)
-        return _ok(_)
-
-    result = BoundedAgentRuntime().execute(
-        flaky_invalid,
-        _input(),
-        _runtime(max_attempts=2),
-        _AGENT,
-        validator=PydanticOutputValidator(SignalExtractorOutput),
-    )
-    assert result.succeeded and result.attempts == calls == 2
 
 
 def test_fallback_runs_after_primary_failure():

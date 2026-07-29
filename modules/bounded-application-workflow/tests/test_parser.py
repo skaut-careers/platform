@@ -10,12 +10,16 @@ Location: Zurich
 Seniority: Mid
 Employment Type: Full-time
 
-- Python
-- LLM Systems
-- Evaluation
+Build and own LLM-based product workflows.
 
-+ FastAPI
-+ React
+Requirements:
+• Python
+• LLM Systems
+• Evaluation
+
+Nice to have:
+• FastAPI
+• React
 """
 
 

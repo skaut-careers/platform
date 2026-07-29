@@ -1,0 +1,12 @@
+{
+  "raw_text": "Target roles: AI Engineer, ML Engineer\nSkills: Python, LLMs, FastAPI\nSeniority: senior\nLocation: Remote Europe\nProduction experience: on-call, observability\nWork preferences: remote\nRecent wins: 8 years building ML platforms.",
+  "expected_profile": {
+    "target_roles": ["AI Engineer", "ML Engineer"],
+    "skills": ["Python", "LLMs", "FastAPI"],
+    "experience_summary": "8 years building ML platforms.",
+    "location": "Remote Europe",
+    "seniority": "senior",
+    "production_experience": ["on-call", "observability"],
+    "work_preferences": ["remote"]
+  }
+}

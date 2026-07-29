@@ -1,7 +1,8 @@
 from app.agents.contracts import ProfileMatcherInput, ProfileMatcherOutput
-from app.agents.profile_matching.matching import match_profile_to_job
+from app.agents.profile_matching.llm import LLMProfileMatcher
+from app.agents.profile_matching.deterministic import match_profile_to_job
 
-__all__ = ["DefaultProfileMatcher"]
+__all__ = ["DefaultProfileMatcher", "LLMProfileMatcher"]
 
 
 class DefaultProfileMatcher:

@@ -1,26 +1,71 @@
 from app.evaluation.dataset import (
     CaseMetadata,
+    MatchCase,
+    MatchExpectation,
+    ProfileCase,
     SignalCase,
     SignalDataset,
-    load_cases,
-    load_dataset,
+    load_match_cases,
+    load_match_dataset,
+    load_profile_cases,
+    load_profile_dataset,
+    load_signal_cases,
+    load_signal_dataset,
 )
-from app.evaluation.evaluators import SignalExtractionEvaluator
-from app.evaluation.metrics import FieldScore, SignalScore, score_field, score_signals
-from app.evaluation.runner import fallback_rate, macro_f1, run_evaluation
+from app.evaluation.evaluators import (
+    ProfileExtractionEvaluator,
+    ProfileMatchEvaluator,
+    SignalExtractionEvaluator,
+)
+from app.evaluation.metrics import (
+    FieldScore,
+    MATCH_LIST_FIELDS,
+    MatchScore,
+    PROFILE_SCORED_FIELDS,
+    ProfileScore,
+    SignalScore,
+    score_field,
+    score_match,
+    score_profile,
+    score_signals,
+)
+from app.evaluation.report import fallback_rate, macro_f1, score_average
+from app.evaluation.runner import (
+    run_profile_extraction_evaluation,
+    run_profile_matching_evaluation,
+    run_signal_evaluation,
+)
 
 __all__ = [
     "CaseMetadata",
     "FieldScore",
+    "MATCH_LIST_FIELDS",
+    "MatchCase",
+    "MatchExpectation",
+    "MatchScore",
+    "PROFILE_SCORED_FIELDS",
+    "ProfileCase",
+    "ProfileExtractionEvaluator",
+    "ProfileMatchEvaluator",
+    "ProfileScore",
     "SignalCase",
     "SignalDataset",
     "SignalExtractionEvaluator",
     "SignalScore",
     "fallback_rate",
-    "load_cases",
-    "load_dataset",
+    "load_match_cases",
+    "load_match_dataset",
+    "load_profile_cases",
+    "load_profile_dataset",
+    "load_signal_cases",
+    "load_signal_dataset",
     "macro_f1",
-    "run_evaluation",
+    "run_profile_extraction_evaluation",
+    "run_profile_matching_evaluation",
+    "run_signal_evaluation",
+    "score_average",
     "score_field",
+    "score_match",
+    "score_profile",
     "score_signals",
 ]
