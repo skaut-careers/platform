@@ -2,7 +2,7 @@
 
 Evaluates whether an opportunity is worth pursuing from user profile + job description. Decisions: `prepare` · `queue` · `skip` · `escalate`. No autonomous applications.
 
-**Phase:** Milestones 1–5 complete — next: M6 Demo-ready application (local end-to-end demo), then M7 Public demo on Azure. See [ROADMAP](../../docs/ROADMAP.md).
+**Phase:** Milestones 1–5 complete — next: M6 Minimal product (local end-to-end user journey), then M7 Public launch on Azure. See [ROADMAP](../../docs/ROADMAP.md).
 
 ## Implemented
 
@@ -35,7 +35,7 @@ poetry run pytest -m llm -s    # golden eval
 ## API
 
 - `GET /health`
-- `POST /workflow/run` — raw `profile_text` + `job_description` → `WorkflowOutput` (profile is extracted server-side, then evaluated)
+- `POST /workflow/run` — raw `profile_text` + raw `job_description_text` → `WorkflowOutput` (profile extracted + job parsed server-side, then LangGraph)
 
 ## CI
 

@@ -10,7 +10,7 @@ Skaut Careers is a modular career platform for deliberate professional decisions
 
 **[Bounded Application Workflow](modules/bounded-application-workflow/)** — evaluates job opportunities against a user profile and returns a bounded decision (`prepare`, `queue`, `skip`, `escalate`). Human-controlled; no autonomous applications.
 
-**Phase:** Milestones 1–5 complete — next: [M6 Demo-ready application](docs/ROADMAP.md) (local end-to-end demo), then [M7 Public demo on Azure](docs/ROADMAP.md).
+**Phase:** Milestones 1–5 complete — next: [M6 Minimal product](docs/ROADMAP.md) (local end-to-end user journey), then [M7 Public launch on Azure](docs/ROADMAP.md).
 
 ## Principles
 

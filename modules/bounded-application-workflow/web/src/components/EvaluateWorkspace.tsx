@@ -7,7 +7,7 @@ import { Atmosphere } from "@/components/Atmosphere";
 import {
   EMPTY_PROFILE,
   WORK_PREFERENCE_OPTIONS,
-  type DemoProfile,
+  type ProfileFormValues,
 } from "@/lib/examples";
 import { DECISION_COPY } from "@/lib/decisions";
 
@@ -33,7 +33,7 @@ function parseList(value: string): string[] {
     .filter(Boolean);
 }
 
-function validateProfile(profile: DemoProfile): string[] {
+function validateProfile(profile: ProfileFormValues): string[] {
   const errors: string[] = [];
   if (parseList(profile.targetRoles).length < 1) errors.push("Add at least 1 role.");
   if (parseList(profile.skills).length < 3) errors.push("Add at least 3 skills.");
@@ -57,15 +57,18 @@ const STEPS = [
   { id: 3 as const, label: "Match" },
 ];
 
-export function DemoWorkspace() {
-  const [profile, setProfile] = useState<DemoProfile>(EMPTY_PROFILE);
+export function EvaluateWorkspace() {
+  const [profile, setProfile] = useState<ProfileFormValues>(EMPTY_PROFILE);
   const [jobText, setJobText] = useState("");
   const [step, setStep] = useState<Step>(1);
   const [showPlaceholder, setShowPlaceholder] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
   const productRef = useRef<HTMLHeadingElement | null>(null);
 
-  function updateProfile<K extends keyof DemoProfile>(key: K, value: DemoProfile[K]) {
+  function updateProfile<K extends keyof ProfileFormValues>(
+    key: K,
+    value: ProfileFormValues[K],
+  ) {
     setProfile((current) => ({ ...current, [key]: value }));
   }
 
