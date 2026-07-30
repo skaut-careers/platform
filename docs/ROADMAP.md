@@ -27,13 +27,13 @@ Migrate onto LangGraph · Pydantic AI · Logfire · Pydantic Evals behind existi
 | `AgentTrace` | Logfire |
 | Custom eval harness | Pydantic Evals |
 
-## Milestone 6 — Demo-ready application
+## Milestone 6 — Minimal product
 
-Local end-to-end demo: paste job description → evaluate → show score, decision, missing signals, risks, reasoning. Next.js + CopilotKit over the FastAPI / LangGraph backend. Azure deploy is Milestone 7.
+Local end-to-end product: paste job description → evaluate → show score, decision, missing signals, risks, reasoning. Next.js + CopilotKit over the FastAPI / LangGraph backend. Azure deploy is Milestone 7.
 
-## Milestone 7 — Public demo on Azure
+## Milestone 7 — Public launch on Azure
 
-Deploy the demo to Azure with a minimal managed setup, public HTTPS access, secure config, and a repeatable deploy process.
+Deploy the minimal product to Azure with a managed setup, public HTTPS access, secure config, and a repeatable deploy process.
 
 ## Milestone 8 — Early Reliability Baseline
 

@@ -1,4 +1,4 @@
-export type DemoProfile = {
+export type ProfileFormValues = {
   targetRoles: string;
   skills: string;
   experienceSummary: string;
@@ -15,7 +15,7 @@ export const WORK_PREFERENCE_OPTIONS = [
 ] as const;
 
 /** Default empty profile for the product form. */
-export const EMPTY_PROFILE: DemoProfile = {
+export const EMPTY_PROFILE: ProfileFormValues = {
   targetRoles: "",
   skills: "",
   experienceSummary: "",
