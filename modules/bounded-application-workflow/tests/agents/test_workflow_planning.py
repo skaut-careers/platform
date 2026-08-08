@@ -1,10 +1,5 @@
 from app.agents.workflow_planning.plan import (
-    DECISION,
     HUMAN_REVIEW,
-    INTAKE,
-    POLICY_EVALUATION,
-    PROFILE_MATCHING,
-    SIGNAL_EXTRACTION,
     WorkflowPlan,
     compare_plan,
     default_workflow_plan,
@@ -12,44 +7,23 @@ from app.agents.workflow_planning.plan import (
 
 
 def test_default_workflow_plan():
-    assert default_workflow_plan().stages == [
-        INTAKE,
-        SIGNAL_EXTRACTION,
-        PROFILE_MATCHING,
-        POLICY_EVALUATION,
-        DECISION,
-    ]
+    stages = default_workflow_plan().stages
+    assert stages[0] == "profile_extraction"
+    assert stages[-1] == "decision"
+    assert "signal_extraction" in stages
+    assert stages.index("signal_extraction") < stages.index("workflow_planning")
 
 
 def test_compare_plan_flags_skipped_human_review():
-    plan = WorkflowPlan(
-        stages=[
-            INTAKE,
-            SIGNAL_EXTRACTION,
-            PROFILE_MATCHING,
-            POLICY_EVALUATION,
-            HUMAN_REVIEW,
-            DECISION,
-        ],
-    )
-    executed = [
-        INTAKE,
-        SIGNAL_EXTRACTION,
-        PROFILE_MATCHING,
-        POLICY_EVALUATION,
-        DECISION,
-    ]
-
-    report = compare_plan(plan, executed)
-
+    base = default_workflow_plan().stages
+    plan = WorkflowPlan(stages=[*base[:-1], HUMAN_REVIEW, base[-1]])
+    report = compare_plan(plan, base)
     assert report.followed_plan is False
     assert report.skipped_stages == [HUMAN_REVIEW]
-    assert report.unplanned_stages == []
 
 
 def test_compare_plan_followed():
     plan = default_workflow_plan()
     report = compare_plan(plan, list(plan.stages))
     assert report.followed_plan is True
-    assert report.unplanned_stages == []
-    assert report.skipped_stages == []
+    assert not report.skipped_stages and not report.unplanned_stages

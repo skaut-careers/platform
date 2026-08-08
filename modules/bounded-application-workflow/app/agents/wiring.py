@@ -131,6 +131,7 @@ def create_agents(
         signal_extractor or config.agent_for(LLMSignalExtractor).mode
     )
     planner = DefaultWorkflowPlanner()
+    profile_extractor = create_profile_extractor(runtime_config=config)
     extractor = create_signal_extractor(
         runtime_config=config, model=signal_model, mode=mode
     )
@@ -140,6 +141,7 @@ def create_agents(
     policy = DefaultDecisionPolicy()
     orchestrator = DefaultWorkflowOrchestrator(
         planner=planner,
+        profile_extractor=profile_extractor,
         extractor=extractor,
         matcher=matcher,
         policy=policy,
@@ -147,22 +149,25 @@ def create_agents(
     return planner, extractor, matcher, policy, orchestrator
 
 
-def evaluate_workflow(
+def run_workflow(
     workflow_input: WorkflowInput,
     *,
     runtime_config: RuntimeConfig | None = None,
 ) -> WorkflowOutput:
-    output, _ = run_workflow_evaluation(
-        workflow_input, runtime_config=runtime_config
+    """Run the orchestrated workflow and return only the output."""
+    output, _ = run_workflow_with_state(
+        workflow_input,
+        runtime_config=runtime_config,
     )
     return output
 
 
-def run_workflow_evaluation(
+def run_workflow_with_state(
     workflow_input: WorkflowInput,
     *,
     runtime_config: RuntimeConfig | None = None,
 ) -> tuple[WorkflowOutput, WorkflowGraphState]:
+    """Run the orchestrated workflow; return output + final state."""
     result = create_agents(runtime_config=runtime_config)[-1].run(
         WorkflowOrchestratorInput(workflow_input=workflow_input)
     )

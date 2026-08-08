@@ -1,39 +1,37 @@
 from app.agents.contracts import WorkflowPlannerInput, WorkflowPlannerOutput
-from app.agents.signal_extraction.deterministic import extract_job_signals
 from app.agents.workflow_planning.plan import (
     DECISION,
     HUMAN_REVIEW,
-    INTAKE,
-    POLICY_EVALUATION,
+    POLICY_APPLICATION,
+    PROFILE_EXTRACTION,
     PROFILE_MATCHING,
     SIGNAL_EXTRACTION,
+    WORKFLOW_PLANNING,
     WorkflowPlan,
 )
 from app.domain.job_signals import JobSignals
-from app.domain.models import WorkflowInput
+from app.domain.models import UserProfile
 
 _CORE_STAGES = [
-    INTAKE,
+    PROFILE_EXTRACTION,
     SIGNAL_EXTRACTION,
+    WORKFLOW_PLANNING,
     PROFILE_MATCHING,
-    POLICY_EVALUATION,
+    POLICY_APPLICATION,
 ]
 
 
-def _predict_human_review(pre_scan: JobSignals) -> bool:
-    # Decision rules escalate risky postings to review; mirror that here so the
-    # plan anticipates the human_review stage instead of always omitting it.
-    return bool(pre_scan.risk_indicators)
+def _predict_human_review(signals: JobSignals) -> bool:
+    return bool(signals.risk_indicators)
 
 
-def create_workflow_plan(workflow_input: WorkflowInput) -> WorkflowPlan:
-    """Estimate the stages of a run before executing it."""
-    # Cheap pre-scan of the posting; the execution re-extracts signals inside
-    # its own signal_extraction stage.
-    pre_scan = extract_job_signals(workflow_input.job_description)
-
+def create_workflow_plan(
+    _user_profile: UserProfile,
+    signals: JobSignals,
+) -> WorkflowPlan:
+    """Estimate the stages of a run from already-extracted job signals."""
     stages = list(_CORE_STAGES)
-    if _predict_human_review(pre_scan):
+    if _predict_human_review(signals):
         stages.append(HUMAN_REVIEW)
     stages.append(DECISION)
 
@@ -42,5 +40,8 @@ def create_workflow_plan(workflow_input: WorkflowInput) -> WorkflowPlan:
 
 class DefaultWorkflowPlanner:
     def run(self, agent_input: WorkflowPlannerInput) -> WorkflowPlannerOutput:
-        plan = create_workflow_plan(agent_input.workflow_input)
+        plan = create_workflow_plan(
+            agent_input.user_profile,
+            agent_input.signals,
+        )
         return WorkflowPlannerOutput(plan=plan)

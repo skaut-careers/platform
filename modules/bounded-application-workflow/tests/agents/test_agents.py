@@ -27,16 +27,16 @@ from tests.conftest import (
     load_signal_fixture,
     sample_signal_extractor_input,
     signals_test_model,
-    workflow_input,
+    fixture_entities,
 )
 
 
 def _match(fixture_name: str):
-    workflow = workflow_input(fixture_name)
+    case = fixture_entities(fixture_name)
     return match_profile_to_job(
-        workflow.user_profile,
-        workflow.job_description,
-        extract_job_signals(workflow.job_description),
+        case.user_profile,
+        case.job_description,
+        extract_job_signals(case.job_description),
     )
 
 

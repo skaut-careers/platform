@@ -1,18 +1,26 @@
 # Skaut Careers Web
 
-Next.js UI for IT opportunity evaluation (M6).
+Next.js UI for the IT opportunity workflow (M6).
 
 ## Stack
 
 - Next.js (App Router) + TypeScript
 - Tailwind CSS v4
+- CopilotKit (`@copilotkit/react-core`) → FastAPI AG-UI agent
 - pnpm, Node 24+
 
-## Run
+## Run (from module root)
 
 ```bash
-pnpm install
-pnpm dev
+make install
+make dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open http://127.0.0.1:3000
+
+```bash
+make web-dev      # UI only
+make web-build    # production build check
+make web-typecheck
+make web-lint
+```

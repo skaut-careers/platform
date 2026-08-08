@@ -1,29 +1,5 @@
 {
-  "user_profile": {
-    "target_roles": [
-      "AI Engineer"
-    ],
-    "skills": [
-      "machine learning research",
-      "Python",
-      "AI systems"
-    ],
-    "experience_summary": "AI/ML background; prefers product-facing AI roles.",
-    "location": "Zurich, Switzerland",
-    "seniority": "mid-senior",
-    "work_preferences": [
-      "remote",
-      "hybrid"
-    ],
-    "production_experience": []
-  },
-  "job_description": {
-    "title": "Senior Frontend Engineer",
-    "company": "Consumer SaaS Company",
-    "location": "Berlin, Germany",
-    "description": "Own frontend architecture and design systems for a consumer SaaS product.\n\nRequirements:\n• React\n• TypeScript\n• CSS\n• frontend architecture\n• design systems\n\nNice to have:\n• Next.js\n• Figma",
-    "seniority": "senior",
-    "employment_type": "full-time"
-  },
+  "profile_text": "target_roles: AI Engineer\nskills: machine learning research, Python, AI systems\nseniority: mid-senior\nlocation: Zurich, Switzerland\nexperience_summary: AI/ML background; prefers product-facing AI roles.\nwork_preferences: remote, hybrid\nproduction_experience: ",
+  "job_description_text": "Senior Frontend Engineer\nCompany: Consumer SaaS Company\nLocation: Berlin, Germany\nSeniority: senior\nEmployment type: full-time\n\nOwn frontend architecture and design systems for a consumer SaaS product.\n\nRequirements:\n\u2022 React\n\u2022 TypeScript\n\u2022 CSS\n\u2022 frontend architecture\n\u2022 design systems\n\nNice to have:\n\u2022 Next.js\n\u2022 Figma",
   "expected_decision": "skip"
 }

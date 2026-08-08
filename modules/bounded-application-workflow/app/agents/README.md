@@ -2,6 +2,8 @@
 
 Each workflow stage is an agent behind a typed `Protocol` contract in [`contracts.py`](contracts.py). LangGraph orchestration ([`orchestration/`](orchestration/)) drives them; [`wiring.py`](wiring.py) selects concrete implementations from the runtime config.
 
+**Domain vs contracts:** shared business types (`UserProfile`, `JobDescription`, `WorkflowInput` / `WorkflowOutput`, …) live in [`app/domain`](../domain/). `contracts.py` only defines stage `Protocol`s and their Input/Output wrappers around those types.
+
 ## Layout
 
 Each stage agent is its own package under `app/agents/`:

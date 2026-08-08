@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
 
 import pytest
 from fastapi.testclient import TestClient
@@ -15,13 +15,11 @@ from pydantic_ai.models import Model
 from pydantic_ai.models.function import AgentInfo, FunctionModel
 from pydantic_ai.models.test import TestModel
 
-from app.agents.contracts import (
-    ProfileExtractorInput,
-    ProfileExtractorOutput,
-    SignalExtractorInput,
-)
+from app.agents.contracts import SignalExtractorInput
+from app.agents.profile_extraction.deterministic import extract_user_profile
 from app.domain.job_signals import SIGNAL_FIELDS
 from app.domain.models import DecisionType, JobDescription, UserProfile, WorkflowInput
+from app.parser import parse_job_description
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 SIGNAL_FIXTURES_DIR = FIXTURES_DIR / "signal"
@@ -62,16 +60,27 @@ def expected_decision(fixture_name: str) -> DecisionType:
 def workflow_input(fixture_name: str) -> WorkflowInput:
     data = load_fixture(fixture_name)
     return WorkflowInput(
-        user_profile=UserProfile(**data["user_profile"]),
-        job_description=JobDescription(**data["job_description"]),
+        profile_text=data["profile_text"],
+        job_description_text=data["job_description_text"],
     )
 
 
-def escalating_workflow_input() -> WorkflowInput:
-    case = load_signal_fixture("risk_extraction.json")
-    return WorkflowInput(
-        user_profile=workflow_input("ambiguous_match.json").user_profile,
-        job_description=JobDescription(**case["job_description"]),
+def workflow_raw_texts(fixture_name: str) -> tuple[str, str]:
+    wi = workflow_input(fixture_name)
+    return wi.profile_text, wi.job_description_text
+
+
+class FixtureEntities(NamedTuple):
+    user_profile: UserProfile
+    job_description: JobDescription
+
+
+def fixture_entities(fixture_name: str) -> FixtureEntities:
+    """Typed profile/job derived from raw workflow fixture texts."""
+    profile_text, job_text = workflow_raw_texts(fixture_name)
+    return FixtureEntities(
+        user_profile=extract_user_profile(profile_text),
+        job_description=parse_job_description(job_text),
     )
 
 
@@ -97,18 +106,6 @@ def sample_signal_extractor_input() -> SignalExtractorInput:
 def signals_test_model(**overrides: list[str]) -> TestModel:
     """A Pydantic AI TestModel that returns a fixed JobSignals payload."""
     return TestModel(custom_output_args=signals_payload(**overrides))
-
-
-class StubProfileExtractor:
-    """ProfileExtractor stub returning a fixed profile and recording raw inputs."""
-
-    def __init__(self, profile: UserProfile) -> None:
-        self._profile = profile
-        self.calls: list[str] = []
-
-    def run(self, agent_input: ProfileExtractorInput) -> ProfileExtractorOutput:
-        self.calls.append(agent_input.raw_text)
-        return ProfileExtractorOutput(profile=self._profile)
 
 
 class RecordingSignalModel:
@@ -155,13 +152,10 @@ def runtime_config(version: str | None = None, **env: str):
 @pytest.fixture
 def api_client() -> TestClient:
     """HTTP client over a v1 (deterministic) app — independent of local `.env`."""
-    from app.agents.wiring import create_agents, create_profile_extractor
+    from app.agents.wiring import create_agents
     from app.api.main import create_app
 
     config = runtime_config(version="v1")
     return TestClient(
-        create_app(
-            orchestrator=create_agents(runtime_config=config)[-1],
-            profile_extractor=create_profile_extractor(runtime_config=config),
-        )
+        create_app(orchestrator=create_agents(runtime_config=config)[-1])
     )
