@@ -57,7 +57,7 @@ const STEPS = [
   { id: 3 as const, label: "Match" },
 ];
 
-export function EvaluateWorkspace() {
+export function RunWorkspace() {
   const [profile, setProfile] = useState<ProfileFormValues>(EMPTY_PROFILE);
   const [jobText, setJobText] = useState("");
   const [step, setStep] = useState<Step>(1);
@@ -93,7 +93,7 @@ export function EvaluateWorkspace() {
     setStep(2);
   }
 
-  function onEvaluate() {
+  function onRun() {
     const nextErrors = [...validateProfile(profile), ...validateJob(jobText)];
     setErrors(nextErrors);
     if (nextErrors.length > 0) return;
@@ -152,7 +152,7 @@ export function EvaluateWorkspace() {
       <div aria-hidden className="h-28 md:h-40" />
 
       <section
-        id="evaluate"
+        id="workflow"
         className="relative mx-auto flex w-full max-w-3xl flex-col gap-6 px-5 pb-16"
       >
         <div className="text-center">
@@ -363,7 +363,7 @@ export function EvaluateWorkspace() {
               )}
               <button
                 type="button"
-                onClick={onEvaluate}
+                onClick={onRun}
                 className="quest-btn panel-action"
                 tabIndex={step === 2 ? 0 : -1}
               >

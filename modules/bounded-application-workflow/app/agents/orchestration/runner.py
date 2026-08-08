@@ -6,12 +6,19 @@ from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.types import Command
 
-from app.agents.contracts import DecisionPolicy, ProfileMatcher, SignalExtractor
+from app.agents.contracts import (
+    DecisionPolicy,
+    ProfileExtractor,
+    ProfileMatcher,
+    SignalExtractor,
+    WorkflowPlanner,
+)
 from app.agents.human_review import HumanReviewInterrupt, HumanReviewResume
 from app.agents.orchestration.graph import compile_workflow_graph
 from app.agents.orchestration.state import WorkflowGraphState
+from app.agents.profile_extraction import DefaultProfileExtractor
+from app.agents.workflow_planning import DefaultWorkflowPlanner
 from app.domain.models import WorkflowInput
-from app.agents.workflow_planning.plan import WorkflowPlan
 
 
 def _thread_config(workflow_id: str) -> RunnableConfig:
@@ -54,7 +61,8 @@ def _result_from_graph(
 def execute_workflow_pipeline(
     workflow_input: WorkflowInput,
     *,
-    plan: WorkflowPlan,
+    profile_extractor: ProfileExtractor | None = None,
+    planner: WorkflowPlanner | None = None,
     extractor: SignalExtractor,
     matcher: ProfileMatcher,
     policy: DecisionPolicy,
@@ -62,8 +70,10 @@ def execute_workflow_pipeline(
     checkpointer: MemorySaver | None = None,
     thread_id: str | None = None,
 ) -> WorkflowPipelineResult:
-    """Run the workflow via LangGraph; may pause on escalation for human review."""
+    """Run the workflow via LangGraph from a validated ``WorkflowInput``."""
     compiled = graph or compile_workflow_graph(
+        profile_extractor=profile_extractor or DefaultProfileExtractor(),
+        planner=planner or DefaultWorkflowPlanner(),
         extractor=extractor,
         matcher=matcher,
         policy=policy,
@@ -72,7 +82,6 @@ def execute_workflow_pipeline(
     workflow_id = thread_id or str(uuid4())
     initial = WorkflowGraphState.from_workflow_input(
         workflow_input,
-        plan,
         workflow_id=workflow_id,
     )
     compiled.invoke(initial, _thread_config(workflow_id))

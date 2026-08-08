@@ -1,62 +1,59 @@
-from fastapi import FastAPI
-from pydantic import BaseModel, field_validator
+import os
 
-from app.agents import WorkflowOrchestrator, WorkflowOrchestratorInput, create_agents
-from app.agents.contracts import ProfileExtractor, ProfileExtractorInput
-from app.agents.wiring import create_profile_extractor
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.agents import create_agents
+from app.agents.contracts import WorkflowOrchestratorInput
+from app.agents.orchestration.orchestrator import DefaultWorkflowOrchestrator
+from app.api.copilot_runtime import mount_copilotkit_runtime
 from app.domain.models import WorkflowInput, WorkflowOutput
 from app.observability import instrument_app
-from app.parser import parse_job_description
 
 
-class WorkflowRunRequest(BaseModel):
-    """Raw profile text (concatenated frontend fields) + raw job posting text."""
+_DEFAULT_CORS_ORIGINS = (
+    "http://localhost:3000,http://127.0.0.1:3000"
+)
 
-    profile_text: str
-    job_description_text: str
 
-    @field_validator("profile_text", "job_description_text")
-    @classmethod
-    def _require_nonempty(cls, value: str) -> str:
-        if not value.strip():
-            raise ValueError("must not be empty")
-        return value
+def _cors_origins() -> list[str]:
+    raw = os.getenv("CORS_ORIGINS", _DEFAULT_CORS_ORIGINS)
+    return [origin.strip() for origin in raw.split(",") if origin.strip()]
 
 
 def create_app(
     *,
-    orchestrator: WorkflowOrchestrator | None = None,
-    profile_extractor: ProfileExtractor | None = None,
+    orchestrator: DefaultWorkflowOrchestrator | None = None,
 ) -> FastAPI:
-    """HTTP app; `/workflow/run` extracts the profile, parses the job, then runs the graph."""
+    """HTTP app: REST workflow run + CopilotKit AG-UI agent endpoint."""
     app = FastAPI(
         title="Bounded Application Workflow",
-        description="Evaluate opportunities against a user profile.",
+        description="Run the opportunity workflow against a user profile.",
         version="0.1.0",
     )
     instrument_app(app)
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=_cors_origins(),
+        allow_credentials=True,
+        allow_methods=["GET", "POST"],
+        allow_headers=["*"],
+    )
+
     workflow = orchestrator or create_agents()[-1]
-    extractor = profile_extractor or create_profile_extractor()
 
     @app.get("/health")
     def health() -> dict[str, str]:
         return {"status": "ok"}
 
     @app.post("/workflow/run", response_model=WorkflowOutput)
-    def run_workflow(request: WorkflowRunRequest) -> WorkflowOutput:
-        profile = extractor.run(
-            ProfileExtractorInput(raw_text=request.profile_text)
-        ).profile
+    def run_workflow(request: WorkflowInput) -> WorkflowOutput:
         return workflow.run(
-            WorkflowOrchestratorInput(
-                workflow_input=WorkflowInput(
-                    user_profile=profile,
-                    job_description=parse_job_description(
-                        request.job_description_text
-                    ),
-                )
-            )
+            WorkflowOrchestratorInput(workflow_input=request)
         ).output
+
+    mount_copilotkit_runtime(app, graph=workflow.graph)
 
     return app
 

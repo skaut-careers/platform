@@ -1,5 +1,5 @@
-import { EvaluateWorkspace } from "@/components/EvaluateWorkspace";
+import { RunWorkspace } from "@/components/RunWorkspace";
 
-export default function HomePage() {
-  return <EvaluateWorkspace />;
+export default function Home() {
+  return <RunWorkspace />;
 }

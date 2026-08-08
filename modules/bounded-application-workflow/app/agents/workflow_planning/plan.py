@@ -1,12 +1,12 @@
 from pydantic import BaseModel, Field
 
-INTAKE = "intake"
+PROFILE_EXTRACTION = "profile_extraction"
+WORKFLOW_PLANNING = "workflow_planning"
 SIGNAL_EXTRACTION = "signal_extraction"
 PROFILE_MATCHING = "profile_matching"
-POLICY_EVALUATION = "policy_evaluation"
+POLICY_APPLICATION = "policy_application"
 HUMAN_REVIEW = "human_review"
 DECISION = "decision"
-
 
 class WorkflowPlan(BaseModel):
     """Intended stages before execution (graph node ids)."""
@@ -27,10 +27,11 @@ class PlanExecutionReport(BaseModel):
 def default_workflow_plan() -> WorkflowPlan:
     return WorkflowPlan(
         stages=[
-            INTAKE,
+            PROFILE_EXTRACTION,
             SIGNAL_EXTRACTION,
+            WORKFLOW_PLANNING,
             PROFILE_MATCHING,
-            POLICY_EVALUATION,
+            POLICY_APPLICATION,
             DECISION,
         ],
     )
@@ -53,11 +54,12 @@ def compare_plan(
 __all__ = [
     "DECISION",
     "HUMAN_REVIEW",
-    "INTAKE",
-    "POLICY_EVALUATION",
+    "POLICY_APPLICATION",
+    "PROFILE_EXTRACTION",
     "PROFILE_MATCHING",
-    "PlanExecutionReport",
     "SIGNAL_EXTRACTION",
+    "WORKFLOW_PLANNING",
+    "PlanExecutionReport",
     "WorkflowPlan",
     "compare_plan",
     "default_workflow_plan",

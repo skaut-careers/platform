@@ -27,9 +27,10 @@ class AgentOutput(BaseModel):
 
 
 class WorkflowPlannerInput(BaseModel):
-    """Workflow input from which to estimate an execution plan."""
+    """Profile + extracted signals used to estimate the execution plan."""
 
-    workflow_input: WorkflowInput
+    user_profile: UserProfile
+    signals: JobSignals
 
 
 class WorkflowPlannerOutput(BaseModel):
@@ -37,7 +38,7 @@ class WorkflowPlannerOutput(BaseModel):
 
 
 class WorkflowPlanner(Protocol):
-    """Estimate stages, evaluation focus and required signals before execution."""
+    """Estimate stages (incl. optional human_review) from extracted signals."""
 
     def run(self, agent_input: WorkflowPlannerInput) -> WorkflowPlannerOutput: ...
 
@@ -59,7 +60,6 @@ class SignalExtractor(Protocol):
 
 
 class ProfileExtractorInput(BaseModel):
-    """Raw candidate text (concatenated form fields or free text) to structure."""
 
     raw_text: str
 
@@ -69,13 +69,11 @@ class ProfileExtractorOutput(AgentOutput):
 
 
 class ProfileExtractor(Protocol):
-    """Parse raw candidate text into a structured UserProfile."""
 
     def run(self, agent_input: ProfileExtractorInput) -> ProfileExtractorOutput: ...
 
 
 class ProfileMatcherInput(BaseModel):
-    """Extracted signals plus candidate profile for alignment scoring."""
 
     user_profile: UserProfile
     job_description: JobDescription
@@ -87,13 +85,11 @@ class ProfileMatcherOutput(AgentOutput):
 
 
 class ProfileMatcher(Protocol):
-    """Score profile alignment against extracted signals."""
 
     def run(self, agent_input: ProfileMatcherInput) -> ProfileMatcherOutput: ...
 
 
 class DecisionPolicyInput(BaseModel):
-    """Match outcome and job signals for bounded decision rules."""
 
     match: ProfileMatchResult
     signals: JobSignals
@@ -104,12 +100,12 @@ class DecisionPolicyOutput(BaseModel):
 
 
 class DecisionPolicy(Protocol):
-    """Apply bounded thresholds and escalation rules."""
 
     def run(self, agent_input: DecisionPolicyInput) -> DecisionPolicyOutput: ...
 
 
 class WorkflowOrchestratorInput(BaseModel):
+
     workflow_input: WorkflowInput
 
 
@@ -119,7 +115,7 @@ class WorkflowOrchestratorOutput(BaseModel):
 
 
 class WorkflowOrchestrator(Protocol):
-    """Coordinate planner + graph execution for one workflow input."""
+    """Coordinate graph execution from raw product texts."""
 
     def run(
         self, agent_input: WorkflowOrchestratorInput

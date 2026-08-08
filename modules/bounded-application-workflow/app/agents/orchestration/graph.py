@@ -12,10 +12,14 @@ from langgraph.types import interrupt
 from app.agents.contracts import (
     DecisionPolicy,
     DecisionPolicyInput,
+    ProfileExtractor,
+    ProfileExtractorInput,
     ProfileMatcher,
     ProfileMatcherInput,
     SignalExtractor,
     SignalExtractorInput,
+    WorkflowPlanner,
+    WorkflowPlannerInput,
 )
 from app.agents.decision_rules.rules import review_reason
 from app.agents.human_review import (
@@ -42,14 +46,16 @@ from app.domain.models import (
 from app.agents.workflow_planning.plan import (
     DECISION,
     HUMAN_REVIEW,
-    INTAKE,
-    POLICY_EVALUATION,
+    POLICY_APPLICATION,
+    PROFILE_EXTRACTION,
     PROFILE_MATCHING,
     SIGNAL_EXTRACTION,
+    WORKFLOW_PLANNING,
     PlanExecutionReport,
     WorkflowPlan,
     compare_plan,
 )
+from app.parser import parse_job_description
 from app.runtime.result import AgentExecutionResult, ExecutionStatus
 
 _NEXT_STEPS: dict[DecisionType, list[str]] = {
@@ -61,12 +67,12 @@ _NEXT_STEPS: dict[DecisionType, list[str]] = {
     DecisionType.QUEUE: [
         "Save this opportunity for a later review cycle.",
         "Note what would need to change before actively pursuing it.",
-        "Re-run evaluation if your profile or priorities shift.",
+        "Re-run the workflow if your profile or priorities shift.",
     ],
     DecisionType.ESCALATE: [
         "Review the opportunity manually before investing application time.",
         "Clarify ambiguous requirements with the recruiter or hiring team.",
-        "Fill in missing profile or job signals, then re-evaluate.",
+        "Fill in missing profile or job signals, then run again.",
     ],
     DecisionType.SKIP: [
         "Record why this opportunity is not a fit for future reference.",
@@ -107,9 +113,11 @@ def _now() -> datetime:
 
 
 def _input_summary(state: WorkflowGraphState) -> str:
+    if state.job_description is None:
+        raise RuntimeError("input summary requires job_description")
     company = state.job_description.company or "an unspecified company"
     return (
-        f"Profile is being evaluated for "
+        f"Profile is being matched against "
         f"{state.job_description.title} at {company}."
     )
 
@@ -155,29 +163,37 @@ def _record_agent_completed(
 
 def build_workflow_graph(
     *,
+    profile_extractor: ProfileExtractor,
+    planner: WorkflowPlanner,
     extractor: SignalExtractor,
     matcher: ProfileMatcher,
     policy: DecisionPolicy,
 ) -> StateGraph:
 
-    def intake(state: WorkflowGraphState) -> dict[str, Any]:
-        planned = " -> ".join(state.plan.stages)
+    def profile_extraction(state: WorkflowGraphState) -> dict[str, Any]:
+        if state.profile_text is None:
+            raise RuntimeError("profile_extraction requires profile_text")
+        events = _enter_stage(state.events, PROFILE_EXTRACTION)
+        user_profile = profile_extractor.run(
+            ProfileExtractorInput(raw_text=state.profile_text)
+        ).profile
+        events = _record_agent_completed(
+            events,
+            stage=PROFILE_EXTRACTION,
+            agent=type(profile_extractor).__name__,
+        )
         return {
-            "events": [
-                *state.events,
-                _event(WorkflowEventType.RUN_STARTED, INTAKE, "Workflow run started."),
-                _event(
-                    WorkflowEventType.PLAN_CREATED,
-                    INTAKE,
-                    f"Planner selected stages: {planned}.",
-                ),
-            ]
+            "user_profile": user_profile,
+            "events": events,
         }
 
     def signal_extraction(state: WorkflowGraphState) -> dict[str, Any]:
+        if state.job_description_text is None:
+            raise RuntimeError("signal_extraction requires job_description_text")
         events = _enter_stage(state.events, SIGNAL_EXTRACTION)
+        job_description = parse_job_description(state.job_description_text)
         output = extractor.run(
-            SignalExtractorInput(job_description=state.job_description)
+            SignalExtractorInput(job_description=job_description)
         )
         events = _record_agent_completed(
             events,
@@ -185,13 +201,51 @@ def build_workflow_graph(
             agent=type(extractor).__name__,
         )
         return {
+            "job_description": job_description,
             "signals": output.signals,
             "events": events,
         }
 
+    def workflow_planning(state: WorkflowGraphState) -> dict[str, Any]:
+        if state.user_profile is None or state.signals is None:
+            raise RuntimeError(
+                "workflow_planning requires user_profile and signals"
+            )
+        events = _enter_stage(state.events, WORKFLOW_PLANNING)
+        if state.plan.stages:
+            plan = state.plan
+        else:
+            plan = planner.run(
+                WorkflowPlannerInput(
+                    user_profile=state.user_profile,
+                    signals=state.signals,
+                )
+            ).plan
+        planned = " -> ".join(plan.stages)
+        events = [
+            *events,
+            _event(
+                WorkflowEventType.PLAN_CREATED,
+                WORKFLOW_PLANNING,
+                f"Planner selected stages: {planned}.",
+            ),
+            _event(
+                WorkflowEventType.AGENT_COMPLETED,
+                WORKFLOW_PLANNING,
+                f"Agent '{type(planner).__name__}' completed.",
+            ),
+        ]
+        return {"plan": plan, "events": events}
+
     def profile_matching(state: WorkflowGraphState) -> dict[str, Any]:
-        if state.signals is None:
-            raise RuntimeError("profile_matching requires signals on graph state")
+        if (
+            state.signals is None
+            or state.user_profile is None
+            or state.job_description is None
+        ):
+            raise RuntimeError(
+                "profile_matching requires signals, user_profile, and job_description"
+            )
         events = _enter_stage(state.events, PROFILE_MATCHING)
         output = matcher.run(
             ProfileMatcherInput(
@@ -210,16 +264,16 @@ def build_workflow_graph(
             "events": events,
         }
 
-    def policy_evaluation(state: WorkflowGraphState) -> dict[str, Any]:
+    def policy_application(state: WorkflowGraphState) -> dict[str, Any]:
         if state.signals is None or state.match is None:
-            raise RuntimeError("policy_evaluation requires signals and match")
-        events = _enter_stage(state.events, POLICY_EVALUATION)
+            raise RuntimeError("policy_application requires signals and match")
+        events = _enter_stage(state.events, POLICY_APPLICATION)
         output = policy.run(
             DecisionPolicyInput(match=state.match, signals=state.signals)
         )
         events = _record_agent_completed(
             events,
-            stage=POLICY_EVALUATION,
+            stage=POLICY_APPLICATION,
             agent=type(policy).__name__,
         )
         return {
@@ -296,12 +350,9 @@ def build_workflow_graph(
         )
         completed_at = _now()
         executed = [
-            INTAKE,
-            *[
-                event.stage
-                for event in events
-                if event.event_type == WorkflowEventType.STAGE_ENTERED
-            ],
+            event.stage
+            for event in events
+            if event.event_type == WorkflowEventType.STAGE_ENTERED
         ]
         plan_report = compare_plan(state.plan, executed)
         events.append(
@@ -315,19 +366,21 @@ def build_workflow_graph(
         }
 
     graph = StateGraph(WorkflowGraphState)
-    graph.add_node(INTAKE, intake)
+    graph.add_node(PROFILE_EXTRACTION, profile_extraction)
+    graph.add_node(WORKFLOW_PLANNING, workflow_planning)
     graph.add_node(SIGNAL_EXTRACTION, signal_extraction)
     graph.add_node(PROFILE_MATCHING, profile_matching)
-    graph.add_node(POLICY_EVALUATION, policy_evaluation)
+    graph.add_node(POLICY_APPLICATION, policy_application)
     graph.add_node(HUMAN_REVIEW, human_review)
     graph.add_node(DECISION, decision)
 
-    graph.add_edge(START, INTAKE)
-    graph.add_edge(INTAKE, SIGNAL_EXTRACTION)
-    graph.add_edge(SIGNAL_EXTRACTION, PROFILE_MATCHING)
-    graph.add_edge(PROFILE_MATCHING, POLICY_EVALUATION)
+    graph.add_edge(START, PROFILE_EXTRACTION)
+    graph.add_edge(PROFILE_EXTRACTION, SIGNAL_EXTRACTION)
+    graph.add_edge(SIGNAL_EXTRACTION, WORKFLOW_PLANNING)
+    graph.add_edge(WORKFLOW_PLANNING, PROFILE_MATCHING)
+    graph.add_edge(PROFILE_MATCHING, POLICY_APPLICATION)
     graph.add_conditional_edges(
-        POLICY_EVALUATION,
+        POLICY_APPLICATION,
         route_after_policy,
         {HUMAN_REVIEW: HUMAN_REVIEW, DECISION: DECISION},
     )
@@ -338,12 +391,16 @@ def build_workflow_graph(
 
 def compile_workflow_graph(
     *,
+    profile_extractor: ProfileExtractor,
+    planner: WorkflowPlanner,
     extractor: SignalExtractor,
     matcher: ProfileMatcher,
     policy: DecisionPolicy,
     checkpointer: MemorySaver | None = None,
 ) -> CompiledStateGraph:
     return build_workflow_graph(
+        profile_extractor=profile_extractor,
+        planner=planner,
         extractor=extractor,
         matcher=matcher,
         policy=policy,

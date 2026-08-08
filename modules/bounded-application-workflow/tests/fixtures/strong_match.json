@@ -1,33 +1,5 @@
 {
-  "user_profile": {
-    "target_roles": [
-      "AI Engineer"
-    ],
-    "skills": [
-      "machine learning research",
-      "Python",
-      "LLM applications",
-      "evaluation pipelines",
-      "agentic workflows",
-      "product ownership",
-      "AI reliability"
-    ],
-    "experience_summary": "Research and startup background with applied AI product work.",
-    "location": "Zurich, Switzerland",
-    "seniority": "mid-senior",
-    "work_preferences": [
-      "remote",
-      "hybrid"
-    ],
-    "production_experience": []
-  },
-  "job_description": {
-    "title": "AI Engineer",
-    "company": "Frontier AI Startup",
-    "location": "Remote Europe",
-    "description": "Build and own LLM-based product workflows, evaluation pipelines, and agentic systems in a product-facing AI role.\n\nRequirements:\n• Python\n• LLM applications\n• evaluation pipelines\n• agentic workflows\n• product ownership\n\nNice to have:\n• research background\n• startup experience",
-    "seniority": "mid-senior",
-    "employment_type": "full-time"
-  },
+  "profile_text": "target_roles: AI Engineer\nskills: machine learning research, Python, LLM applications, evaluation pipelines, agentic workflows, product ownership, AI reliability\nseniority: mid-senior\nlocation: Zurich, Switzerland\nexperience_summary: Research and startup background with applied AI product work.\nwork_preferences: remote, hybrid\nproduction_experience: ",
+  "job_description_text": "AI Engineer\nCompany: Frontier AI Startup\nLocation: Remote Europe\nSeniority: mid-senior\nEmployment type: full-time\n\nBuild and own LLM-based product workflows, evaluation pipelines, and agentic systems in a product-facing AI role.\n\nRequirements:\n\u2022 Python\n\u2022 LLM applications\n\u2022 evaluation pipelines\n\u2022 agentic workflows\n\u2022 product ownership\n\nNice to have:\n\u2022 research background\n\u2022 startup experience",
   "expected_decision": "prepare"
 }

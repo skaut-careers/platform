@@ -19,7 +19,7 @@ const cormorant = Cormorant_Garamond({
 export const metadata: Metadata = {
   title: "Skaut Careers",
   description:
-    "Navigate your professional life with clarity. Evaluate IT job postings against your profile — deliberate decisions, not application volume.",
+    "Navigate your professional life with clarity. Match IT job postings against your profile — deliberate decisions, not application volume.",
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },

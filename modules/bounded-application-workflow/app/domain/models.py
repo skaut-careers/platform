@@ -1,7 +1,9 @@
-from enum import Enum
-from typing import List, Optional
+from __future__ import annotations
 
-from pydantic import BaseModel, Field, field_validator
+from enum import Enum
+from typing import Any, List, Mapping, Optional
+
+from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from app.domain.job_signals import JobSignals
 
@@ -68,8 +70,25 @@ class ProfileMatchResult(BaseModel):
 
 
 class WorkflowInput(BaseModel):
-    user_profile: UserProfile
-    job_description: JobDescription
+    """Product workflow entry: raw candidate + job posting texts."""
+
+    profile_text: str
+    job_description_text: str
+
+    @field_validator("profile_text", "job_description_text")
+    @classmethod
+    def _require_nonempty(cls, value: str) -> str:
+        text = value.strip()
+        if not text:
+            raise ValueError("must not be empty")
+        return text
+
+    @classmethod
+    def try_from_mapping(cls, data: Mapping[str, Any]) -> WorkflowInput | None:
+        try:
+            return cls.model_validate(data)
+        except ValidationError:
+            return None
 
 
 class WorkflowDecision(BaseModel):

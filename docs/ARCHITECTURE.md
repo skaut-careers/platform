@@ -8,17 +8,18 @@ Stack: **LangGraph** (orchestration) · **Pydantic AI** (agents) · **Logfire** 
 
 ```mermaid
 stateDiagram-v2
-    [*] --> intake
-    intake --> signal_extraction
-    signal_extraction --> profile_matching
-    profile_matching --> policy_evaluation
-    policy_evaluation --> human_review : escalate
-    policy_evaluation --> decision
+    [*] --> profile_extraction
+    profile_extraction --> signal_extraction
+    signal_extraction --> workflow_planning
+    workflow_planning --> profile_matching
+    profile_matching --> policy_application
+    policy_application --> human_review : escalate
+    policy_application --> decision
     human_review --> decision : approved / revised
     decision --> [*]
 ```
 
-LangGraph `StateGraph` nodes: `signal_extraction` → `JobSignals` → `profile_matching` → `ProfileMatchResult` → `policy_evaluation` → `WorkflowDecision`. Escalation via `interrupt`; approve/revise via `Command`. Checkpointed `WorkflowGraphState` holds data plus thin audit (`events`, `human_review`); plan vs execution via `WorkflowPlan` / `PlanExecutionReport`.
+LangGraph `StateGraph` nodes: `profile_extraction` → `UserProfile` → `signal_extraction` → `JobDescription` + `JobSignals` → `workflow_planning` → `WorkflowPlan` → `profile_matching` → `ProfileMatchResult` → `policy_application` → `WorkflowDecision`. Escalation via `interrupt`; approve/revise via `Command`. Checkpointed `WorkflowGraphState` holds data plus thin audit (`events`, `human_review`); plan vs execution via `WorkflowPlan` / `PlanExecutionReport`.
 
 ## Agents
 
