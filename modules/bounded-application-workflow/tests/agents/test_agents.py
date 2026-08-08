@@ -198,11 +198,65 @@ def test_decision_thresholds(score, expected):
 
 
 def test_decision_risk_and_seniority_overrides():
-    signals = JobSignals(risk_indicators=["ambiguous scope"])
-    assert decision_from_signals(0.9, signals) == DecisionType.ESCALATE
+    risky_but_usable = JobSignals(
+        required_skills=["Python"],
+        risk_indicators=["ambiguous scope"],
+    )
+    assert decision_from_signals(0.9, risky_but_usable) == DecisionType.ESCALATE
     assert (
-        decision_from_signals(0.9, signals, severe_seniority_mismatch=True)
+        decision_from_signals(0.9, risky_but_usable, severe_seniority_mismatch=True)
         == DecisionType.SKIP
+    )
+
+
+def test_decision_unusable_posting_is_hard_pass():
+    assert (
+        decision_from_signals(
+            0.9,
+            JobSignals(risk_indicators=["gibberish description"]),
+        )
+        == DecisionType.SKIP
+    )
+    assert (
+        decision_from_signals(
+            0.9,
+            JobSignals(
+                missing_signals=["seniority level", "salary range", "team size"],
+            ),
+        )
+        == DecisionType.SKIP
+    )
+    # Invented skills must not rescue a hollow posting.
+    assert (
+        decision_from_signals(
+            0.9,
+            JobSignals(
+                required_skills=["communication"],
+                risk_indicators=[
+                    "gibberish description",
+                    "no responsibilities listed",
+                    "unclear hiring intent",
+                ],
+                missing_signals=["seniority level", "salary range", "team size"],
+            ),
+        )
+        == DecisionType.SKIP
+    )
+    # Real job with ordinary risk flags must not hard-pass (e.g. Google SWE).
+    assert (
+        decision_from_signals(
+            0.9,
+            JobSignals(
+                required_skills=["Python", "ML infrastructure"],
+                risk_indicators=[
+                    "research + production hybrid role",
+                    "very broad technical scope",
+                    "high ownership expectation",
+                ],
+                missing_signals=["salary range", "team size", "employment type"],
+            ),
+        )
+        == DecisionType.ESCALATE
     )
 
 
@@ -214,12 +268,26 @@ def test_build_workflow_decision():
             risks=["Missing required skills: Kubernetes."],
         ),
         JobSignals(
+            required_skills=["Python"],
             risk_indicators=["ambiguous scope"],
             missing_signals=["salary range"],
         ),
     )
     assert decision.decision == DecisionType.ESCALATE
     assert decision.missing_information == ["Job posting missing signal: salary range"]
+
+
+def test_build_workflow_decision_hard_passes_unusable_posting():
+    decision = build_workflow_decision(
+        ProfileMatchResult(score=0.86, reasons=["full coverage"], risks=[]),
+        JobSignals(
+            risk_indicators=["gibberish description"],
+            missing_signals=["salary range", "team size", "seniority level"],
+        ),
+    )
+    assert decision.decision == DecisionType.SKIP
+    assert decision.score == 0.0
+    assert "hard pass" in decision.reasons[0].casefold()
 
 
 @pytest.mark.parametrize("fixture_name", PROFILE_EXTRACTION_FIXTURES)

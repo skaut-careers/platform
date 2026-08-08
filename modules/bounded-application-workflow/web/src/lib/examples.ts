@@ -24,3 +24,16 @@ export const EMPTY_PROFILE: ProfileFormValues = {
   productionExperience: "",
   workPreferences: [],
 };
+
+/** Concatenate form fields into the raw `profile_text` the workflow expects. */
+export function toProfileText(profile: ProfileFormValues): string {
+  return [
+    `target_roles: ${profile.targetRoles.trim()}`,
+    `skills: ${profile.skills.trim()}`,
+    `seniority: ${profile.seniority.trim()}`,
+    `location: ${profile.location.trim()}`,
+    `experience_summary: ${profile.experienceSummary.trim()}`,
+    `work_preferences: ${profile.workPreferences.join(", ")}`,
+    `production_experience: ${profile.productionExperience.trim()}`,
+  ].join("\n");
+}
