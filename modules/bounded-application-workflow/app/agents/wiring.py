@@ -10,7 +10,6 @@ from app.agents.contracts import (
     ProfileExtractor,
     ProfileMatcher,
     SignalExtractor,
-    WorkflowOrchestrator,
     WorkflowOrchestratorInput,
     WorkflowPlanner,
 )
@@ -31,7 +30,7 @@ _AgentBundle = tuple[
     SignalExtractor,
     ProfileMatcher,
     DecisionPolicy,
-    WorkflowOrchestrator,
+    DefaultWorkflowOrchestrator,
 ]
 
 
