@@ -4,6 +4,8 @@ import { useMemo } from "react";
 import { HttpAgent } from "@ag-ui/client";
 import { CopilotKit } from "@copilotkit/react-core";
 
+import { WORKFLOW_AGENT_ID } from "@/lib/workflow";
+
 export function CopilotProvider({
   children,
 }: {
@@ -15,14 +17,14 @@ export function CopilotProvider({
 
   const agents = useMemo(
     () => ({
-      application_workflow: new HttpAgent({ url: agentUrl }),
+      [WORKFLOW_AGENT_ID]: new HttpAgent({ url: agentUrl }),
     }),
     [agentUrl],
   );
 
   return (
     <CopilotKit
-      agent="application_workflow"
+      agent={WORKFLOW_AGENT_ID}
       agents__unsafe_dev_only={agents}
       enableInspector={false}
       showDevConsole={false}

@@ -2,14 +2,24 @@
 
 import Image from "next/image";
 import { useRef, useState } from "react";
+import { randomUUID } from "@ag-ui/client";
+import { useAgent, UseAgentUpdate } from "@copilotkit/react-core/v2";
 
 import { Atmosphere } from "@/components/Atmosphere";
+import { MatchResult } from "@/components/MatchResult";
 import {
   EMPTY_PROFILE,
   WORK_PREFERENCE_OPTIONS,
+  toProfileText,
   type ProfileFormValues,
 } from "@/lib/examples";
-import { DECISION_COPY } from "@/lib/decisions";
+import {
+  WORKFLOW_AGENT_ID,
+  missingSignals,
+  stageProgressLabel,
+  workflowDecision,
+  type WorkflowAgentState,
+} from "@/lib/workflow";
 
 const fieldClassName =
   "w-full rounded-lg border border-line bg-surface/90 px-3 py-2.5 text-sm text-ink outline-none transition placeholder:text-muted/50 focus:border-forest focus:ring-2 focus:ring-forest/15";
@@ -61,9 +71,19 @@ export function RunWorkspace() {
   const [profile, setProfile] = useState<ProfileFormValues>(EMPTY_PROFILE);
   const [jobText, setJobText] = useState("");
   const [step, setStep] = useState<Step>(1);
-  const [showPlaceholder, setShowPlaceholder] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
+  const [runError, setRunError] = useState<string | null>(null);
+  const [hasStartedRun, setHasStartedRun] = useState(false);
   const productRef = useRef<HTMLHeadingElement | null>(null);
+
+  const { agent } = useAgent({
+    agentId: WORKFLOW_AGENT_ID,
+    updates: [UseAgentUpdate.OnStateChanged, UseAgentUpdate.OnRunStatusChanged],
+  });
+
+  const state = (agent.state ?? {}) as WorkflowAgentState;
+  const decision = workflowDecision(state);
+  const running = agent.isRunning;
 
   function updateProfile<K extends keyof ProfileFormValues>(
     key: K,
@@ -93,12 +113,29 @@ export function RunWorkspace() {
     setStep(2);
   }
 
-  function onRun() {
+  async function onRun() {
     const nextErrors = [...validateProfile(profile), ...validateJob(jobText)];
     setErrors(nextErrors);
     if (nextErrors.length > 0) return;
-    setShowPlaceholder(true);
+
+    setRunError(null);
+    setHasStartedRun(true);
     setStep(3);
+
+    agent.threadId = randomUUID();
+    agent.setState({
+      profile_text: toProfileText(profile),
+      job_description_text: jobText.trim(),
+    });
+
+    try {
+      await agent.runAgent();
+      if (!workflowDecision(agent.state as WorkflowAgentState)) {
+        setRunError("No decision returned. Try again or pick another role.");
+      }
+    } catch (error) {
+      setRunError(error instanceof Error ? error.message : "Workflow failed.");
+    }
   }
 
   // Trail dots navigate backward only; forward moves go through the step buttons.
@@ -109,9 +146,12 @@ export function RunWorkspace() {
   }
 
   function checkAnotherRole() {
+    if (running) agent.abortRun();
     setJobText("");
-    setShowPlaceholder(false);
     setErrors([]);
+    setRunError(null);
+    setHasStartedRun(false);
+    agent.setState({});
     setStep(2);
   }
 
@@ -363,11 +403,12 @@ export function RunWorkspace() {
               )}
               <button
                 type="button"
-                onClick={onRun}
+                onClick={() => void onRun()}
                 className="quest-btn panel-action"
+                disabled={running}
                 tabIndex={step === 2 ? 0 : -1}
               >
-                Check match →
+                {running ? "Checking…" : "Check match →"}
               </button>
             </div>
           </div>
@@ -379,24 +420,26 @@ export function RunWorkspace() {
             <div className="quest-badge">Stop 3</div>
 
             <div className="panel-body mt-3 items-center justify-center text-center">
-              {showPlaceholder ? (
-                <div className="flex max-w-lg flex-col items-center gap-3 px-4">
-                  <p className="font-display text-4xl font-semibold tracking-tight text-forest md:text-5xl">
-                    {DECISION_COPY.queue.label}
+              {running ? (
+                <div className="flex flex-col items-center gap-2 px-4">
+                  <p className="font-display text-2xl font-semibold text-forest">
+                    Checking match
                   </p>
-                  <p className="whitespace-nowrap text-sm leading-7 tracking-wide text-muted">
-                    {DECISION_COPY.queue.parts.map((part, index) => (
-                      <span key={part}>
-                        {index > 0 ? (
-                          <span className="mx-2.5 text-base font-bold text-ink" aria-hidden>
-                            ·
-                          </span>
-                        ) : null}
-                        {part}
-                      </span>
-                    ))}
+                  <p className="text-sm text-muted" aria-live="polite">
+                    {stageProgressLabel(state)}
                   </p>
                 </div>
+              ) : runError ? (
+                <p className="max-w-md text-sm text-[#8a3b2a]" role="alert">
+                  {runError}
+                </p>
+              ) : decision ? (
+                <MatchResult
+                  decision={decision}
+                  missingSignals={missingSignals(state)}
+                />
+              ) : hasStartedRun ? (
+                <p className="text-sm text-muted">No result yet.</p>
               ) : (
                 <p className="text-sm text-muted">Run a check to see your match.</p>
               )}
@@ -408,6 +451,7 @@ export function RunWorkspace() {
                 type="button"
                 onClick={checkAnotherRole}
                 className="quest-btn panel-action"
+                disabled={running}
                 tabIndex={step === 3 ? 0 : -1}
               >
                 Check another role →
