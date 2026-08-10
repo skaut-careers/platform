@@ -1,9 +1,20 @@
 from collections.abc import Mapping
+from functools import lru_cache
+from pathlib import Path
 
-from app.local_env import local_env
+from dotenv import dotenv_values
+
 from app.runtime.config_registry import ConfigRegistry, default_config_registry
 from app.runtime.prompt_registry import PromptRegistry, default_prompt_registry
 from app.runtime.runtime_config import RuntimeConfig
+
+_ENV_PATH = Path(__file__).resolve().parent.parent.parent / ".env"
+
+
+@lru_cache(maxsize=1)
+def local_env() -> dict[str, str]:
+    """Read module-local .env (cached). Missing file => empty dict."""
+    return {k: v for k, v in dotenv_values(_ENV_PATH).items() if v is not None}
 
 
 def load_runtime_config(
