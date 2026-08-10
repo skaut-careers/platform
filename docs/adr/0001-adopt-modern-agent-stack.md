@@ -55,17 +55,17 @@ The migration is the backend foundation for the wider product stack:
 
 | Layer | Direction |
 | --- | --- |
-| Frontend & UI | Next.js + CopilotKit (stream LangGraph agent state into the app UI) — local product in M6; public Azure launch in M7 |
+| Frontend & UI | Next.js + CopilotKit (stream LangGraph agent state into the app UI) — local product in M6; Azure public launch in M10 after M7/M8 |
 | Backend & API | FastAPI (Python) |
 | Orchestration | LangGraph |
 | Agents | Pydantic AI (model-agnostic; route a high-capability model for decisions and a cheaper model for subtasks) |
-| Tool integration | MCP (Model Context Protocol) — introduced with retrieval & tooling |
-| Data & memory | PostgreSQL + `pgvector` — introduced with memory & retrieval |
+| Tool integration | MCP (Model Context Protocol) — Milestone 7 (retrieval & tooling) |
+| Data & memory | PostgreSQL + `pgvector` — Milestone 8 locally, then wired on Azure in M10 |
 | Observability | Pydantic Logfire + Pydantic Evals (OpenTelemetry) |
 
 Only the backend agent runtime, orchestration, and observability/eval land in this milestone;
-the local product UI (M6), Azure public launch (M7), tooling/MCP, and memory/pgvector arrive in
-their own milestones.
+the local product UI (M6), tooling/MCP (M7), memory/pgvector (M8), and Azure public launch (M10)
+arrive in their own milestones.
 
 ## Consequences
 
