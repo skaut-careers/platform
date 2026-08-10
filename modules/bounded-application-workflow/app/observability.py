@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 import logfire
 
-from app.local_env import get_local_env
+from app.runtime.config_loader import local_env
 
 if TYPE_CHECKING:
     from fastapi import FastAPI
@@ -31,7 +31,7 @@ def configure_observability(*, force: bool = False) -> None:
     if _configured and not force:
         return
 
-    token = get_local_env("LOGFIRE_TOKEN") or None
+    token = local_env().get("LOGFIRE_TOKEN") or None
     logfire.configure(
         token=token,
         send_to_logfire="if-token-present",

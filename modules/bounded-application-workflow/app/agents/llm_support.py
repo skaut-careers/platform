@@ -12,7 +12,7 @@ from pydantic_ai.exceptions import (
 from pydantic_ai.models import Model
 
 from app.agents.contracts import AgentOutput
-from app.local_env import get_local_env
+from app.runtime.config_loader import local_env
 from app.runtime import AgentRuntime, BoundedAgentRuntime, RetryPolicy
 from app.runtime.agent_identity import agent_name_for
 from app.runtime.runtime_config import RuntimeConfig
@@ -36,7 +36,7 @@ def build_openai_model(
     from pydantic_ai.models.openai import OpenAIChatModel
     from pydantic_ai.providers.openai import OpenAIProvider
 
-    resolved_key = api_key if api_key is not None else get_local_env("OPENAI_API_KEY")
+    resolved_key = api_key if api_key is not None else local_env().get("OPENAI_API_KEY")
     if not resolved_key:
         raise error_cls("OPENAI_API_KEY is not configured")
     return OpenAIChatModel(model_name, provider=OpenAIProvider(api_key=resolved_key))
