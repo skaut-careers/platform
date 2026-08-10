@@ -1,0 +1,61 @@
+{
+  "id": "mid_queue",
+  "description": "Score in the queue band with partial skill coverage",
+  "tags": [
+    "queue",
+    "threshold"
+  ],
+  "match": {
+    "score": 0.6,
+    "required_skills_matched": [
+      "Python"
+    ],
+    "required_skills_missing": [
+      "Kubernetes"
+    ],
+    "preferred_skills_matched": [],
+    "production_expectations_matched": [],
+    "production_expectations_missing": [],
+    "role_aligned": true,
+    "work_arrangement_aligned": true,
+    "location_aligned": true,
+    "severe_seniority_mismatch": false,
+    "reasons": [
+      "partial required-skill coverage"
+    ],
+    "risks": [
+      "missing Kubernetes"
+    ]
+  },
+  "signals": {
+    "required_skills": [
+      "Python",
+      "Kubernetes"
+    ],
+    "preferred_skills": [],
+    "seniority_signals": [
+      "mid"
+    ],
+    "production_expectations": [],
+    "work_arrangements": [
+      "hybrid"
+    ],
+    "location_signals": [
+      "Berlin"
+    ],
+    "risk_indicators": [],
+    "missing_signals": []
+  },
+  "expected": {
+    "decision": "queue",
+    "score_min": 0.55,
+    "score_max": 0.74,
+    "reasons": [
+      "partial required-skill coverage"
+    ],
+    "risks": [
+      "missing Kubernetes"
+    ],
+    "missing_information": []
+  }
+}

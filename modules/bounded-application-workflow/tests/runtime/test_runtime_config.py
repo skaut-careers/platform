@@ -53,6 +53,7 @@ def test_discover_agents_finds_runtime_packages():
     discovery = discover_agents()
     assert "signal_extraction" in discovery.packages
     assert discovery.runtime_agents == [
+        "decision_rules",
         "profile_extraction",
         "profile_matching",
         "signal_extraction",

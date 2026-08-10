@@ -4,11 +4,11 @@ from dataclasses import dataclass
 
 from pydantic_evals.evaluators import EvaluationReason, Evaluator, EvaluatorContext, EvaluatorOutput
 
-from app.agents.contracts import ProfileMatcherInput
+from app.agents.contracts import DecisionPolicyInput, ProfileMatcherInput
 from app.domain.job_signals import JobSignals
-from app.domain.models import ProfileMatchResult, UserProfile
+from app.domain.models import ProfileMatchResult, UserProfile, WorkflowDecision
 from app.evaluation.dataset import CaseMetadata
-from app.evaluation.metrics import score_match, score_profile, score_signals
+from app.evaluation.metrics import score_decision, score_match, score_profile, score_signals
 
 
 def _f1_with_reason(
@@ -28,10 +28,25 @@ def _f1_with_reason(
     return EvaluationReason(value=f1, reason="; ".join(detail))
 
 
-def _flag_with_reason(ok: bool, *, expected: bool, got: bool) -> bool | EvaluationReason:
+def _flag_with_reason(ok: bool, *, expected: object, got: object) -> float | EvaluationReason:
     if ok:
-        return True
-    return EvaluationReason(value=False, reason=f"expected {expected}, got {got}")
+        return 1.0
+    return EvaluationReason(value=0.0, reason=f"expected {expected}, got {got}")
+
+
+def _range_with_reason(
+    ok: bool,
+    *,
+    score: float,
+    score_min: float,
+    score_max: float,
+) -> float | EvaluationReason:
+    if ok:
+        return 1.0
+    return EvaluationReason(
+        value=0.0,
+        reason=f"score={score}, expected {score_min}-{score_max}",
+    )
 
 
 @dataclass
@@ -98,18 +113,13 @@ class ProfileMatchEvaluator(
         expected = ctx.expected_output
         match = ctx.output
         scored = score_match(expected, match)  # type: ignore[arg-type]
-        scores: dict[str, float | bool | EvaluationReason] = {
+        scores: dict[str, float | EvaluationReason] = {
             "macro_f1": scored.macro_f1,
-            "score_in_range": (
-                True
-                if scored.score_in_range
-                else EvaluationReason(
-                    value=False,
-                    reason=(
-                        f"score={match.score}, "
-                        f"expected {scored.score_min}-{scored.score_max}"
-                    ),
-                )
+            "score_in_range": _range_with_reason(
+                scored.score_in_range,
+                score=match.score,
+                score_min=scored.score_min,
+                score_max=scored.score_max,
             ),
             "role_aligned_correct": _flag_with_reason(
                 scored.role_aligned_correct,
@@ -130,6 +140,46 @@ class ProfileMatchEvaluator(
                 scored.severe_seniority_mismatch_correct,
                 expected=expected.severe_seniority_mismatch,
                 got=match.severe_seniority_mismatch,
+            ),
+        }
+        for field in scored.fields:
+            scores[f"{field.field}_f1"] = _f1_with_reason(
+                f1=field.f1,
+                exact_match=field.exact_match,
+                missing=field.missing,
+                extra=field.extra,
+            )
+        return scores
+
+
+@dataclass
+class DecisionPolicyEvaluator(
+    Evaluator[DecisionPolicyInput, WorkflowDecision, CaseMetadata]
+):
+    """Exact decision + score band + reasons/risks/missing_information set F1."""
+
+    def evaluate(
+        self,
+        ctx: EvaluatorContext[DecisionPolicyInput, WorkflowDecision, CaseMetadata],
+    ) -> EvaluatorOutput:
+        if ctx.expected_output is None:
+            raise ValueError("expected_output is required")
+
+        expected = ctx.expected_output
+        decision = ctx.output
+        scored = score_decision(expected, decision)  # type: ignore[arg-type]
+        scores: dict[str, float | EvaluationReason] = {
+            "macro_f1": scored.macro_f1,
+            "decision_accuracy": _flag_with_reason(
+                scored.decision_correct,
+                expected=expected.decision,
+                got=decision.decision,
+            ),
+            "score_in_range": _range_with_reason(
+                scored.score_in_range,
+                score=decision.score,
+                score_min=scored.score_min,
+                score_max=scored.score_max,
             ),
         }
         for field in scored.fields:

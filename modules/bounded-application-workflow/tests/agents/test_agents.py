@@ -1,7 +1,7 @@
 import pytest
 from pydantic_ai.exceptions import ModelHTTPError
 
-from app.agents.decision_rules.rules import (
+from app.agents.decision_rules.deterministic import (
     build_workflow_decision,
     decision_from_score,
     decision_from_signals,

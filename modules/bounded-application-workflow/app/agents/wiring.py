@@ -6,12 +6,13 @@ from typing import Any, TypeVar, cast
 from pydantic_ai.models import Model
 
 from app.agents.contracts import (
+    DecisionPolicy,
     ProfileExtractor,
     ProfileMatcher,
     SignalExtractor,
     WorkflowOrchestratorInput,
 )
-from app.agents.decision_rules import DefaultDecisionPolicy
+from app.agents.decision_rules import DefaultDecisionPolicy, LLMDecisionPolicy
 from app.agents.orchestration.orchestrator import DefaultWorkflowOrchestrator
 from app.agents.orchestration.state import WorkflowGraphState
 from app.agents.profile_extraction import DefaultProfileExtractor, LLMProfileExtractor
@@ -28,8 +29,7 @@ def _resolve_mode(mode: str) -> str:
     resolved = mode.casefold()
     if resolved not in {"deterministic", "llm"}:
         raise ValueError(
-            f"Unsupported signal extractor mode {mode!r}; "
-            "expected 'deterministic' or 'llm'"
+            f"Unsupported agent mode {mode!r}; expected 'deterministic' or 'llm'"
         )
     return resolved
 
@@ -107,31 +107,45 @@ def create_profile_matcher(
     )
 
 
+def create_decision_policy(
+    *,
+    runtime_config: RuntimeConfig | None = None,
+    model: Model | str | None = None,
+    mode: str | None = None,
+) -> DecisionPolicy:
+    """Select the decision policy from the runtime config (LLM under v2/v3)."""
+    return _create_agent(
+        llm_type=LLMDecisionPolicy,
+        default_factory=DefaultDecisionPolicy,
+        runtime_config=runtime_config,
+        model=model,
+        mode=mode,
+    )
+
+
 def create_agents(
     *,
-    signal_extractor: str | None = None,
     runtime_config: RuntimeConfig | None = None,
+    profile_model: Model | str | None = None,
     signal_model: Model | str | None = None,
     match_model: Model | str | None = None,
+    policy_model: Model | str | None = None,
 ) -> DefaultWorkflowOrchestrator:
-    """Select agent wiring from the runtime config registry or explicit overrides."""
+    """Wire agents from runtime config; optional per-agent model overrides for tests."""
     config = runtime_config or load_runtime_config()
-    mode = _resolve_mode(
-        signal_extractor or config.agent_for(LLMSignalExtractor).mode
-    )
-    profile_extractor = create_profile_extractor(runtime_config=config)
-    extractor = create_signal_extractor(
-        runtime_config=config, model=signal_model, mode=mode
-    )
-    matcher = create_profile_matcher(
-        runtime_config=config, model=match_model, mode=mode
-    )
-    policy = DefaultDecisionPolicy()
     return DefaultWorkflowOrchestrator(
-        profile_extractor=profile_extractor,
-        extractor=extractor,
-        matcher=matcher,
-        policy=policy,
+        profile_extractor=create_profile_extractor(
+            runtime_config=config, model=profile_model
+        ),
+        extractor=create_signal_extractor(
+            runtime_config=config, model=signal_model
+        ),
+        matcher=create_profile_matcher(
+            runtime_config=config, model=match_model
+        ),
+        policy=create_decision_policy(
+            runtime_config=config, model=policy_model
+        ),
     )
 
 

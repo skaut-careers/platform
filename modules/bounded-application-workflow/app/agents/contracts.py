@@ -77,7 +77,7 @@ class DecisionPolicyInput(BaseModel):
     signals: JobSignals
 
 
-class DecisionPolicyOutput(BaseModel):
+class DecisionPolicyOutput(AgentOutput):
     decision: WorkflowDecision
 
 

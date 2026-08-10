@@ -39,13 +39,6 @@ def evaluate_dataset(
     )
 
 
-def macro_f1(report: EvaluationReport) -> float:
-    averages = report.averages()
-    if averages is None or "macro_f1" not in averages.scores:
-        return 0.0
-    return float(averages.scores["macro_f1"])
-
-
 def score_average(report: EvaluationReport, key: str) -> float:
     """Mean of a named score across cases (0.0 when absent)."""
     averages = report.averages()

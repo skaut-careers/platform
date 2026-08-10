@@ -6,7 +6,7 @@ Decides whether an opportunity is worth pursuing from user profile + job descrip
 
 ## Implemented
 
-- Workflow — signal extraction · profile matching · decision policy · `POST /workflow/run` → `WorkflowOutput`
+- Workflow — profile extraction · signal extraction · profile matching · decision policy · `POST /workflow/run` → `WorkflowOutput`
 - Orchestration — LangGraph `StateGraph` + checkpointed `WorkflowGraphState`; 
 - Agents — typed `Protocol` contracts; LLM path via Pydantic AI + `BoundedAgentRuntime` (retry / fallback / provenance)
 - Product surface — Next.js UI + CopilotKit AG-UI on FastAPI (`/copilotkit`) over the same workflow run path

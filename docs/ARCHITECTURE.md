@@ -20,7 +20,7 @@ LangGraph `StateGraph` nodes: `profile_extraction` → `UserProfile` → `signal
 
 ## Agents
 
-Each stage is a typed `Protocol`. LLM agents (e.g. `LLMSignalExtractor`) use Pydantic AI for structured outputs; `BoundedAgentRuntime` bounds attempts, deterministic fallback, and `AgentExecutionResult` provenance. Prompts and runtime settings are versioned (`RUNTIME_CONFIG_VERSION`).
+Each stage is a typed `Protocol`. LLM agents (`LLMProfileExtractor`, `LLMSignalExtractor`, `LLMProfileMatcher`, `LLMDecisionPolicy`) use Pydantic AI for structured outputs; `BoundedAgentRuntime` bounds attempts, deterministic fallback, and `AgentExecutionResult` provenance. Prompts and runtime settings are versioned (`RUNTIME_CONFIG_VERSION`).
 
 ```mermaid
 flowchart TD

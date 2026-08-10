@@ -9,7 +9,7 @@ from app.agents.orchestration.state import WorkflowGraphState
 from app.agents.profile_extraction import DefaultProfileExtractor
 from app.agents.profile_matching import DefaultProfileMatcher
 from app.agents.signal_extraction import DefaultSignalExtractor
-from app.agents.wiring import create_agents
+from app.agents.wiring import create_agents, create_signal_extractor
 from app.domain.models import DecisionType
 from tests.conftest import (
     WORKFLOW_FIXTURES,
@@ -33,20 +33,40 @@ def test_fixture_decisions(fixture_name):
 
 
 @pytest.mark.parametrize(
-    "runtime_version, extractor_name",
-    [("v1", "DefaultSignalExtractor"), ("v2", "LLMSignalExtractor")],
+    "runtime_version, profile_name, signal_name, match_name, policy_name",
+    [
+        (
+            "v1",
+            "DefaultProfileExtractor",
+            "DefaultSignalExtractor",
+            "DefaultProfileMatcher",
+            "DefaultDecisionPolicy",
+        ),
+        (
+            "v2",
+            "LLMProfileExtractor",
+            "LLMSignalExtractor",
+            "LLMProfileMatcher",
+            "LLMDecisionPolicy",
+        ),
+    ],
 )
-def test_create_agents_selects_extractor(runtime_version, extractor_name):
+def test_create_agents_selects_agents_from_runtime(
+    runtime_version, profile_name, signal_name, match_name, policy_name
+):
     config = runtime_config(version=runtime_version)
-    name = create_agents(
+    orchestrator = create_agents(
         signal_model=signals_test_model(), runtime_config=config
-    ).signal_extractor.__class__.__name__
-    assert name == extractor_name
+    )
+    assert orchestrator.profile_extractor.__class__.__name__ == profile_name
+    assert orchestrator.signal_extractor.__class__.__name__ == signal_name
+    assert orchestrator.matcher.__class__.__name__ == match_name
+    assert orchestrator.policy.__class__.__name__ == policy_name
 
 
-def test_create_agents_rejects_unknown_mode():
-    with pytest.raises(ValueError, match="Unsupported signal extractor mode"):
-        create_agents(signal_extractor="magic", runtime_config=_v1())
+def test_create_agent_rejects_unknown_mode():
+    with pytest.raises(ValueError, match="Unsupported agent mode"):
+        create_signal_extractor(mode="magic", runtime_config=_v1())
 
 
 def test_prepare_path_executed_stages():

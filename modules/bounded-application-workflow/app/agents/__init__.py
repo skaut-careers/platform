@@ -12,7 +12,7 @@ from app.agents.contracts import (
     WorkflowOrchestratorInput,
     WorkflowOrchestratorOutput,
 )
-from app.agents.decision_rules import DefaultDecisionPolicy
+from app.agents.decision_rules import DefaultDecisionPolicy, LLMDecisionPolicy
 from app.agents.orchestration import DefaultWorkflowOrchestrator
 from app.agents.profile_matching import DefaultProfileMatcher
 from app.agents.signal_extraction import DefaultSignalExtractor, LLMSignalExtractor
@@ -30,6 +30,7 @@ __all__ = [
     "DefaultProfileMatcher",
     "DefaultSignalExtractor",
     "DefaultWorkflowOrchestrator",
+    "LLMDecisionPolicy",
     "LLMSignalExtractor",
     "ProfileMatcher",
     "ProfileMatcherInput",

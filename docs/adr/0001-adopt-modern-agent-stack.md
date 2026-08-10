@@ -23,9 +23,8 @@ has consolidated around a small set of libraries that provide these capabilities
   `capabilities`, dependency injection, `TestModel`/`FunctionModel` for LLM-free testing,
   model-agnostic providers, and native MCP support. Fits a Pydantic- and `Protocol`-first code base.
 - **LangGraph 1.x** (GA 1.0 Oct 2025; 1.2.x mid-2026) — stateful graph orchestration with
-  pluggable checkpointers, durable execution, and `interrupt`/`Command` for human-in-the-loop.
-  Covers what `WorkflowStateMachine` + `WorkflowRun` + escalation do by hand, with production
-  persistence and resumability.
+  pluggable checkpointers and durable execution. Covers what `WorkflowStateMachine` +
+  `WorkflowRun` do by hand, with production persistence.
 - **Pydantic Logfire + Pydantic Evals** — OpenTelemetry-native observability (full-stack app +
   LLM tracing, token/cost/latency) and systematic evaluation, replacing the custom `AgentTrace`
   tracing and F1 harness. Chosen over LangSmith for full-stack OTel coverage and no vendor lock-in.
@@ -38,10 +37,10 @@ type-safe agent building block**, with Logfire/Evals for observability and evalu
 Migrate the backend onto this stack **before** building the user-facing product surface, so the
 product ships and grows on maintained infrastructure rather than bespoke primitives:
 
-- **Agents** → Pydantic AI v2 (signal extraction, profile matching), preserving deterministic
+- **Agents** → Pydantic AI v2 (profile extraction, signal extraction, profile matching, decision policy), preserving deterministic
   fallback behaviour and the existing bounded decision policy/thresholds.
-- **Orchestration & state** → LangGraph `StateGraph` with a checkpointer; escalation via
-  `interrupt`/`Command` (human-in-the-loop stays first-class and bounded).
+- **Orchestration & state** → LangGraph `StateGraph` with a checkpointer; `escalate` is a
+  terminal decision (no pause / resume in the product path).
 - **Observability & evaluation** → Pydantic Logfire (OTel) across FastAPI, LangGraph, and agents,
   with Pydantic Evals for the golden dataset and metrics.
 - **Dependencies/tooling** → current stable versions, PEP 621 `pyproject`, CI matrix.
@@ -70,7 +69,7 @@ arrive in their own milestones.
 ## Consequences
 
 **Positive**
-- Production-grade durability, persistence, and human-in-the-loop out of the box.
+- Production-grade durability and persistence out of the box.
 - Less bespoke infrastructure to maintain; faster feature delivery.
 - Later milestones (memory, retrieval/tooling, evaluation, multi-agent, observability) build on
   framework primitives and standards (MCP, OTel) instead of re-implementing them.
@@ -87,8 +86,8 @@ arrive in their own milestones.
 - **Keep everything custom** — highest long-term maintenance cost and slowest integration with
   standard tooling/providers; rejected for a production product.
 - **Adopt only Pydantic AI (keep custom orchestration)** — smallest change, but leaves the
-  hand-written state machine, persistence, and human-in-the-loop to maintain; rejected because
-  LangGraph is purpose-built for exactly this stateful, resumable, human-in-the-loop pattern.
+  hand-written state machine and persistence to maintain; rejected because LangGraph is
+  purpose-built for stateful, checkpointed orchestration.
 - **CrewAI** — role-based autonomous multi-agent crews; rejected as the core because emergent,
   role-driven autonomy conflicts with this product's principles of bounded, auditable,
   policy-gated decisions with explicit state. LangGraph gives explicit control; may be revisited

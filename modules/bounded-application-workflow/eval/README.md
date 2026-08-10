@@ -7,12 +7,15 @@ Human-curated golden datasets, one directory per LLM-backed agent:
 | Signal extractor | [`signal_extraction/`](signal_extraction/) | `job_description`, `expected_signals` | set-based P/R/F1 per signal field + macro F1 |
 | Profile extractor | [`profile_extraction/`](profile_extraction/) | `raw_text`, `expected_profile` | set-based F1 per profile field + macro F1 |
 | Profile matcher | [`profile_matching/`](profile_matching/) | `user_profile`, `job_description`, `signals`, `expected` | score band + role/work/location/seniority flags + required/preferred/production set F1 |
+| Decision policy | [`decision_rules/`](decision_rules/) | `match`, `signals`, `expected` | exact decision + score band + reasons/risks/missing_information set F1 |
 
 Each agent has exactly **seven** golden cases.
 
 Signal goldens are intentionally hard for regex baselines: prose/numbered skills, soft remote/hybrid cues, PagerDuty→on-call, risk without the word “vague”, and decade-tenure seniority. Prefer empty lists when evidence is weak.
 
 Matching goldens stress semantic bridges the deterministic matcher misses: skill aliases (`k8s`/`GCP`/`ML`), Frontend↔UI role titles, NYC↔New York place aliasing, `wfh`↔remote preferences, plus one severe seniority negative.
+
+Decision goldens cover score thresholds (`prepare` / `queue` / `escalate` / `skip`) plus guardrails: risk indicators escalate a prepare-band match, severe seniority hard-skips, and unusable/gibberish postings hard-pass at score `0.0`.
 
 Each case also carries optional `id`, `description`, `tags`. Datasets load as
 [Pydantic Evals](https://pydantic.dev/docs/ai/evals/) `Dataset`s with a matching evaluator.
