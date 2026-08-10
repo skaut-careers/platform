@@ -1,5 +1,4 @@
 from app.agents.workflow_planning.plan import (
-    HUMAN_REVIEW,
     WorkflowPlan,
     compare_plan,
     default_workflow_plan,
@@ -12,14 +11,15 @@ def test_default_workflow_plan():
     assert stages[-1] == "decision"
     assert "signal_extraction" in stages
     assert stages.index("signal_extraction") < stages.index("workflow_planning")
+    assert "human_review" not in stages
 
 
-def test_compare_plan_flags_skipped_human_review():
+def test_compare_plan_flags_skipped_stage():
     base = default_workflow_plan().stages
-    plan = WorkflowPlan(stages=[*base[:-1], HUMAN_REVIEW, base[-1]])
+    plan = WorkflowPlan(stages=[*base[:-1], "extra_stage", base[-1]])
     report = compare_plan(plan, base)
     assert report.followed_plan is False
-    assert report.skipped_stages == [HUMAN_REVIEW]
+    assert report.skipped_stages == ["extra_stage"]
 
 
 def test_compare_plan_followed():

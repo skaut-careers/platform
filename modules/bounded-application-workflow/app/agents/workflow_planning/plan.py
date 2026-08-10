@@ -5,8 +5,8 @@ WORKFLOW_PLANNING = "workflow_planning"
 SIGNAL_EXTRACTION = "signal_extraction"
 PROFILE_MATCHING = "profile_matching"
 POLICY_APPLICATION = "policy_application"
-HUMAN_REVIEW = "human_review"
 DECISION = "decision"
+
 
 class WorkflowPlan(BaseModel):
     """Intended stages before execution (graph node ids)."""
@@ -53,7 +53,6 @@ def compare_plan(
 
 __all__ = [
     "DECISION",
-    "HUMAN_REVIEW",
     "POLICY_APPLICATION",
     "PROFILE_EXTRACTION",
     "PROFILE_MATCHING",

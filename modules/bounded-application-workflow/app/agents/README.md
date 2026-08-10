@@ -44,4 +44,3 @@ The package directory name is the agent's registry name (`agent_name_for`), used
 | `signal_extraction` | extract signals | deterministic · llm (Pydantic AI) |
 | `profile_matching` | score alignment | deterministic |
 | `decision_rules` | apply policy | deterministic |
-| `human_review` | escalation interrupt | LangGraph `interrupt` / `Command` resume |

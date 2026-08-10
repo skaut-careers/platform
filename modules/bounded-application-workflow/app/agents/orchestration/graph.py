@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Any, Literal
+from typing import Any
 
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
-from langgraph.types import interrupt
 
 from app.agents.contracts import (
     DecisionPolicy,
@@ -21,14 +20,7 @@ from app.agents.contracts import (
     WorkflowPlanner,
     WorkflowPlannerInput,
 )
-from app.agents.decision_rules.rules import review_reason
-from app.agents.human_review import (
-    HumanReviewInterrupt,
-    HumanReviewResume,
-    parse_review_resume,
-)
 from app.agents.orchestration.audit import (
-    HumanReviewRecord,
     WorkflowEvent,
     WorkflowEventType,
 )
@@ -45,7 +37,6 @@ from app.domain.models import (
 )
 from app.agents.workflow_planning.plan import (
     DECISION,
-    HUMAN_REVIEW,
     POLICY_APPLICATION,
     PROFILE_EXTRACTION,
     PROFILE_MATCHING,
@@ -92,9 +83,6 @@ _CHECKPOINT_TYPES = (
     WorkflowPlan,
     WorkflowEvent,
     WorkflowEventType,
-    HumanReviewRecord,
-    HumanReviewInterrupt,
-    HumanReviewResume,
     PlanExecutionReport,
     AgentExecutionResult,
     ExecutionStatus,
@@ -281,62 +269,6 @@ def build_workflow_graph(
             "events": events,
         }
 
-    def route_after_policy(
-        state: WorkflowGraphState,
-    ) -> Literal["human_review", "decision"]:
-        if state.decision is not None and state.decision.decision == DecisionType.ESCALATE:
-            return HUMAN_REVIEW
-        return DECISION
-
-    def human_review(state: WorkflowGraphState) -> dict[str, Any]:
-        if state.decision is None:
-            raise RuntimeError("human_review requires a decision on graph state")
-        if state.review is not None and not state.review.is_pending:
-            raise RuntimeError("A review was already recorded for this run")
-
-        reason = review_reason(state.decision)
-        # interrupt() raises on first entry (graph pauses). After Command(resume=...),
-        # LangGraph restarts this node from the top; interrupt() then returns the
-        # resume payload instead of raising. State updates below only persist then.
-        resume_value = interrupt(
-            HumanReviewInterrupt(
-                reason=reason,
-                decision=state.decision,
-                workflow_id=state.workflow_id,
-                requested_at=_now(),
-            ).model_dump(mode="json")
-        )
-        gate_output = parse_review_resume(resume_value)
-        review = HumanReviewRecord(
-            reason=reason,
-            original_decision=state.decision,
-            final_decision=gate_output.decision,
-            approved=gate_output.approved,
-            reviewer_notes=gate_output.reviewer_notes,
-            requested_at=gate_output.requested_at,
-            reviewed_at=_now(),
-        )
-        outcome = (
-            "approved"
-            if not review.is_revised
-            else f"revised to '{gate_output.decision.decision.value}'"
-        )
-        events = _enter_stage(state.events, HUMAN_REVIEW, reason)
-        events = [
-            *events,
-            _event(WorkflowEventType.REVIEW_REQUESTED, HUMAN_REVIEW, reason),
-            _event(
-                WorkflowEventType.REVIEW_COMPLETED,
-                HUMAN_REVIEW,
-                f"Human review {outcome}.",
-            ),
-        ]
-        return {
-            "decision": gate_output.decision,
-            "review": review,
-            "events": events,
-        }
-
     def decision(state: WorkflowGraphState) -> dict[str, Any]:
         if state.decision is None or state.signals is None or state.match is None:
             raise RuntimeError("decision requires decision, signals, and match")
@@ -371,7 +303,6 @@ def build_workflow_graph(
     graph.add_node(SIGNAL_EXTRACTION, signal_extraction)
     graph.add_node(PROFILE_MATCHING, profile_matching)
     graph.add_node(POLICY_APPLICATION, policy_application)
-    graph.add_node(HUMAN_REVIEW, human_review)
     graph.add_node(DECISION, decision)
 
     graph.add_edge(START, PROFILE_EXTRACTION)
@@ -379,12 +310,7 @@ def build_workflow_graph(
     graph.add_edge(SIGNAL_EXTRACTION, WORKFLOW_PLANNING)
     graph.add_edge(WORKFLOW_PLANNING, PROFILE_MATCHING)
     graph.add_edge(PROFILE_MATCHING, POLICY_APPLICATION)
-    graph.add_conditional_edges(
-        POLICY_APPLICATION,
-        route_after_policy,
-        {HUMAN_REVIEW: HUMAN_REVIEW, DECISION: DECISION},
-    )
-    graph.add_edge(HUMAN_REVIEW, DECISION)
+    graph.add_edge(POLICY_APPLICATION, DECISION)
     graph.add_edge(DECISION, END)
     return graph
 

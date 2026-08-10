@@ -6,7 +6,6 @@ from uuid import uuid4
 from pydantic import BaseModel, Field
 
 from app.agents.orchestration.audit import (
-    HumanReviewRecord,
     WorkflowEvent,
     WorkflowEventType,
 )
@@ -40,7 +39,6 @@ class WorkflowGraphState(BaseModel):
     match: ProfileMatchResult | None = None
     decision: WorkflowDecision | None = None
     output: WorkflowOutput | None = None
-    review: HumanReviewRecord | None = None
 
     events: list[WorkflowEvent] = Field(default_factory=list)
     completed_at: datetime | None = None

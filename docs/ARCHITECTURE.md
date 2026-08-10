@@ -1,6 +1,6 @@
 # Architecture — Bounded Application Workflow
 
-Bounded agents behind typed contracts. Priorities: bounded execution · explicit state transitions · observable decisions · human oversight.
+Bounded agents behind typed contracts. Priorities: bounded execution · explicit state transitions · observable decisions.
 
 Stack: **LangGraph** (orchestration) · **Pydantic AI** (agents) · **Logfire** (observability) · **Pydantic Evals** (evaluation). 
 
@@ -13,13 +13,11 @@ stateDiagram-v2
     signal_extraction --> workflow_planning
     workflow_planning --> profile_matching
     profile_matching --> policy_application
-    policy_application --> human_review : escalate
     policy_application --> decision
-    human_review --> decision : approved / revised
     decision --> [*]
 ```
 
-LangGraph `StateGraph` nodes: `profile_extraction` → `UserProfile` → `signal_extraction` → `JobDescription` + `JobSignals` → `workflow_planning` → `WorkflowPlan` → `profile_matching` → `ProfileMatchResult` → `policy_application` → `WorkflowDecision`. Escalation via `interrupt`; approve/revise via `Command`. Checkpointed `WorkflowGraphState` holds data plus thin audit (`events`, `human_review`); plan vs execution via `WorkflowPlan` / `PlanExecutionReport`.
+LangGraph `StateGraph` nodes: `profile_extraction` → `UserProfile` → `signal_extraction` → `JobDescription` + `JobSignals` → `workflow_planning` → `WorkflowPlan` → `profile_matching` → `ProfileMatchResult` → `policy_application` → `WorkflowDecision` → terminal `decision` (`prepare` / `queue` / `escalate` / `skip`). Checkpointed `WorkflowGraphState` holds data plus thin audit (`events`); plan vs execution via `WorkflowPlan` / `PlanExecutionReport`.
 
 ## Agents
 

@@ -38,7 +38,7 @@ class WorkflowPlannerOutput(BaseModel):
 
 
 class WorkflowPlanner(Protocol):
-    """Estimate stages (incl. optional human_review) from extracted signals."""
+    """Return the planned stages for a run."""
 
     def run(self, agent_input: WorkflowPlannerInput) -> WorkflowPlannerOutput: ...
 

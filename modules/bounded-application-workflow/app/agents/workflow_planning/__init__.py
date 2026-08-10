@@ -1,6 +1,5 @@
 from app.agents.workflow_planning.plan import (
     DECISION,
-    HUMAN_REVIEW,
     POLICY_APPLICATION,
     PROFILE_EXTRACTION,
     PROFILE_MATCHING,
@@ -15,7 +14,6 @@ from app.agents.workflow_planning.plan import (
 __all__ = [
     "DECISION",
     "DefaultWorkflowPlanner",
-    "HUMAN_REVIEW",
     "POLICY_APPLICATION",
     "PROFILE_EXTRACTION",
     "PROFILE_MATCHING",
@@ -34,4 +32,4 @@ def __getattr__(name: str):
         from app.agents.workflow_planning import planner
 
         return getattr(planner, name)
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    raise AttributeError(f"module {__name__!r} has no attribute {name}")
