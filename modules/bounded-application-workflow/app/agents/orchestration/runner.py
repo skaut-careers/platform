@@ -10,12 +10,10 @@ from app.agents.contracts import (
     ProfileExtractor,
     ProfileMatcher,
     SignalExtractor,
-    WorkflowPlanner,
 )
 from app.agents.orchestration.graph import compile_workflow_graph
 from app.agents.orchestration.state import WorkflowGraphState
 from app.agents.profile_extraction import DefaultProfileExtractor
-from app.agents.workflow_planning import DefaultWorkflowPlanner
 from app.domain.models import WorkflowInput
 
 
@@ -40,7 +38,6 @@ def execute_workflow_pipeline(
     workflow_input: WorkflowInput,
     *,
     profile_extractor: ProfileExtractor | None = None,
-    planner: WorkflowPlanner | None = None,
     extractor: SignalExtractor,
     matcher: ProfileMatcher,
     policy: DecisionPolicy,
@@ -51,7 +48,6 @@ def execute_workflow_pipeline(
     """Run the workflow via LangGraph from a validated ``WorkflowInput``."""
     compiled = graph or compile_workflow_graph(
         profile_extractor=profile_extractor or DefaultProfileExtractor(),
-        planner=planner or DefaultWorkflowPlanner(),
         extractor=extractor,
         matcher=matcher,
         policy=policy,

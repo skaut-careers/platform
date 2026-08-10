@@ -157,5 +157,5 @@ def api_client() -> TestClient:
 
     config = runtime_config(version="v1")
     return TestClient(
-        create_app(orchestrator=create_agents(runtime_config=config)[-1])
+        create_app(orchestrator=create_agents(runtime_config=config))
     )

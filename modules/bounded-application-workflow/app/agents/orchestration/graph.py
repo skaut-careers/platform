@@ -17,12 +17,17 @@ from app.agents.contracts import (
     ProfileMatcherInput,
     SignalExtractor,
     SignalExtractorInput,
-    WorkflowPlanner,
-    WorkflowPlannerInput,
 )
 from app.agents.orchestration.audit import (
     WorkflowEvent,
     WorkflowEventType,
+)
+from app.agents.orchestration.stages import (
+    DECISION,
+    POLICY_APPLICATION,
+    PROFILE_EXTRACTION,
+    PROFILE_MATCHING,
+    SIGNAL_EXTRACTION,
 )
 from app.agents.orchestration.state import WorkflowGraphState
 from app.domain.job_signals import JobSignals
@@ -34,17 +39,6 @@ from app.domain.models import (
     WorkflowDecision,
     WorkflowInput,
     WorkflowOutput,
-)
-from app.agents.workflow_planning.plan import (
-    DECISION,
-    POLICY_APPLICATION,
-    PROFILE_EXTRACTION,
-    PROFILE_MATCHING,
-    SIGNAL_EXTRACTION,
-    WORKFLOW_PLANNING,
-    PlanExecutionReport,
-    WorkflowPlan,
-    compare_plan,
 )
 from app.parser import parse_job_description
 from app.runtime.result import AgentExecutionResult, ExecutionStatus
@@ -80,10 +74,8 @@ _CHECKPOINT_TYPES = (
     ProfileMatchResult,
     DecisionType,
     JobSignals,
-    WorkflowPlan,
     WorkflowEvent,
     WorkflowEventType,
-    PlanExecutionReport,
     AgentExecutionResult,
     ExecutionStatus,
 )
@@ -152,7 +144,6 @@ def _record_agent_completed(
 def build_workflow_graph(
     *,
     profile_extractor: ProfileExtractor,
-    planner: WorkflowPlanner,
     extractor: SignalExtractor,
     matcher: ProfileMatcher,
     policy: DecisionPolicy,
@@ -193,37 +184,6 @@ def build_workflow_graph(
             "signals": output.signals,
             "events": events,
         }
-
-    def workflow_planning(state: WorkflowGraphState) -> dict[str, Any]:
-        if state.user_profile is None or state.signals is None:
-            raise RuntimeError(
-                "workflow_planning requires user_profile and signals"
-            )
-        events = _enter_stage(state.events, WORKFLOW_PLANNING)
-        if state.plan.stages:
-            plan = state.plan
-        else:
-            plan = planner.run(
-                WorkflowPlannerInput(
-                    user_profile=state.user_profile,
-                    signals=state.signals,
-                )
-            ).plan
-        planned = " -> ".join(plan.stages)
-        events = [
-            *events,
-            _event(
-                WorkflowEventType.PLAN_CREATED,
-                WORKFLOW_PLANNING,
-                f"Planner selected stages: {planned}.",
-            ),
-            _event(
-                WorkflowEventType.AGENT_COMPLETED,
-                WORKFLOW_PLANNING,
-                f"Agent '{type(planner).__name__}' completed.",
-            ),
-        ]
-        return {"plan": plan, "events": events}
 
     def profile_matching(state: WorkflowGraphState) -> dict[str, Any]:
         if (
@@ -281,12 +241,6 @@ def build_workflow_graph(
             recommended_next_steps=list(_NEXT_STEPS[state.decision.decision]),
         )
         completed_at = _now()
-        executed = [
-            event.stage
-            for event in events
-            if event.event_type == WorkflowEventType.STAGE_ENTERED
-        ]
-        plan_report = compare_plan(state.plan, executed)
         events.append(
             _event(WorkflowEventType.RUN_COMPLETED, DECISION, "Workflow run completed.")
         )
@@ -294,12 +248,10 @@ def build_workflow_graph(
             "output": output,
             "events": events,
             "completed_at": completed_at,
-            "plan_report": plan_report,
         }
 
     graph = StateGraph(WorkflowGraphState)
     graph.add_node(PROFILE_EXTRACTION, profile_extraction)
-    graph.add_node(WORKFLOW_PLANNING, workflow_planning)
     graph.add_node(SIGNAL_EXTRACTION, signal_extraction)
     graph.add_node(PROFILE_MATCHING, profile_matching)
     graph.add_node(POLICY_APPLICATION, policy_application)
@@ -307,8 +259,7 @@ def build_workflow_graph(
 
     graph.add_edge(START, PROFILE_EXTRACTION)
     graph.add_edge(PROFILE_EXTRACTION, SIGNAL_EXTRACTION)
-    graph.add_edge(SIGNAL_EXTRACTION, WORKFLOW_PLANNING)
-    graph.add_edge(WORKFLOW_PLANNING, PROFILE_MATCHING)
+    graph.add_edge(SIGNAL_EXTRACTION, PROFILE_MATCHING)
     graph.add_edge(PROFILE_MATCHING, POLICY_APPLICATION)
     graph.add_edge(POLICY_APPLICATION, DECISION)
     graph.add_edge(DECISION, END)
@@ -318,7 +269,6 @@ def build_workflow_graph(
 def compile_workflow_graph(
     *,
     profile_extractor: ProfileExtractor,
-    planner: WorkflowPlanner,
     extractor: SignalExtractor,
     matcher: ProfileMatcher,
     policy: DecisionPolicy,
@@ -326,7 +276,6 @@ def compile_workflow_graph(
 ) -> CompiledStateGraph:
     return build_workflow_graph(
         profile_extractor=profile_extractor,
-        planner=planner,
         extractor=extractor,
         matcher=matcher,
         policy=policy,

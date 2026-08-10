@@ -18,13 +18,12 @@ from langchain_core.runnables import RunnableConfig
 from langgraph.graph.state import CompiledStateGraph
 from app.agents.orchestration.state import WorkflowGraphState
 from app.domain.models import WorkflowInput
-from app.agents.workflow_planning.plan import (
+from app.agents.orchestration.stages import (
     DECISION,
     POLICY_APPLICATION,
     PROFILE_EXTRACTION,
     PROFILE_MATCHING,
     SIGNAL_EXTRACTION,
-    WORKFLOW_PLANNING,
 )
 
 AGUI_WORKFLOW_AGENT_NAME = "application_workflow"
@@ -33,7 +32,6 @@ COPILOTKIT_PATH = "/copilotkit"
 CANONICAL_WORKFLOW_NODES = frozenset(
     {
         PROFILE_EXTRACTION,
-        WORKFLOW_PLANNING,
         SIGNAL_EXTRACTION,
         PROFILE_MATCHING,
         POLICY_APPLICATION,

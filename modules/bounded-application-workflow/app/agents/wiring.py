@@ -6,12 +6,10 @@ from typing import Any, TypeVar, cast
 from pydantic_ai.models import Model
 
 from app.agents.contracts import (
-    DecisionPolicy,
     ProfileExtractor,
     ProfileMatcher,
     SignalExtractor,
     WorkflowOrchestratorInput,
-    WorkflowPlanner,
 )
 from app.agents.decision_rules import DefaultDecisionPolicy
 from app.agents.orchestration.orchestrator import DefaultWorkflowOrchestrator
@@ -19,19 +17,11 @@ from app.agents.orchestration.state import WorkflowGraphState
 from app.agents.profile_extraction import DefaultProfileExtractor, LLMProfileExtractor
 from app.agents.profile_matching import DefaultProfileMatcher, LLMProfileMatcher
 from app.agents.signal_extraction import DefaultSignalExtractor, LLMSignalExtractor
-from app.agents.workflow_planning import DefaultWorkflowPlanner
 from app.domain.models import WorkflowInput, WorkflowOutput
 from app.runtime import BoundedAgentRuntime, RuntimeConfig
 from app.runtime.config_loader import load_runtime_config
 
 _AgentT = TypeVar("_AgentT")
-_AgentBundle = tuple[
-    WorkflowPlanner,
-    SignalExtractor,
-    ProfileMatcher,
-    DecisionPolicy,
-    DefaultWorkflowOrchestrator,
-]
 
 
 def _resolve_mode(mode: str) -> str:
@@ -123,13 +113,12 @@ def create_agents(
     runtime_config: RuntimeConfig | None = None,
     signal_model: Model | str | None = None,
     match_model: Model | str | None = None,
-) -> _AgentBundle:
+) -> DefaultWorkflowOrchestrator:
     """Select agent wiring from the runtime config registry or explicit overrides."""
     config = runtime_config or load_runtime_config()
     mode = _resolve_mode(
         signal_extractor or config.agent_for(LLMSignalExtractor).mode
     )
-    planner = DefaultWorkflowPlanner()
     profile_extractor = create_profile_extractor(runtime_config=config)
     extractor = create_signal_extractor(
         runtime_config=config, model=signal_model, mode=mode
@@ -138,14 +127,12 @@ def create_agents(
         runtime_config=config, model=match_model, mode=mode
     )
     policy = DefaultDecisionPolicy()
-    orchestrator = DefaultWorkflowOrchestrator(
-        planner=planner,
+    return DefaultWorkflowOrchestrator(
         profile_extractor=profile_extractor,
         extractor=extractor,
         matcher=matcher,
         policy=policy,
     )
-    return planner, extractor, matcher, policy, orchestrator
 
 
 def run_workflow(
@@ -167,7 +154,7 @@ def run_workflow_with_state(
     runtime_config: RuntimeConfig | None = None,
 ) -> tuple[WorkflowOutput, WorkflowGraphState]:
     """Run the orchestrated workflow; return output + final state."""
-    result = create_agents(runtime_config=runtime_config)[-1].run(
+    result = create_agents(runtime_config=runtime_config).run(
         WorkflowOrchestratorInput(workflow_input=workflow_input)
     )
     return result.output, result.run

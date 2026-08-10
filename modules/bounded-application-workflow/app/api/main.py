@@ -41,7 +41,7 @@ def create_app(
         allow_headers=["*"],
     )
 
-    workflow = orchestrator or create_agents()[-1]
+    workflow = orchestrator or create_agents()
 
     @app.get("/health")
     def health() -> dict[str, str]:

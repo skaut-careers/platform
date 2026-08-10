@@ -10,8 +10,8 @@ from fastapi.testclient import TestClient
 from langgraph.graph import END, START, StateGraph
 
 from app.agents.orchestration.state import WorkflowGraphState
+from app.agents.orchestration.stages import CANONICAL_STAGES
 from app.agents.wiring import create_agents
-from app.agents.workflow_planning.plan import default_workflow_plan
 from app.api.copilot_runtime import (
     AGUI_WORKFLOW_AGENT_NAME,
     CANONICAL_WORKFLOW_NODES,
@@ -21,11 +21,11 @@ from app.api.copilot_runtime import (
 from app.api.main import create_app
 from tests.conftest import runtime_config, workflow_input
 
-_CORE_NODES = frozenset(default_workflow_plan().stages)
+_CORE_NODES = frozenset(CANONICAL_STAGES)
 
 
 def _orchestrator():
-    return create_agents(runtime_config=runtime_config(version="v1"))[-1]
+    return create_agents(runtime_config=runtime_config(version="v1"))
 
 
 def _initial_state(*, thread_id: str | None = None) -> WorkflowGraphState:

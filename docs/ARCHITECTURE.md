@@ -10,14 +10,13 @@ Stack: **LangGraph** (orchestration) · **Pydantic AI** (agents) · **Logfire** 
 stateDiagram-v2
     [*] --> profile_extraction
     profile_extraction --> signal_extraction
-    signal_extraction --> workflow_planning
-    workflow_planning --> profile_matching
+    signal_extraction --> profile_matching
     profile_matching --> policy_application
     policy_application --> decision
     decision --> [*]
 ```
 
-LangGraph `StateGraph` nodes: `profile_extraction` → `UserProfile` → `signal_extraction` → `JobDescription` + `JobSignals` → `workflow_planning` → `WorkflowPlan` → `profile_matching` → `ProfileMatchResult` → `policy_application` → `WorkflowDecision` → terminal `decision` (`prepare` / `queue` / `escalate` / `skip`). Checkpointed `WorkflowGraphState` holds data plus thin audit (`events`); plan vs execution via `WorkflowPlan` / `PlanExecutionReport`.
+LangGraph `StateGraph` nodes: `profile_extraction` → `UserProfile` → `signal_extraction` → `JobDescription` + `JobSignals` → `profile_matching` → `ProfileMatchResult` → `policy_application` → `WorkflowDecision` → terminal `decision` (`prepare` / `queue` / `escalate` / `skip`). Checkpointed `WorkflowGraphState` holds data plus thin audit (`events` / `executed_stages`).
 
 ## Agents
 

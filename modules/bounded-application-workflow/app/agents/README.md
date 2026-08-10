@@ -40,7 +40,6 @@ The package directory name is the agent's registry name (`agent_name_for`), used
 
 | Agent | Stage | Modes |
 |-------|-------|-------|
-| `workflow_planning` | plan | deterministic |
 | `signal_extraction` | extract signals | deterministic · llm (Pydantic AI) |
 | `profile_matching` | score alignment | deterministic |
 | `decision_rules` | apply policy | deterministic |
