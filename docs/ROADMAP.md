@@ -29,25 +29,25 @@ Migrate onto LangGraph · Pydantic AI · Logfire · Pydantic Evals behind existi
 
 ## Milestone 6 — Minimal product
 
-Local end-to-end product: paste job description → evaluate → show score, decision, missing signals, risks, reasoning. Next.js + CopilotKit over the FastAPI / LangGraph backend. Azure deploy is Milestone 7.
+Local end-to-end product: paste profile/CV + job description → evaluate → show decision, missing signals, risks, reasoning. Next.js + CopilotKit over the FastAPI / LangGraph backend.
 
-## Milestone 7 — Public launch on Azure
+## Milestone 7 — Retrieval & Tooling
 
-Deploy the minimal product to Azure with a managed setup, public HTTPS access, secure config, and a repeatable deploy process.
+Tool registry, contracts, retriever abstraction, vector search, tool selection, schema-validated invocation via Pydantic AI tools / MCP. Runs on the local product from M6 (shared vector store with M8).
 
-## Milestone 8 — Early Reliability Baseline
+## Milestone 8 — Agent Memory & Context
+
+Short-term/working memory, artifacts, context windows, persistence, pruning — via LangGraph checkpointers and state reducers, backed by PostgreSQL + `pgvector` (local first; same store later wired on Azure in M10).
+
+## Milestone 9 — Early Reliability Baseline
 
 Schema validation, execution tracing, prompt versioning, benchmark fixtures — built on Logfire traces and Pydantic Evals. Continues in Milestone 11.
 
 **Done when:** all outputs Pydantic-validated; runs inspectable via Logfire/LangGraph checkpoints; versioned configs; starter benchmark set.
 
-## Milestone 9 — Retrieval & Tooling
+## Milestone 10 — Public launch on Azure
 
-Tool registry, contracts, retriever abstraction, vector search, tool selection, schema-validated invocation via Pydantic AI tools / MCP.
-
-## Milestone 10 — Agent Memory & Context
-
-Short-term/working memory, artifacts, context windows, persistence, pruning — via LangGraph checkpointers and state reducers, backed by PostgreSQL + `pgvector`.
+Deploy the product (M6 + M7/M8 capabilities as ready) to Azure: managed app hosting, public HTTPS, secure config, repeatable deploy, and the Postgres/`pgvector` store introduced in M8.
 
 ## Milestone 11 — Evaluation & Reliability
 

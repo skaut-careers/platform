@@ -6,7 +6,7 @@ Evaluates whether a professional opportunity is worth pursuing from structured s
 
 Supports deliberate, high-quality career decisions — not application volume or autonomous actions. First executable Skaut Careers module.
 
-**Phase:** Milestones 1–5 complete — next: Milestone 6 (minimal product), then Milestone 7 (public launch on Azure).
+**Phase:** Milestones 1–5 complete — next: Milestone 6 (minimal product), then Milestone 7 (retrieval & tooling) and Milestone 8 (memory). Public Azure launch is Milestone 10.
 
 ---
 
@@ -50,23 +50,47 @@ LLM agents behind the same `Protocol` contracts: schema-validated outputs, deter
 
 Migrated onto LangGraph · Pydantic AI · Logfire · Pydantic Evals per [ADR 0001](./adr/0001-adopt-modern-agent-stack.md). Contracts and decision policy unchanged; **output parity** preserved.
 
-**Non-goals:** changing decision policy; user-facing product UI (Milestones 6–7).
+**Non-goals:** changing decision policy; user-facing product UI (Milestone 6+).
 
 ---
 
 ## Milestone 6 — Minimal product (planned)
 
-Local end-to-end product on the migrated stack: Next.js + CopilotKit UI over the FastAPI / LangGraph backend. Paste a job description, run evaluation, and see score, decision, missing signals, risks, and reasoning — with UX states, verification, and setup docs.
+Local end-to-end product on the migrated stack: Next.js + CopilotKit UI over the FastAPI / LangGraph backend. Paste profile/CV + job description, run evaluation, and see decision, missing signals, risks, and reasoning — with UX states, verification, and setup docs.
 
-**Non-goals:** Azure / cloud deployment (Milestone 7); new evaluation logic; autonomous actions.
+**Non-goals:** Azure / cloud deployment (Milestone 10); retrieval/memory (Milestones 7–8); autonomous actions.
 
 ---
 
-## Milestone 7 — Public launch on Azure (planned)
+## Milestone 7 — Retrieval & Tooling (planned)
 
-Deploy the M6 product to Azure with a minimal managed architecture, public HTTPS access, secure configuration, repeatable deploy (GitHub Actions or documented process), and basic ops docs (logging, health, cost, troubleshooting, cleanup).
+Tool registry, retriever abstraction, vector search, and schema-validated tool invocation (Pydantic AI tools / MCP) so evaluation can use more than a single pasted JD.
 
-**Non-goals:** Kubernetes, complex networking, production multi-tenant hardening, or introducing Postgres/`pgvector` memory (later milestones).
+**Non-goals:** Azure deploy; multi-agent sprawl; unbounded tool use outside contracts.
+
+---
+
+## Milestone 8 — Agent Memory & Context (planned)
+
+LangGraph checkpointer-backed memory and context (artifacts, pruning) on PostgreSQL + `pgvector`, first locally so profile/history and concurrent runs can persist.
+
+**Non-goals:** Azure hosting of that database (Milestone 10 wires the same store); adaptive policy learning (Milestone 13).
+
+---
+
+## Milestone 9 — Early Reliability Baseline (planned)
+
+Schema validation, execution tracing, prompt versioning, and starter benchmark fixtures on Logfire / Pydantic Evals. Continues in Milestone 11.
+
+**Non-goals:** full regression platform (Milestone 11); Azure launch.
+
+---
+
+## Milestone 10 — Public launch on Azure (planned)
+
+Deploy the product to Azure after M7/M8 exist locally: managed app hosting, public HTTPS, secure configuration, repeatable deploy, and the Postgres/`pgvector` store from Milestone 8.
+
+**Non-goals:** Kubernetes, complex networking, or inventing a second persistence stack.
 
 ---
 
@@ -98,7 +122,7 @@ Structured evaluation object:
 | -------- | ------- |
 | prepare | High alignment — pursue actively |
 | queue | Potential fit, not current priority |
-| escalate | Ambiguity or conflicting signals — human review |
+| escalate | Ambiguity or conflicting signals — inspect personally |
 | skip | Low alignment or poor strategic fit |
 
 ### Policy thresholds
@@ -116,7 +140,7 @@ Deterministic and simple. Risk-based escalation via workflow plan and decision r
 
 ## Technical Scope
 
-Python · FastAPI · LangGraph · Pydantic AI · Logfire · Pydantic Evals · typed agent contracts · bounded runtime (retry / fallback / provenance) · versioned prompts and configs · modular domain layer · tests · CI. Planned product surface: Next.js + CopilotKit (M6 local; M7 Azure).
+Python · FastAPI · LangGraph · Pydantic AI · Logfire · Pydantic Evals · typed agent contracts · bounded runtime (retry / fallback / provenance) · versioned prompts and configs · modular domain layer · tests · CI. Planned product surface: Next.js + CopilotKit (M6 local); retrieval/memory (M7–M8); public Azure launch (M10).
 
 Implementation details: [module README](../modules/bounded-application-workflow/README.md).
 
@@ -132,9 +156,15 @@ Implementation details: [module README](../modules/bounded-application-workflow/
 
 **Milestone 5:** LangGraph orchestration · Pydantic AI agents · Logfire traces · Pydantic Evals · output parity · see [ARCHITECTURE](./ARCHITECTURE.md).
 
-**Milestone 6:** main user journey works locally · frontend connected to real backend · loading/empty/validation/success/error states · verification · local docs · deploy-ready but not cloud-deployed.
+**Milestone 6:** main user journey works locally · frontend connected to real backend · loading/empty/validation/success/error states · verification · local docs.
 
-**Milestone 7:** public HTTPS product on Azure · secure env/secrets · required persistence decided · repeatable deploy · basic logging/health/cost/troubleshooting docs.
+**Milestone 7:** tools/retrieval behind contracts · vector search usable from the workflow · schema-validated invocation.
+
+**Milestone 8:** Postgres/`pgvector` + checkpointer memory locally · concurrent runs isolated · context/pruning defined.
+
+**Milestone 9:** outputs validated · runs inspectable · versioned configs · starter benchmarks.
+
+**Milestone 10:** public HTTPS product on Azure · secure env/secrets · M8 store wired · repeatable deploy · basic logging/health/cost/troubleshooting docs.
 
 ---
 
