@@ -10,6 +10,7 @@ from pydantic_ai.exceptions import (
     UserError,
 )
 from pydantic_ai.models import Model
+from pydantic_ai.models.openai import OpenAIChatModelSettings
 
 from app.agents.contracts import AgentOutput
 from app.runtime.config_loader import local_env
@@ -25,6 +26,12 @@ PROVIDER_ERRORS: tuple[type[Exception], ...] = (
     AgentRunError,
     UserError,
 )
+
+# Reasoning tokens inflate "output" usage and latency on GPT-5.x; keep effort off
+# for this extraction/match/policy path.
+_DEFAULT_MODEL_SETTINGS: OpenAIChatModelSettings = {
+    "openai_reasoning_effort": "none",
+}
 
 
 def build_openai_model(
@@ -104,6 +111,7 @@ class BoundedLLMAgent(Generic[InputT, OutputT, ContractT]):
                 model,
                 output_type=self.output_type,
                 system_prompt=self._prompt.content,
+                model_settings=_DEFAULT_MODEL_SETTINGS,
             )
         return self._agent
 

@@ -32,7 +32,7 @@ def test_default_config_registry():
     spec = registry.get("v2")
     assert spec.settings == {
         "mode": "llm",
-        "model": "gpt-5-mini",
+        "model": "gpt-5.4-mini",
         "max_attempts": 2,
         "prompt_version": "v1",
     }
@@ -109,7 +109,7 @@ def test_load_runtime_config(version, mode, prompt_version):
         assert config.config_hash == compute_config_hash({"mode": "deterministic"})
     else:
         assert config.config_version == version
-        assert agent.model == "gpt-5-mini"
+        assert agent.model == "gpt-5.4-mini"
         assert agent.prompt and agent.prompt.version == prompt_version
 
 

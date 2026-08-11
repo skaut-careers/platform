@@ -13,7 +13,7 @@ class AgentRuntimeConfig(BaseModel):
     """Per-agent runtime settings used during execution."""
 
     mode: Literal["deterministic", "llm"] = "deterministic"
-    model: str = Field(default="gpt-5-mini", min_length=1)
+    model: str = Field(default="gpt-5.4-mini", min_length=1)
     max_attempts: int = Field(default=2, ge=1, le=5)
     prompt: PromptSpec | None = None
 
@@ -56,7 +56,7 @@ class RuntimeConfig(BaseModel):
         agent_name: str | None = None,
         config_version: str = "v1",
         mode: Literal["deterministic", "llm"] = "llm",
-        model: str = "gpt-5-mini",
+        model: str = "gpt-5.4-mini",
         max_attempts: int = 2,
         prompt_version: str = "v1",
         prompt_registry: PromptRegistry | None = None,

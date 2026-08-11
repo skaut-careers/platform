@@ -318,3 +318,4 @@ def test_llm_signal_extractor_success_and_fallback():
     assert failed.execution.used_fallback
     assert failed.execution.status == ExecutionStatus.SUCCESS
     assert (failed.execution.error or "").startswith("SignalExtractionLLMError")
+
