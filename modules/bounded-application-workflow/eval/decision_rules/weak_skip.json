@@ -1,0 +1,60 @@
+{
+  "id": "weak_skip",
+  "description": "Score below escalate band \u2192 skip",
+  "tags": [
+    "skip",
+    "threshold"
+  ],
+  "match": {
+    "score": 0.2,
+    "required_skills_matched": [],
+    "required_skills_missing": [
+      "Java",
+      "Spring"
+    ],
+    "preferred_skills_matched": [],
+    "production_expectations_matched": [],
+    "production_expectations_missing": [],
+    "role_aligned": false,
+    "work_arrangement_aligned": false,
+    "location_aligned": false,
+    "severe_seniority_mismatch": false,
+    "reasons": [
+      "poor skill overlap"
+    ],
+    "risks": [
+      "location mismatch"
+    ]
+  },
+  "signals": {
+    "required_skills": [
+      "Java",
+      "Spring"
+    ],
+    "preferred_skills": [],
+    "seniority_signals": [
+      "senior"
+    ],
+    "production_expectations": [],
+    "work_arrangements": [
+      "onsite"
+    ],
+    "location_signals": [
+      "Munich"
+    ],
+    "risk_indicators": [],
+    "missing_signals": []
+  },
+  "expected": {
+    "decision": "skip",
+    "score_min": 0.0,
+    "score_max": 0.34,
+    "reasons": [
+      "poor skill overlap"
+    ],
+    "risks": [
+      "location mismatch"
+    ],
+    "missing_information": []
+  }
+}

@@ -1,7 +1,8 @@
 from app.agents.contracts import DecisionPolicyInput, DecisionPolicyOutput
-from app.agents.decision_rules.rules import build_workflow_decision
+from app.agents.decision_rules.llm import LLMDecisionPolicy
+from app.agents.decision_rules.deterministic import build_workflow_decision
 
-__all__ = ["DefaultDecisionPolicy"]
+__all__ = ["DefaultDecisionPolicy", "LLMDecisionPolicy"]
 
 
 class DefaultDecisionPolicy:

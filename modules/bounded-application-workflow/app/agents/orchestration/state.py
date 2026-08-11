@@ -6,7 +6,6 @@ from uuid import uuid4
 from pydantic import BaseModel, Field
 
 from app.agents.orchestration.audit import (
-    HumanReviewRecord,
     WorkflowEvent,
     WorkflowEventType,
 )
@@ -19,7 +18,6 @@ from app.domain.models import (
     WorkflowInput,
     WorkflowOutput,
 )
-from app.agents.workflow_planning.plan import PlanExecutionReport, WorkflowPlan
 
 
 class WorkflowGraphState(BaseModel):
@@ -32,7 +30,6 @@ class WorkflowGraphState(BaseModel):
 
     user_profile: UserProfile | None = None
     job_description: JobDescription | None = None
-    plan: WorkflowPlan = Field(default_factory=WorkflowPlan)
 
     started_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
@@ -40,11 +37,9 @@ class WorkflowGraphState(BaseModel):
     match: ProfileMatchResult | None = None
     decision: WorkflowDecision | None = None
     output: WorkflowOutput | None = None
-    review: HumanReviewRecord | None = None
 
     events: list[WorkflowEvent] = Field(default_factory=list)
     completed_at: datetime | None = None
-    plan_report: PlanExecutionReport | None = None
 
     @classmethod
     def from_workflow_input(

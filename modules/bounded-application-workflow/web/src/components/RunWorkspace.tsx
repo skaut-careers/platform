@@ -8,12 +8,6 @@ import { useAgent, UseAgentUpdate } from "@copilotkit/react-core/v2";
 import { Atmosphere } from "@/components/Atmosphere";
 import { MatchResult } from "@/components/MatchResult";
 import {
-  EMPTY_PROFILE,
-  WORK_PREFERENCE_OPTIONS,
-  toProfileText,
-  type ProfileFormValues,
-} from "@/lib/examples";
-import {
   WORKFLOW_AGENT_ID,
   missingSignals,
   stageProgressLabel,
@@ -36,27 +30,9 @@ function RequiredMark() {
 
 type Step = 1 | 2 | 3;
 
-function parseList(value: string): string[] {
-  return value
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
-
-function validateProfile(profile: ProfileFormValues): string[] {
-  const errors: string[] = [];
-  if (parseList(profile.targetRoles).length < 1) errors.push("Add at least 1 role.");
-  if (parseList(profile.skills).length < 3) errors.push("Add at least 3 skills.");
-  if (!profile.seniority.trim()) errors.push("Add seniority.");
-  if (profile.workPreferences.length < 1) {
-    errors.push("Pick at least one work preference.");
-  }
-  return errors;
-}
-
-function validateJob(jobText: string): string[] {
-  if (jobText.trim().length < 40) {
-    return ["Paste a fuller job description (~40+ characters)."];
+function validatePaste(text: string, label: string): string[] {
+  if (text.trim().length < 40) {
+    return [`Paste a fuller ${label} (~40+ characters).`];
   }
   return [];
 }
@@ -68,7 +44,7 @@ const STEPS = [
 ];
 
 export function RunWorkspace() {
-  const [profile, setProfile] = useState<ProfileFormValues>(EMPTY_PROFILE);
+  const [profileText, setProfileText] = useState("");
   const [jobText, setJobText] = useState("");
   const [step, setStep] = useState<Step>(1);
   const [errors, setErrors] = useState<string[]>([]);
@@ -85,28 +61,12 @@ export function RunWorkspace() {
   const decision = workflowDecision(state);
   const running = agent.isRunning;
 
-  function updateProfile<K extends keyof ProfileFormValues>(
-    key: K,
-    value: ProfileFormValues[K],
-  ) {
-    setProfile((current) => ({ ...current, [key]: value }));
-  }
-
-  function toggleWorkPreference(option: string) {
-    setProfile((current) => {
-      const selected = current.workPreferences.includes(option)
-        ? current.workPreferences.filter((item) => item !== option)
-        : [...current.workPreferences, option];
-      return { ...current, workPreferences: selected };
-    });
-  }
-
   function scrollToProduct() {
     productRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   function goToRole() {
-    const nextErrors = validateProfile(profile);
+    const nextErrors = validatePaste(profileText, "CV");
     setErrors(nextErrors);
     if (nextErrors.length > 0) return;
     setErrors([]);
@@ -114,7 +74,10 @@ export function RunWorkspace() {
   }
 
   async function onRun() {
-    const nextErrors = [...validateProfile(profile), ...validateJob(jobText)];
+    const nextErrors = [
+      ...validatePaste(profileText, "CV"),
+      ...validatePaste(jobText, "job description"),
+    ];
     setErrors(nextErrors);
     if (nextErrors.length > 0) return;
 
@@ -124,7 +87,7 @@ export function RunWorkspace() {
 
     agent.threadId = randomUUID();
     agent.setState({
-      profile_text: toProfileText(profile),
+      profile_text: profileText.trim(),
       job_description_text: jobText.trim(),
     });
 
@@ -241,109 +204,24 @@ export function RunWorkspace() {
           >
             <div className="quest-badge">Stop 1</div>
             <h3 className="font-display text-2xl font-semibold text-forest">You</h3>
+            <p className="mt-1 text-sm text-muted">
+              Paste your CV — we extract roles, skills, and preferences from it.
+            </p>
 
             <div className="panel-body mt-3">
-              <div className="grid grid-cols-2 gap-x-3 gap-y-2 md:grid-cols-4">
-                <label className="flex flex-col gap-1">
-                  <span className={labelClassName}>
-                    Level
-                    <RequiredMark />
-                  </span>
-                  <input
-                    value={profile.seniority}
-                    onChange={(event) => updateProfile("seniority", event.target.value)}
-                    placeholder="mid…"
-                    className={fieldClassName}
-                    required
-                    tabIndex={step === 1 ? 0 : -1}
-                  />
-                </label>
-                <label className="flex flex-col gap-1">
-                  <span className={labelClassName}>Base</span>
-                  <input
-                    value={profile.location}
-                    onChange={(event) => updateProfile("location", event.target.value)}
-                    placeholder="city"
-                    className={fieldClassName}
-                    tabIndex={step === 1 ? 0 : -1}
-                  />
-                </label>
-                <label className="col-span-2 flex flex-col gap-1">
-                  <span className={labelClassName}>
-                    Roles you want
-                    <RequiredMark />
-                  </span>
-                  <input
-                    value={profile.targetRoles}
-                    onChange={(event) => updateProfile("targetRoles", event.target.value)}
-                    placeholder="AI Engineer, Backend…"
-                    className={fieldClassName}
-                    required
-                    tabIndex={step === 1 ? 0 : -1}
-                  />
-                </label>
-                <label className="col-span-2 flex flex-col gap-1">
-                  <span className={labelClassName}>
-                    Skills
-                    <RequiredMark />
-                  </span>
-                  <input
-                    value={profile.skills}
-                    onChange={(event) => updateProfile("skills", event.target.value)}
-                    placeholder="Python, SQL, system design"
-                    className={fieldClassName}
-                    required
-                    tabIndex={step === 1 ? 0 : -1}
-                  />
-                </label>
-                <label className="col-span-2 flex flex-col gap-1">
-                  <span className={labelClassName}>Recent wins</span>
-                  <input
-                    value={profile.experienceSummary}
-                    onChange={(event) =>
-                      updateProfile("experienceSummary", event.target.value)
-                    }
-                    placeholder="What you’ve shipped lately"
-                    className={fieldClassName}
-                    tabIndex={step === 1 ? 0 : -1}
-                  />
-                </label>
-                <label className="col-span-2 flex flex-col gap-1">
-                  <span className={labelClassName}>Production (optional)</span>
-                  <input
-                    value={profile.productionExperience}
-                    onChange={(event) =>
-                      updateProfile("productionExperience", event.target.value)
-                    }
-                    placeholder="on-call, owned services…"
-                    className={fieldClassName}
-                    tabIndex={step === 1 ? 0 : -1}
-                  />
-                </label>
-              </div>
-
-              <div className="mt-3">
+              <label className="flex h-full min-h-0 flex-col gap-1">
                 <span className={labelClassName}>
-                  Where you work best (select all that apply)
+                  CV
                   <RequiredMark />
                 </span>
-                <div className="mt-1.5 flex flex-wrap gap-2">
-                  {WORK_PREFERENCE_OPTIONS.map((option) => {
-                    const selected = profile.workPreferences.includes(option);
-                    return (
-                      <button
-                        key={option}
-                        type="button"
-                        onClick={() => toggleWorkPreference(option)}
-                        className={`choice-chip capitalize ${selected ? "is-on" : ""}`}
-                        tabIndex={step === 1 ? 0 : -1}
-                      >
-                        {option}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+                <textarea
+                  value={profileText}
+                  onChange={(event) => setProfileText(event.target.value)}
+                  placeholder="Paste your CV…"
+                  className={`${fieldClassName} min-h-[10.5rem] flex-1 resize-y leading-6`}
+                  tabIndex={step === 1 ? 0 : -1}
+                />
+              </label>
             </div>
 
             <div className="panel-footer">
@@ -385,7 +263,6 @@ export function RunWorkspace() {
                   onChange={(event) => setJobText(event.target.value)}
                   placeholder="Paste the job posting…"
                   className={`${fieldClassName} min-h-[10.5rem] flex-1 resize-y leading-6`}
-                  required
                   tabIndex={step === 2 ? 0 : -1}
                 />
               </label>

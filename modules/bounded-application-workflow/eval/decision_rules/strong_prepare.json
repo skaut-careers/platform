@@ -1,0 +1,64 @@
+{
+  "id": "strong_prepare",
+  "description": "High match score, no risk indicators \u2192 prepare",
+  "tags": [
+    "prepare",
+    "threshold"
+  ],
+  "match": {
+    "score": 0.9,
+    "required_skills_matched": [
+      "Python",
+      "Kubernetes"
+    ],
+    "required_skills_missing": [],
+    "preferred_skills_matched": [
+      "Go"
+    ],
+    "production_expectations_matched": [
+      "on-call"
+    ],
+    "production_expectations_missing": [],
+    "role_aligned": true,
+    "work_arrangement_aligned": true,
+    "location_aligned": true,
+    "severe_seniority_mismatch": false,
+    "reasons": [
+      "strong required-skill coverage",
+      "role aligned"
+    ],
+    "risks": []
+  },
+  "signals": {
+    "required_skills": [
+      "Python",
+      "Kubernetes"
+    ],
+    "preferred_skills": [
+      "Go"
+    ],
+    "seniority_signals": [
+      "senior"
+    ],
+    "production_expectations": [
+      "on-call"
+    ],
+    "work_arrangements": [
+      "remote"
+    ],
+    "location_signals": [],
+    "risk_indicators": [],
+    "missing_signals": []
+  },
+  "expected": {
+    "decision": "prepare",
+    "score_min": 0.75,
+    "score_max": 1.0,
+    "reasons": [
+      "strong required-skill coverage",
+      "role aligned"
+    ],
+    "risks": [],
+    "missing_information": []
+  }
+}

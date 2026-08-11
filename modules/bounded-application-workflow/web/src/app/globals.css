@@ -314,33 +314,6 @@ body {
   transform: translateY(0);
 }
 
-.choice-chip {
-  border: 1px solid var(--line);
-  background: var(--surface);
-  color: var(--ink);
-  border-radius: 0.65rem;
-  padding: 0.45rem 0.85rem;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition:
-    background 0.15s ease,
-    border-color 0.15s ease,
-    color 0.15s ease,
-    transform 0.15s ease;
-}
-
-.choice-chip:hover {
-  border-color: color-mix(in srgb, var(--forest) 40%, var(--line));
-}
-
-.choice-chip.is-on {
-  border-color: var(--forest);
-  background: color-mix(in srgb, var(--forest) 12%, white);
-  color: var(--forest-deep);
-  transform: translateY(-1px);
-}
-
 .panel {
   border: 1px solid var(--line);
   background: color-mix(in srgb, var(--surface) 94%, white);

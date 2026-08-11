@@ -32,7 +32,7 @@ The module **evaluates** (prepare, queue, skip, escalate). It does **not** apply
 
 ## Milestone 3 — Agentic Workflow Layer (delivered)
 
-Bounded orchestration: planning/execution separation, typed agent contracts, explicit states, human review on escalation, auditable transitions.
+Bounded orchestration: typed agent contracts, explicit states, auditable transitions.
 
 **Non-goals:** unconstrained multi-agent autonomy; LLM overrides without policy bounds.
 
@@ -150,7 +150,7 @@ Implementation details: [module README](../modules/bounded-application-workflow/
 
 **Milestones 1–2:** core evaluation engine shipped.
 
-**Milestone 3:** explicit states · planning/execution separation · human review · inspectable transitions.
+**Milestone 3:** explicit states · typed agent contracts · inspectable transitions.
 
 **Milestone 4:** ≥1 LLM-backed agent · schema validation · deterministic fallback · versioned prompts/configs · provenance · eval dataset.
 

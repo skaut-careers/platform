@@ -4,20 +4,16 @@ from uuid import uuid4
 from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph.state import CompiledStateGraph
-from langgraph.types import Command
 
 from app.agents.contracts import (
     DecisionPolicy,
     ProfileExtractor,
     ProfileMatcher,
     SignalExtractor,
-    WorkflowPlanner,
 )
-from app.agents.human_review import HumanReviewInterrupt, HumanReviewResume
 from app.agents.orchestration.graph import compile_workflow_graph
 from app.agents.orchestration.state import WorkflowGraphState
 from app.agents.profile_extraction import DefaultProfileExtractor
-from app.agents.workflow_planning import DefaultWorkflowPlanner
 from app.domain.models import WorkflowInput
 
 
@@ -27,42 +23,21 @@ def _thread_config(workflow_id: str) -> RunnableConfig:
 
 @dataclass(frozen=True)
 class WorkflowPipelineResult:
-    """Invoke handle: compiled graph + thread id, plus interrupt side-channel if paused."""
+    """Invoke handle: compiled graph + thread id."""
 
     graph: CompiledStateGraph
     workflow_id: str
-    review_interrupt: HumanReviewInterrupt | None = None
 
     @property
     def state(self) -> WorkflowGraphState:
         snapshot = self.graph.get_state(_thread_config(self.workflow_id))
         return WorkflowGraphState.model_validate(snapshot.values)
 
-    @property
-    def is_interrupted(self) -> bool:
-        return self.review_interrupt is not None
-
-
-def _result_from_graph(
-    compiled: CompiledStateGraph,
-    workflow_id: str,
-) -> WorkflowPipelineResult:
-    snapshot = compiled.get_state(_thread_config(workflow_id))
-    interrupts = list(snapshot.interrupts)
-    if interrupts:
-        return WorkflowPipelineResult(
-            graph=compiled,
-            workflow_id=workflow_id,
-            review_interrupt=HumanReviewInterrupt.model_validate(interrupts[0].value),
-        )
-    return WorkflowPipelineResult(graph=compiled, workflow_id=workflow_id)
-
 
 def execute_workflow_pipeline(
     workflow_input: WorkflowInput,
     *,
     profile_extractor: ProfileExtractor | None = None,
-    planner: WorkflowPlanner | None = None,
     extractor: SignalExtractor,
     matcher: ProfileMatcher,
     policy: DecisionPolicy,
@@ -73,7 +48,6 @@ def execute_workflow_pipeline(
     """Run the workflow via LangGraph from a validated ``WorkflowInput``."""
     compiled = graph or compile_workflow_graph(
         profile_extractor=profile_extractor or DefaultProfileExtractor(),
-        planner=planner or DefaultWorkflowPlanner(),
         extractor=extractor,
         matcher=matcher,
         policy=policy,
@@ -85,18 +59,4 @@ def execute_workflow_pipeline(
         workflow_id=workflow_id,
     )
     compiled.invoke(initial, _thread_config(workflow_id))
-    return _result_from_graph(compiled, workflow_id)
-
-
-def resume_workflow_pipeline(
-    pipeline: WorkflowPipelineResult,
-    resume: HumanReviewResume,
-) -> WorkflowPipelineResult:
-    """Apply an approve/revise Command and continue to the final decision."""
-    if not pipeline.is_interrupted:
-        raise RuntimeError("Pipeline is not waiting for human review")
-    pipeline.graph.invoke(
-        Command(resume=resume.model_dump(mode="json")),
-        _thread_config(pipeline.workflow_id),
-    )
-    return _result_from_graph(pipeline.graph, pipeline.workflow_id)
+    return WorkflowPipelineResult(graph=compiled, workflow_id=workflow_id)

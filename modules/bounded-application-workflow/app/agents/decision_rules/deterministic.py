@@ -73,23 +73,11 @@ def decision_from_signals(
 
     base = decision_from_score(score)
 
-    # Risky but still usable postings need human review even on a strong match.
+    # Risky but still usable postings escalate even on a strong match.
     if base == DecisionType.PREPARE and signals.risk_indicators:
         return DecisionType.ESCALATE
 
     return base
-
-
-def review_reason(decision: WorkflowDecision) -> str:
-    """Explain why an escalated decision needs human review."""
-    parts: list[str] = []
-    if decision.risks:
-        parts.append("risks: " + "; ".join(decision.risks))
-    if decision.missing_information:
-        parts.append("missing information: " + "; ".join(decision.missing_information))
-    if not parts:
-        parts.append(f"match score {decision.score:.2f} is in the escalation band")
-    return "Escalated for human review: " + " | ".join(parts)
 
 
 def build_workflow_decision(

@@ -5,18 +5,26 @@ from typing import cast
 from pydantic import BaseModel, Field
 from pydantic_evals import Case, Dataset
 
-from app.agents.contracts import ProfileMatcherInput
+from app.agents.contracts import DecisionPolicyInput, ProfileMatcherInput
 from app.domain.job_signals import JobSignals
-from app.domain.models import JobDescription, ProfileMatchResult, UserProfile
+from app.domain.models import (
+    DecisionType,
+    JobDescription,
+    ProfileMatchResult,
+    UserProfile,
+    WorkflowDecision,
+)
 
 EVAL_ROOT = Path(__file__).resolve().parents[2] / "eval"
 SIGNAL_DATASET_DIR = EVAL_ROOT / "signal_extraction"
 PROFILE_DATASET_DIR = EVAL_ROOT / "profile_extraction"
 MATCH_DATASET_DIR = EVAL_ROOT / "profile_matching"
+DECISION_DATASET_DIR = EVAL_ROOT / "decision_rules"
 
 SIGNAL_DATASET_NAME = "signal_extractor_golden"
 PROFILE_DATASET_NAME = "profile_extractor_golden"
 MATCH_DATASET_NAME = "profile_matcher_golden"
+DECISION_DATASET_NAME = "decision_policy_golden"
 
 
 class CaseMetadata(BaseModel):
@@ -39,6 +47,16 @@ class MatchExpectation(BaseModel):
     production_expectations_missing: list[str] = Field(default_factory=list)
 
 
+class DecisionExpectation(BaseModel):
+
+    decision: DecisionType
+    score_min: float = Field(default=0.0, ge=0.0, le=1.0)
+    score_max: float = Field(default=1.0, ge=0.0, le=1.0)
+    reasons: list[str] = Field(default_factory=list)
+    risks: list[str] = Field(default_factory=list)
+    missing_information: list[str] = Field(default_factory=list)
+
+
 SignalCase = Case[JobDescription, JobSignals, CaseMetadata]
 SignalDataset = Dataset[JobDescription, JobSignals, CaseMetadata]
 ProfileCase = Case[str, UserProfile, CaseMetadata]
@@ -46,6 +64,8 @@ ProfileDataset = Dataset[str, UserProfile, CaseMetadata]
 # OutputT is ProfileMatchResult (task output); goldens store MatchExpectation in expected_output.
 MatchCase = Case[ProfileMatcherInput, ProfileMatchResult, CaseMetadata]
 MatchDataset = Dataset[ProfileMatcherInput, ProfileMatchResult, CaseMetadata]
+DecisionCase = Case[DecisionPolicyInput, WorkflowDecision, CaseMetadata]
+DecisionDataset = Dataset[DecisionPolicyInput, WorkflowDecision, CaseMetadata]
 
 
 def _require_cases(cases: list, root: Path) -> list:
@@ -124,6 +144,37 @@ def load_match_cases(dataset_dir: Path | None = None) -> list[MatchCase]:
     return _require_cases(cases, root)
 
 
+def _decision_input(payload: dict) -> DecisionPolicyInput:
+    return DecisionPolicyInput(
+        match=ProfileMatchResult.model_validate(payload["match"]),
+        signals=JobSignals.model_validate(payload["signals"]),
+    )
+
+
+def load_decision_cases(dataset_dir: Path | None = None) -> list[DecisionCase]:
+    root = dataset_dir or DECISION_DATASET_DIR
+    cases: list[DecisionCase] = []
+    for path in sorted(root.glob("*.json")):
+        payload = json.loads(path.read_text())
+        cases.append(
+            cast(
+                DecisionCase,
+                Case(
+                    name=payload["id"],
+                    inputs=_decision_input(payload),
+                    expected_output=DecisionExpectation.model_validate(
+                        payload["expected"]
+                    ),
+                    metadata=CaseMetadata(
+                        description=payload.get("description", ""),
+                        tags=payload.get("tags", []),
+                    ),
+                ),
+            )
+        )
+    return _require_cases(cases, root)
+
+
 def load_signal_dataset(
     dataset_dir: Path | None = None,
     *,
@@ -163,4 +214,18 @@ def load_match_dataset(
         name=MATCH_DATASET_NAME,
         cases=cases if cases is not None else load_match_cases(dataset_dir),
         evaluators=[ProfileMatchEvaluator()],
+    )
+
+
+def load_decision_dataset(
+    dataset_dir: Path | None = None,
+    *,
+    cases: list[DecisionCase] | None = None,
+) -> DecisionDataset:
+    from app.evaluation.evaluators import DecisionPolicyEvaluator
+
+    return DecisionDataset(
+        name=DECISION_DATASET_NAME,
+        cases=cases if cases is not None else load_decision_cases(dataset_dir),
+        evaluators=[DecisionPolicyEvaluator()],
     )

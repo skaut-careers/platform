@@ -1,7 +1,7 @@
 import pytest
 from pydantic_ai.exceptions import ModelHTTPError
 
-from app.agents.decision_rules.rules import (
+from app.agents.decision_rules.deterministic import (
     build_workflow_decision,
     decision_from_score,
     decision_from_signals,
@@ -318,3 +318,4 @@ def test_llm_signal_extractor_success_and_fallback():
     assert failed.execution.used_fallback
     assert failed.execution.status == ExecutionStatus.SUCCESS
     assert (failed.execution.error or "").startswith("SignalExtractionLLMError")
+

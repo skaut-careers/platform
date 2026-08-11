@@ -1,0 +1,142 @@
+import pytest
+from pydantic_evals.reporting import EvaluationReport
+
+from app.domain.job_signals import SIGNAL_FIELDS
+from app.evaluation import (
+    DECISION_LIST_FIELDS,
+    MATCH_LIST_FIELDS,
+    PROFILE_SCORED_FIELDS,
+    fallback_rate,
+    load_decision_cases,
+    load_match_cases,
+    load_profile_cases,
+    load_signal_cases,
+    run_decision_policy_evaluation,
+    run_profile_extraction_evaluation,
+    run_profile_matching_evaluation,
+    run_signal_evaluation,
+    score_average,
+)
+
+SIGNAL_SCORE_KEYS = (
+    "macro_f1",
+    *(f"{field}_f1" for field in SIGNAL_FIELDS),
+)
+PROFILE_SCORE_KEYS = (
+    "macro_f1",
+    *(f"{field}_f1" for field in PROFILE_SCORED_FIELDS),
+)
+MATCH_SCORE_KEYS = (
+    "macro_f1",
+    "score_in_range",
+    "role_aligned_correct",
+    "work_arrangement_aligned_correct",
+    "location_aligned_correct",
+    "severe_seniority_mismatch_correct",
+    *(f"{field}_f1" for field in MATCH_LIST_FIELDS),
+)
+DECISION_SCORE_KEYS = (
+    "decision_accuracy",
+    "score_in_range",
+    "macro_f1",
+    *(f"{field}_f1" for field in DECISION_LIST_FIELDS),
+)
+
+
+def _assert_scores_in_unit(report: EvaluationReport, keys: tuple[str, ...]) -> None:
+    for key in keys:
+        assert 0.0 <= score_average(report, key) <= 1.0, key
+
+
+def _format_scores(report: EvaluationReport, keys: tuple[str, ...]) -> str:
+    return " ".join(f"{key}={score_average(report, key):.3f}" for key in keys)
+
+
+def test_signal_extraction_deterministic():
+    report = run_signal_evaluation(runtime_version="v1", progress=False)
+    assert len(report.cases) == len(load_signal_cases()) == 7
+    assert fallback_rate(report) == 0.0
+    _assert_scores_in_unit(report, SIGNAL_SCORE_KEYS)
+
+
+def test_profile_extraction_deterministic():
+    report = run_profile_extraction_evaluation(runtime_version="v1", progress=False)
+    assert len(report.cases) == len(load_profile_cases()) == 7
+    assert fallback_rate(report) == 0.0
+    _assert_scores_in_unit(report, PROFILE_SCORE_KEYS)
+
+
+def test_profile_matching_deterministic():
+    report = run_profile_matching_evaluation(runtime_version="v1", progress=False)
+    assert len(report.cases) == len(load_match_cases()) == 7
+    assert fallback_rate(report) == 0.0
+    _assert_scores_in_unit(report, MATCH_SCORE_KEYS)
+
+
+def test_decision_policy_deterministic():
+    report = run_decision_policy_evaluation(runtime_version="v1", progress=False)
+    assert len(report.cases) == len(load_decision_cases()) == 7
+    assert fallback_rate(report) == 0.0
+    _assert_scores_in_unit(report, DECISION_SCORE_KEYS)
+
+
+@pytest.mark.llm
+def test_signal_extraction_llm_v3():
+    print("\n[signal_extraction] LLM v3 eval — 7 cases", flush=True)
+    report = run_signal_evaluation(runtime_version="v3", progress=True)
+    report.print()
+    print(
+        f"[signal_extraction] {_format_scores(report, SIGNAL_SCORE_KEYS)} "
+        f"fallback_rate={fallback_rate(report):.3f}",
+        flush=True,
+    )
+    assert fallback_rate(report) == 0.0
+    _assert_scores_in_unit(report, SIGNAL_SCORE_KEYS)
+    assert score_average(report, "macro_f1") >= 0.7
+
+
+@pytest.mark.llm
+def test_profile_extraction_llm_v3():
+    print("\n[profile_extraction] LLM v3 eval — 7 cases", flush=True)
+    report = run_profile_extraction_evaluation(runtime_version="v3", progress=True)
+    report.print()
+    print(
+        f"[profile_extraction] {_format_scores(report, PROFILE_SCORE_KEYS)} "
+        f"fallback_rate={fallback_rate(report):.3f}",
+        flush=True,
+    )
+    assert fallback_rate(report) == 0.0
+    _assert_scores_in_unit(report, PROFILE_SCORE_KEYS)
+    assert score_average(report, "macro_f1") >= 0.8
+
+
+@pytest.mark.llm
+def test_profile_matching_llm_v3():
+    print("\n[profile_matching] LLM v3 eval — 7 cases", flush=True)
+    report = run_profile_matching_evaluation(runtime_version="v3", progress=True)
+    report.print()
+    print(
+        f"[profile_matching] {_format_scores(report, MATCH_SCORE_KEYS)} "
+        f"fallback_rate={fallback_rate(report):.3f}",
+        flush=True,
+    )
+    assert fallback_rate(report) == 0.0
+    _assert_scores_in_unit(report, MATCH_SCORE_KEYS)
+    assert score_average(report, "macro_f1") >= 0.8
+    assert score_average(report, "required_skills_matched_f1") >= 0.7
+
+
+@pytest.mark.llm
+def test_decision_policy_llm_v3():
+    print("\n[decision_rules] LLM v3 eval — 7 cases", flush=True)
+    report = run_decision_policy_evaluation(runtime_version="v3", progress=True)
+    report.print()
+    print(
+        f"[decision_rules] {_format_scores(report, DECISION_SCORE_KEYS)} "
+        f"fallback_rate={fallback_rate(report):.3f}",
+        flush=True,
+    )
+    assert fallback_rate(report) == 0.0
+    _assert_scores_in_unit(report, DECISION_SCORE_KEYS)
+    assert score_average(report, "decision_accuracy") >= 0.85
+    assert score_average(report, "macro_f1") >= 0.7

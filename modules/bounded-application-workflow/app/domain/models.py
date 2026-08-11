@@ -70,7 +70,7 @@ class ProfileMatchResult(BaseModel):
 
 
 class WorkflowInput(BaseModel):
-    """Product workflow entry: raw candidate + job posting texts."""
+    """Product workflow entry: pasted CV + job posting texts."""
 
     profile_text: str
     job_description_text: str

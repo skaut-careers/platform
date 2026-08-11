@@ -1,6 +1,6 @@
 # Architecture — Bounded Application Workflow
 
-Bounded agents behind typed contracts. Priorities: bounded execution · explicit state transitions · observable decisions · human oversight.
+Bounded agents behind typed contracts. Priorities: bounded execution · explicit state transitions · observable decisions.
 
 Stack: **LangGraph** (orchestration) · **Pydantic AI** (agents) · **Logfire** (observability) · **Pydantic Evals** (evaluation). 
 
@@ -10,20 +10,17 @@ Stack: **LangGraph** (orchestration) · **Pydantic AI** (agents) · **Logfire** 
 stateDiagram-v2
     [*] --> profile_extraction
     profile_extraction --> signal_extraction
-    signal_extraction --> workflow_planning
-    workflow_planning --> profile_matching
+    signal_extraction --> profile_matching
     profile_matching --> policy_application
-    policy_application --> human_review : escalate
     policy_application --> decision
-    human_review --> decision : approved / revised
     decision --> [*]
 ```
 
-LangGraph `StateGraph` nodes: `profile_extraction` → `UserProfile` → `signal_extraction` → `JobDescription` + `JobSignals` → `workflow_planning` → `WorkflowPlan` → `profile_matching` → `ProfileMatchResult` → `policy_application` → `WorkflowDecision`. Escalation via `interrupt`; approve/revise via `Command`. Checkpointed `WorkflowGraphState` holds data plus thin audit (`events`, `human_review`); plan vs execution via `WorkflowPlan` / `PlanExecutionReport`.
+LangGraph `StateGraph` nodes: `profile_extraction` → `UserProfile` → `signal_extraction` → `JobDescription` + `JobSignals` → `profile_matching` → `ProfileMatchResult` → `policy_application` → `WorkflowDecision` → terminal `decision` (`prepare` / `queue` / `escalate` / `skip`). Checkpointed `WorkflowGraphState` holds data plus thin audit (`events` / `executed_stages`).
 
 ## Agents
 
-Each stage is a typed `Protocol`. LLM agents (e.g. `LLMSignalExtractor`) use Pydantic AI for structured outputs; `BoundedAgentRuntime` bounds attempts, deterministic fallback, and `AgentExecutionResult` provenance. Prompts and runtime settings are versioned (`RUNTIME_CONFIG_VERSION`).
+Each stage is a typed `Protocol`. LLM agents (`LLMProfileExtractor`, `LLMSignalExtractor`, `LLMProfileMatcher`, `LLMDecisionPolicy`) use Pydantic AI for structured outputs; `BoundedAgentRuntime` bounds attempts, deterministic fallback, and `AgentExecutionResult` provenance. Prompts and runtime settings are versioned (`RUNTIME_CONFIG_VERSION`).
 
 ```mermaid
 flowchart TD

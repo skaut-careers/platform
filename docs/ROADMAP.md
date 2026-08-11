@@ -10,7 +10,7 @@ Structured signals from job descriptions and profiles: skills, seniority, produc
 
 ## Milestone 3 — Agentic Workflow Layer — completed
 
-Bounded orchestration: agent contracts, planning/execution separation, explicit states, human review, auditable transitions.
+Bounded orchestration: agent contracts, explicit states, auditable transitions.
 
 ## Milestone 4 — LLM-Backed Agent Runtime — completed
 

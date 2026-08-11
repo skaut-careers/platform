@@ -1,0 +1,69 @@
+{
+  "id": "borderline_escalate",
+  "description": "Score in the escalate band without hard-pass triggers",
+  "tags": [
+    "escalate",
+    "threshold"
+  ],
+  "match": {
+    "score": 0.4,
+    "required_skills_matched": [
+      "SQL"
+    ],
+    "required_skills_missing": [
+      "Python",
+      "Spark"
+    ],
+    "preferred_skills_matched": [],
+    "production_expectations_matched": [],
+    "production_expectations_missing": [
+      "on-call"
+    ],
+    "role_aligned": false,
+    "work_arrangement_aligned": true,
+    "location_aligned": true,
+    "severe_seniority_mismatch": false,
+    "reasons": [
+      "weak skill coverage"
+    ],
+    "risks": [
+      "role not aligned"
+    ]
+  },
+  "signals": {
+    "required_skills": [
+      "Python",
+      "Spark",
+      "SQL"
+    ],
+    "preferred_skills": [],
+    "seniority_signals": [
+      "mid"
+    ],
+    "production_expectations": [
+      "on-call"
+    ],
+    "work_arrangements": [
+      "remote"
+    ],
+    "location_signals": [],
+    "risk_indicators": [],
+    "missing_signals": [
+      "salary range"
+    ]
+  },
+  "expected": {
+    "decision": "escalate",
+    "score_min": 0.35,
+    "score_max": 0.54,
+    "reasons": [
+      "weak skill coverage"
+    ],
+    "risks": [
+      "role not aligned"
+    ],
+    "missing_information": [
+      "Job posting missing signal: salary range"
+    ]
+  }
+}

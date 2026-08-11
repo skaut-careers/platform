@@ -13,7 +13,6 @@ from app.domain.models import (
     WorkflowInput,
     WorkflowOutput,
 )
-from app.agents.workflow_planning.plan import WorkflowPlan
 from app.runtime.result import AgentExecutionResult
 
 if TYPE_CHECKING:
@@ -24,23 +23,6 @@ class AgentOutput(BaseModel):
     """Base for LLM-backed agent outputs carrying execution provenance."""
 
     execution: Optional[AgentExecutionResult[Any]] = None
-
-
-class WorkflowPlannerInput(BaseModel):
-    """Profile + extracted signals used to estimate the execution plan."""
-
-    user_profile: UserProfile
-    signals: JobSignals
-
-
-class WorkflowPlannerOutput(BaseModel):
-    plan: WorkflowPlan
-
-
-class WorkflowPlanner(Protocol):
-    """Estimate stages (incl. optional human_review) from extracted signals."""
-
-    def run(self, agent_input: WorkflowPlannerInput) -> WorkflowPlannerOutput: ...
 
 
 class SignalExtractorInput(BaseModel):
@@ -95,7 +77,7 @@ class DecisionPolicyInput(BaseModel):
     signals: JobSignals
 
 
-class DecisionPolicyOutput(BaseModel):
+class DecisionPolicyOutput(AgentOutput):
     decision: WorkflowDecision
 
 

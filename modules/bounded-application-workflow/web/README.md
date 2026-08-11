@@ -7,7 +7,7 @@ Next.js UI for the IT opportunity workflow (M6).
 - Next.js (App Router) + TypeScript
 - Tailwind CSS v4
 - CopilotKit (`@copilotkit/react-core`) → FastAPI AG-UI agent (`/copilotkit`)
-- Product form → `profile_text` + `job_description_text` → streamed match result
+- Paste CV + job posting → `profile_text` + `job_description_text` → streamed match result
 - pnpm, Node 24+
 
 ## Run (from module root)

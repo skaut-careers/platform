@@ -3,9 +3,9 @@ from __future__ import annotations
 from pydantic import BaseModel, Field
 
 from app.domain.job_signals import SIGNAL_FIELDS, JobSignals
-from app.domain.models import ProfileMatchResult, UserProfile
+from app.domain.models import ProfileMatchResult, UserProfile, WorkflowDecision
 from app.domain.signal_text import casefold_for_match
-from app.evaluation.dataset import MatchExpectation
+from app.evaluation.dataset import DecisionExpectation, MatchExpectation
 
 # Mirrors UserProfile: list fields scored as sets; string fields as single-value sets.
 PROFILE_LIST_FIELDS = (
@@ -23,6 +23,12 @@ MATCH_LIST_FIELDS = (
     "preferred_skills_matched",
     "production_expectations_matched",
     "production_expectations_missing",
+)
+
+DECISION_LIST_FIELDS = (
+    "reasons",
+    "risks",
+    "missing_information",
 )
 
 
@@ -62,6 +68,15 @@ class MatchScore(BaseModel):
     work_arrangement_aligned_correct: bool
     location_aligned_correct: bool
     severe_seniority_mismatch_correct: bool
+
+
+class DecisionScore(BaseModel):
+    fields: list[FieldScore] = Field(default_factory=list)
+    macro_f1: float = Field(ge=0.0, le=1.0)
+    decision_correct: bool
+    score_in_range: bool
+    score_min: float = Field(ge=0.0, le=1.0)
+    score_max: float = Field(ge=0.0, le=1.0)
 
 
 def score_field(field: str, expected: list[str], predicted: list[str]) -> FieldScore:
@@ -154,4 +169,21 @@ def score_match(expected: MatchExpectation, predicted: ProfileMatchResult) -> Ma
         work_arrangement_aligned_correct=work_ok,
         location_aligned_correct=location_ok,
         severe_seniority_mismatch_correct=seniority_ok,
+    )
+
+
+def score_decision(
+    expected: DecisionExpectation, predicted: WorkflowDecision
+) -> DecisionScore:
+    fields = [
+        score_field(field, getattr(expected, field), getattr(predicted, field))
+        for field in DECISION_LIST_FIELDS
+    ]
+    return DecisionScore(
+        fields=fields,
+        macro_f1=sum(f.f1 for f in fields) / len(fields),
+        decision_correct=predicted.decision == expected.decision,
+        score_in_range=expected.score_min <= predicted.score <= expected.score_max,
+        score_min=expected.score_min,
+        score_max=expected.score_max,
     )
