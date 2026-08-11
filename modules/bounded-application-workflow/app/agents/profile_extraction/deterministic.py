@@ -5,8 +5,6 @@ from app.domain.models import UserProfile
 
 _LIST_SEPARATOR = re.compile(r"[,;]")
 
-# Keys are matched case-insensitively; both human labels and the serialized
-# UserProfile field names (e.g. the frontend's ``target_roles: ...`` lines) resolve.
 _LIST_FIELDS = {
     "target roles": "target_roles",
     "target_roles": "target_roles",
