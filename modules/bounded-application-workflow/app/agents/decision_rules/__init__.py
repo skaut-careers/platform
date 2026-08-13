@@ -7,5 +7,5 @@ __all__ = ["DefaultDecisionPolicy", "LLMDecisionPolicy"]
 
 class DefaultDecisionPolicy:
     def run(self, agent_input: DecisionPolicyInput) -> DecisionPolicyOutput:
-        decision = build_workflow_decision(agent_input.match, agent_input.signals)
+        decision = build_workflow_decision(agent_input.match, agent_input.job_signals)
         return DecisionPolicyOutput(decision=decision)

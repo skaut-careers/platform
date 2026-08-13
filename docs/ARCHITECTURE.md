@@ -16,7 +16,7 @@ stateDiagram-v2
     decision --> [*]
 ```
 
-LangGraph `StateGraph` nodes: `profile_extraction` → `UserProfile` → `signal_extraction` → `JobDescription` + `JobSignals` → `profile_matching` → `ProfileMatchResult` → `policy_application` → `WorkflowDecision` → terminal `decision` (`prepare` / `queue` / `escalate` / `skip`). Checkpointed `WorkflowGraphState` holds data plus thin audit (`events` / `executed_stages`).
+LangGraph `StateGraph` nodes: `profile_extraction` → `UserProfile` → `signal_extraction` → `JobSignals` → `profile_matching` → `ProfileMatchResult` → `policy_application` → `WorkflowDecision` → terminal `decision` (`prepare` / `queue` / `skip`). Checkpointed `WorkflowGraphState` holds data plus thin audit (`events` / `executed_stages`).
 
 ## Agents
 

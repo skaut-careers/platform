@@ -26,7 +26,7 @@ Job search is noisy and cognitively expensive. Existing tools optimize volume, s
 4. Apply bounded decision policy
 5. Return structured recommendation via API
 
-The module **evaluates** (prepare, queue, skip, escalate). It does **not** apply to jobs, send emails, automate browsers, optimize resumes, or scrape platforms at scale.
+The module **evaluates** (prepare, queue, skip). It does **not** apply to jobs, send emails, automate browsers, optimize resumes, or scrape platforms at scale.
 
 ---
 
@@ -122,7 +122,6 @@ Structured evaluation object:
 | -------- | ------- |
 | prepare | High alignment — pursue actively |
 | queue | Potential fit, not current priority |
-| escalate | Ambiguity or conflicting signals — inspect personally |
 | skip | Low alignment or poor strategic fit |
 
 ### Policy thresholds
@@ -131,10 +130,9 @@ Structured evaluation object:
 | ----- | -------- |
 | ≥ 0.75 | prepare |
 | ≥ 0.55 | queue |
-| ≥ 0.35 | escalate |
-| < 0.35 | skip |
+| < 0.55 | skip |
 
-Deterministic and simple. Risk-based escalation via workflow plan and decision rules. Future: confidence, uncertainty, weighted signals, user preferences, memory.
+Deterministic and simple. Future: confidence, uncertainty, weighted signals, user preferences, memory.
 
 ---
 

@@ -2,7 +2,7 @@
 
 Each workflow stage is an agent behind a typed `Protocol` contract in [`contracts.py`](contracts.py). LangGraph orchestration ([`orchestration/`](orchestration/)) drives them; [`wiring.py`](wiring.py) selects concrete implementations from the runtime config.
 
-**Domain vs contracts:** shared business types (`UserProfile`, `JobDescription`, `WorkflowInput` / `WorkflowOutput`, …) live in [`app/domain`](../domain/). `contracts.py` only defines stage `Protocol`s and their Input/Output wrappers around those types.
+**Domain vs contracts:** shared business types (`UserProfile`, `WorkflowInput` / `WorkflowOutput`, …) live in [`app/domain`](../domain/). `contracts.py` only defines stage `Protocol`s and their Input/Output wrappers around those types.
 
 ## Layout
 
@@ -13,7 +13,7 @@ signal_extraction/
   __init__.py        # Default* adapter (thin, deterministic)
   deterministic.py   # deterministic logic
   llm.py             # LLM-backed implementation (optional)
-  prompts/           # versioned prompts (v1.txt, v2.txt, …) — marks it a runtime agent
+  prompts/           # versioned prompts (v1.txt, …) — marks it a runtime agent
 ```
 
 The package directory name is the agent's registry name (`agent_name_for`), used to resolve its prompts and runtime config.
