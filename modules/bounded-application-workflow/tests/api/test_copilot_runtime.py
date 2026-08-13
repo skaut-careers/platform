@@ -119,6 +119,30 @@ def test_agui_agent_run_emits_canonical_step_nodes():
     assert _CORE_NODES.issubset(asyncio.run(_steps()))
 
 
+def test_agui_agent_rejects_empty_or_invalid_state():
+    agent = AguiWorkflowAgent(name=AGUI_WORKFLOW_AGENT_NAME, graph=_orchestrator().graph)
+
+    async def _error_message(state: dict) -> str | None:
+        run_input = RunAgentInput(
+            thread_id=str(uuid.uuid4()),
+            run_id=str(uuid.uuid4()),
+            messages=[],
+            state=state,
+            tools=[],
+            context=[],
+            forwarded_props={},
+        )
+        async for event in agent.run(run_input):
+            if event.type == EventType.RUN_ERROR:
+                return event.message
+        return None
+
+    for state in ({}, {"profile_text": "cv", "job_description_text": "   "}):
+        message = asyncio.run(_error_message(state))
+        assert message is not None
+        assert "profile_text and job_description_text are required" in message
+
+
 def test_app_mounts_orchestrator_canonical_graph():
     orchestrator = _orchestrator()
     client = TestClient(create_app(orchestrator=orchestrator))
