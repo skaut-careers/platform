@@ -1,0 +1,47 @@
+{
+  "match": {
+    "score": 0.86,
+    "required_skills_matched": [],
+    "required_skills_missing": [],
+    "preferred_skills_matched": [],
+    "production_expectations_matched": [],
+    "production_expectations_missing": [],
+    "work_arrangement_aligned": false,
+    "location_aligned": false,
+    "severe_seniority_mismatch": false,
+    "reasons": [
+      "full coverage"
+    ],
+    "risks": []
+  },
+  "signals": {
+    "required_skills": [],
+    "preferred_skills": [],
+    "seniority_signals": [],
+    "production_expectations": [],
+    "work_arrangements": [],
+    "location_signals": [],
+    "risk_indicators": [
+      "gibberish description"
+    ],
+    "missing_signals": [
+      "salary range",
+      "team size",
+      "seniority level"
+    ]
+  },
+  "expected_decision": {
+    "decision": "skip",
+    "score": 0.0,
+    "reasons": [
+      "Job posting is too incomplete or unclear to evaluate — hard pass.",
+      "full coverage"
+    ],
+    "risks": [],
+    "missing_information": [
+      "Job posting missing signal: salary range",
+      "Job posting missing signal: team size",
+      "Job posting missing signal: seniority level"
+    ]
+  }
+}
