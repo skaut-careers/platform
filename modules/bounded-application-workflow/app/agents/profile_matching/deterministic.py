@@ -1,21 +1,10 @@
-import re
-from typing import Iterable
-
-from app.domain.models import JobSignals
-from app.domain.models import ProfileMatchResult, UserProfile
-from app.domain.text_processing import canonicalize_seniority, seniority_rank
-
-_TOKEN_PATTERN = re.compile(r"[a-z0-9]+")
-_STOPWORDS = frozenset({"and", "the", "for", "with", "or"})
-_QUALIFIER_TOKENS = frozenset(
-    {"background", "experience", "expertise", "knowledge", "proficiency", "skills"}
+from app.domain.models import JobSignals, ProfileMatchResult, UserProfile
+from app.domain.text_processing import (
+    canonicalize_seniority,
+    locations_compatible,
+    partition_text_matches,
+    seniority_rank,
 )
-def _tokens(value: str) -> set[str]:
-    return {
-        token
-        for token in _TOKEN_PATTERN.findall(value.lower())
-        if len(token) > 2 and token not in _STOPWORDS
-    }
 
 
 def _profile_sources(profile: UserProfile) -> list[str]:
@@ -26,57 +15,10 @@ def _profile_sources(profile: UserProfile) -> list[str]:
     ]
 
 
-def _skill_matches_in_text(source: str, skill: str) -> bool:
-    normalized_source = source.lower().strip()
-    normalized_skill = skill.lower().strip()
-    if not normalized_skill:
-        return False
-
-    if normalized_skill in normalized_source:
-        return True
-
-    skill_tokens = _tokens(normalized_skill)
-    if not skill_tokens:
-        return False
-
-    source_tokens = _tokens(normalized_source)
-    overlap = skill_tokens & source_tokens
-    if not overlap:
-        return False
-
-    if len(skill_tokens) == 1:
-        return True
-
-    meaningful_skill_tokens = skill_tokens - _QUALIFIER_TOKENS
-    meaningful_overlap = overlap - _QUALIFIER_TOKENS
-    if not meaningful_skill_tokens:
-        return False
-
-    # A single shared word in a multi-word capability is too weak:
-    # "AI systems" must not satisfy "design systems", in any occupation.
-    return len(meaningful_overlap) / len(meaningful_skill_tokens) >= 0.67
-
-
-def _skill_matches(profile: UserProfile, skill: str) -> bool:
-    return any(
-        source and _skill_matches_in_text(source, skill)
-        for source in _profile_sources(profile)
-    )
-
-
 def _partition_skills(
-    profile: UserProfile, skills: Iterable[str]
+    profile: UserProfile, skills: list[str]
 ) -> tuple[list[str], list[str]]:
-    matched: list[str] = []
-    missing: list[str] = []
-
-    for skill in skills:
-        if _skill_matches(profile, skill):
-            matched.append(skill)
-        else:
-            missing.append(skill)
-
-    return matched, missing
+    return partition_text_matches(_profile_sources(profile), skills)
 
 
 def _coverage_ratio(matched_count: int, total_count: int) -> float:
@@ -147,16 +89,6 @@ def _experience_gap_is_material(matched: list[str], missing: list[str]) -> bool:
     return len(missing) > total / 2
 
 
-def _locations_compatible(profile_location: str, job_location: str) -> bool:
-    if not profile_location.strip() or not job_location.strip():
-        return True
-    left = profile_location.casefold()
-    right = job_location.casefold()
-    if left in right or right in left:
-        return True
-    return bool(_tokens(profile_location) & _tokens(job_location))
-
-
 def _work_arrangement_aligned(
     profile: UserProfile, job_modes: set[str]
 ) -> bool:
@@ -177,10 +109,10 @@ def _location_aligned(
         return True
 
     if "onsite" in job_modes or (not job_modes and job_place):
-        return _locations_compatible(profile_location, job_place)
+        return locations_compatible(profile_location, job_place)
 
     if "hybrid" in job_modes:
-        return _locations_compatible(profile_location, job_place)
+        return locations_compatible(profile_location, job_place)
 
     return True
 
@@ -293,26 +225,10 @@ def _assess_seniority_alignment(
     return reasons, risks, severe_mismatch
 
 
-def _experience_expectation_matches(profile: UserProfile, expectation: str) -> bool:
-    for item in profile.relevant_experience:
-        if item and _skill_matches_in_text(item, expectation):
-            return True
-    return False
-
-
 def _partition_experience_requirements(
-    profile: UserProfile, expectations: Iterable[str]
+    profile: UserProfile, expectations: list[str]
 ) -> tuple[list[str], list[str]]:
-    matched: list[str] = []
-    missing: list[str] = []
-
-    for expectation in expectations:
-        if _experience_expectation_matches(profile, expectation):
-            matched.append(expectation)
-        else:
-            missing.append(expectation)
-
-    return matched, missing
+    return partition_text_matches(profile.relevant_experience, expectations)
 
 
 def _assess_experience_alignment(

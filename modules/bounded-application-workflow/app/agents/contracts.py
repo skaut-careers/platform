@@ -4,8 +4,8 @@ from typing import TYPE_CHECKING, Any, Optional, Protocol
 
 from pydantic import BaseModel
 
-from app.domain.job_signals import JobSignals
 from app.domain.models import (
+    JobSignals,
     ProfileMatchResult,
     UserProfile,
     WorkflowDecision,

@@ -1,6 +1,6 @@
-from app.domain.job_signals import JobSignals
 from app.domain.models import (
     DecisionType,
+    JobSignals,
     ProfileMatchResult,
     WorkflowDecision,
 )
@@ -18,9 +18,8 @@ def decision_from_score(score: float) -> DecisionType:
     return DecisionType.SKIP
 
 
-def decision_from_signals(
+def decision_from_match(
     score: float,
-    job_signals: JobSignals,
     *,
     severe_seniority_mismatch: bool = False,
 ) -> DecisionType:
@@ -34,9 +33,8 @@ def build_workflow_decision(
     match: ProfileMatchResult,
     job_signals: JobSignals,
 ) -> WorkflowDecision:
-    decision = decision_from_signals(
+    decision = decision_from_match(
         match.score,
-        job_signals,
         severe_seniority_mismatch=match.severe_seniority_mismatch,
     )
 

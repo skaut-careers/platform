@@ -3,8 +3,8 @@ from pydantic_ai.exceptions import ModelHTTPError
 
 from app.agents.decision_rules.deterministic import (
     build_workflow_decision,
+    decision_from_match,
     decision_from_score,
-    decision_from_signals,
 )
 from app.agents.profile_extraction.deterministic import extract_user_profile
 from app.agents.profile_matching.deterministic import match_profile_to_job
@@ -148,13 +148,9 @@ def test_decision_thresholds(score, expected):
 
 
 def test_decision_risk_and_seniority_overrides():
-    risky_but_usable = JobSignals(
-        required_skills=["Python"],
-        risk_indicators=["ambiguous scope"],
-    )
-    assert decision_from_signals(0.9, risky_but_usable) == DecisionType.PREPARE
+    assert decision_from_match(0.9) == DecisionType.PREPARE
     assert (
-        decision_from_signals(0.9, risky_but_usable, severe_seniority_mismatch=True)
+        decision_from_match(0.9, severe_seniority_mismatch=True)
         == DecisionType.SKIP
     )
 

@@ -30,7 +30,7 @@ from app.agents.orchestration.stages import (
     SIGNAL_EXTRACTION,
 )
 from app.agents.orchestration.state import WorkflowGraphState
-from app.domain.job_signals import JobSignals
+from app.domain.models import JobSignals
 from app.domain.models import (
     DecisionType,
     ProfileMatchResult,
