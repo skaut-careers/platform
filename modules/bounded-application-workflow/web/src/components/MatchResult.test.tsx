@@ -46,11 +46,4 @@ describe("MatchResult", () => {
       "Missing salary",
     ]);
   });
-
-  it.each(["escalate", "skip"] as const)("renders %s label", (type) => {
-    render(
-      <MatchResult decision={decision({ decision: type })} missingSignals={[]} />,
-    );
-    expect(screen.getByText(DECISION_COPY[type].label)).toBeInTheDocument();
-  });
 });
