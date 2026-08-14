@@ -13,9 +13,8 @@
     ],
     "required_skills_missing": [],
     "preferred_skills_matched": [],
-    "production_expectations_matched": [],
-    "production_expectations_missing": [],
-    "role_aligned": true,
+    "experience_requirements_matched": [],
+    "experience_requirements_missing": [],
     "work_arrangement_aligned": true,
     "location_aligned": true,
     "severe_seniority_mismatch": true,
@@ -26,7 +25,7 @@
       "junior vs principal"
     ]
   },
-  "signals": {
+  "job_signals": {
     "required_skills": [
       "Python",
       "PostgreSQL"
@@ -35,7 +34,7 @@
     "seniority_signals": [
       "principal"
     ],
-    "production_expectations": [],
+    "experience_requirements": [],
     "work_arrangements": [
       "remote"
     ],

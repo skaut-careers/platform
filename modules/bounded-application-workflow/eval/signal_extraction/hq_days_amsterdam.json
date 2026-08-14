@@ -7,14 +7,7 @@
     "observability",
     "hard"
   ],
-  "job_description": {
-    "title": "Platform Engineer",
-    "company": "NoordStack",
-    "location": "",
-    "description": "Most of the week you can work from home; we ask for two days a month at our Amsterdam HQ for planning. You will run Kubernetes clusters, write Go services, and improve CI with GitHub Actions. Observability with Prometheus is part of the job.",
-    "seniority": "Senior",
-    "employment_type": "Full-time"
-  },
+  "job_description_text": "Platform Engineer\n\nSenior Full-time. Most of the week you can work from home; we ask for two days a month at our Amsterdam HQ for planning. You will run Kubernetes clusters, write Go services, and improve CI with GitHub Actions. Observability with Prometheus is part of the job.",
   "expected_signals": {
     "required_skills": [
       "Kubernetes",
@@ -26,7 +19,7 @@
     "seniority_signals": [
       "Senior"
     ],
-    "production_expectations": [
+    "experience_requirements": [
       "observability"
     ],
     "work_arrangements": [

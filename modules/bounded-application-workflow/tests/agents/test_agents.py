@@ -100,7 +100,7 @@ def test_onsite_location_mismatch_lowers_score():
 @pytest.mark.parametrize("fixture_name", SIGNAL_EXTRACTION_FIXTURES)
 def test_extract_signals_from_fixture(fixture_name):
     case = load_signal_fixture(fixture_name)
-    job_signals = extract_job_signals(case["raw_text"])
+    job_signals = extract_job_signals(case["job_description_text"])
     expected = case["expected_signals"]
     for field in SIGNAL_FIELDS:
         assert getattr(job_signals, field) == expected[field]
@@ -172,7 +172,9 @@ def test_build_workflow_decision_from_fixture(fixture_name):
 @pytest.mark.parametrize("fixture_name", PROFILE_EXTRACTION_FIXTURES)
 def test_extract_profile_from_fixture(fixture_name):
     case = load_profile_fixture(fixture_name)
-    assert extract_user_profile(case["raw_text"]) == UserProfile(**case["expected_profile"])
+    assert extract_user_profile(case["profile_text"]) == UserProfile(
+        **case["expected_profile"]
+    )
 
 
 def test_extract_profile_rejects_empty_text():

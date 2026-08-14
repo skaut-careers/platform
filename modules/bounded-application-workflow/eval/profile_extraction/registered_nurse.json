@@ -1,0 +1,29 @@
+{
+  "id": "registered_nurse",
+  "description": "Credential-led healthcare resume with clinical capabilities",
+  "tags": [
+    "cv",
+    "healthcare",
+    "credentials",
+    "non-tech"
+  ],
+  "profile_text": "Jordan Lee\nSenior Registered Nurse\nBoston, MA\n\nLicenses & Certifications\nRN, BLS\n\nCompetencies\npatient care, medication administration, de-escalation\n\nClinical Experience: patient care, medication administration\n\nOpen to onsite work.",
+  "expected_profile": {
+    "skills": [
+      "RN",
+      "BLS",
+      "patient care",
+      "medication administration",
+      "de-escalation"
+    ],
+    "location": "Boston",
+    "seniority": "senior",
+    "relevant_experience": [
+      "patient care",
+      "medication administration"
+    ],
+    "work_preferences": [
+      "onsite"
+    ]
+  }
+}

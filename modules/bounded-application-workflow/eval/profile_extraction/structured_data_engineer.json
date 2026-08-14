@@ -1,0 +1,23 @@
+{
+  "id": "structured_data_engineer",
+  "description": "Structured CV with a Skills section the regex parser can read fully",
+  "tags": [
+    "cv",
+    "structured",
+    "skills-section"
+  ],
+  "profile_text": "Samira Haddad\nMid-level Data Engineer\nAmsterdam, Netherlands\nsamira@example.com\n\nSkills\nPython, SQL, Airflow\n\nExperience\n- Built batch pipelines for analytics teams.\n\nOpen to remote roles.",
+  "expected_profile": {
+    "skills": [
+      "Python",
+      "SQL",
+      "Airflow"
+    ],
+    "location": "Amsterdam",
+    "seniority": "mid",
+    "relevant_experience": [],
+    "work_preferences": [
+      "remote"
+    ]
+  }
+}

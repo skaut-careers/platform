@@ -6,14 +6,7 @@
     "missing-seniority",
     "hard"
   ],
-  "job_description": {
-    "title": "ML Engineer",
-    "company": "OmniSense",
-    "location": "Hybrid - Berlin",
-    "description": "You will wear many hats: train models in PyTorch, ship features in Python services, talk to customers about roadmap priorities, and occasionally own hiring for the pod. Scope evolves week to week depending on what the business needs. Experience with FastAPI and AWS is required.",
-    "seniority": "",
-    "employment_type": "Full-time"
-  },
+  "job_description_text": "ML Engineer\n\nFull-time Hybrid - Berlin. You will wear many hats: train models in PyTorch, ship features in Python services, talk to customers about roadmap priorities, and occasionally own hiring for the pod. Scope evolves week to week depending on what the business needs. Experience with FastAPI and AWS is required.",
   "expected_signals": {
     "required_skills": [
       "PyTorch",
@@ -23,7 +16,7 @@
     ],
     "preferred_skills": [],
     "seniority_signals": [],
-    "production_expectations": [],
+    "experience_requirements": [],
     "work_arrangements": [
       "hybrid"
     ],

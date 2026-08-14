@@ -1,15 +1,22 @@
 {
   "id": "contract_designer",
-  "description": "Clean frontend fields for a product designer",
-  "tags": ["frontend", "clean"],
-  "raw_text": "seniority: mid\nlocation: Lisbon\ntarget_roles: Product Designer\nskills: Figma, Prototyping\nwork_preferences: remote",
+  "description": "Short product-designer CV with slash-free skills list",
+  "tags": [
+    "cv",
+    "structured",
+    "designer"
+  ],
+  "profile_text": "Ines Costa\nMid-level Product Designer\nLisbon, Portugal\n\nSkills: Figma, Prototyping\n\nExperience\n- Designed flows for a B2B SaaS dashboard.\n\nAvailable for remote contracts.",
   "expected_profile": {
-    "target_roles": ["Product Designer"],
-    "skills": ["Figma", "Prototyping"],
-    "experience_summary": "",
+    "skills": [
+      "Figma",
+      "Prototyping"
+    ],
     "location": "Lisbon",
     "seniority": "mid",
-    "production_experience": [],
-    "work_preferences": ["remote"]
+    "relevant_experience": [],
+    "work_preferences": [
+      "remote"
+    ]
   }
 }

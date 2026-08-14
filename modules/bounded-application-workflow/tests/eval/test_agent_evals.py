@@ -29,7 +29,6 @@ PROFILE_SCORE_KEYS = (
 MATCH_SCORE_KEYS = (
     "macro_f1",
     "score_in_range",
-    "role_aligned_correct",
     "work_arrangement_aligned_correct",
     "location_aligned_correct",
     "severe_seniority_mismatch_correct",
@@ -54,36 +53,36 @@ def _format_scores(report: EvaluationReport, keys: tuple[str, ...]) -> str:
 
 def test_signal_extraction_deterministic():
     report = run_signal_evaluation(runtime_version="v1", progress=False)
-    assert len(report.cases) == len(load_signal_cases()) == 7
+    assert len(report.cases) == len(load_signal_cases()) == 8
     assert fallback_rate(report) == 0.0
     _assert_scores_in_unit(report, SIGNAL_SCORE_KEYS)
 
 
 def test_profile_extraction_deterministic():
     report = run_profile_extraction_evaluation(runtime_version="v1", progress=False)
-    assert len(report.cases) == len(load_profile_cases()) == 7
+    assert len(report.cases) == len(load_profile_cases()) == 8
     assert fallback_rate(report) == 0.0
     _assert_scores_in_unit(report, PROFILE_SCORE_KEYS)
 
 
 def test_profile_matching_deterministic():
     report = run_profile_matching_evaluation(runtime_version="v1", progress=False)
-    assert len(report.cases) == len(load_match_cases()) == 7
+    assert len(report.cases) == len(load_match_cases()) == 8
     assert fallback_rate(report) == 0.0
     _assert_scores_in_unit(report, MATCH_SCORE_KEYS)
 
 
 def test_decision_policy_deterministic():
     report = run_decision_policy_evaluation(runtime_version="v1", progress=False)
-    assert len(report.cases) == len(load_decision_cases()) == 7
+    assert len(report.cases) == len(load_decision_cases()) == 6
     assert fallback_rate(report) == 0.0
     _assert_scores_in_unit(report, DECISION_SCORE_KEYS)
 
 
 @pytest.mark.llm
-def test_signal_extraction_llm_v3():
-    print("\n[signal_extraction] LLM v3 eval — 7 cases", flush=True)
-    report = run_signal_evaluation(runtime_version="v3", progress=True)
+def test_signal_extraction_llm_v2():
+    print("\n[signal_extraction] LLM v2 eval — 8 cases", flush=True)
+    report = run_signal_evaluation(runtime_version="v2", progress=True)
     report.print()
     print(
         f"[signal_extraction] {_format_scores(report, SIGNAL_SCORE_KEYS)} "
@@ -96,9 +95,9 @@ def test_signal_extraction_llm_v3():
 
 
 @pytest.mark.llm
-def test_profile_extraction_llm_v3():
-    print("\n[profile_extraction] LLM v3 eval — 7 cases", flush=True)
-    report = run_profile_extraction_evaluation(runtime_version="v3", progress=True)
+def test_profile_extraction_llm_v2():
+    print("\n[profile_extraction] LLM v2 eval — 8 cases", flush=True)
+    report = run_profile_extraction_evaluation(runtime_version="v2", progress=True)
     report.print()
     print(
         f"[profile_extraction] {_format_scores(report, PROFILE_SCORE_KEYS)} "
@@ -111,9 +110,9 @@ def test_profile_extraction_llm_v3():
 
 
 @pytest.mark.llm
-def test_profile_matching_llm_v3():
-    print("\n[profile_matching] LLM v3 eval — 7 cases", flush=True)
-    report = run_profile_matching_evaluation(runtime_version="v3", progress=True)
+def test_profile_matching_llm_v2():
+    print("\n[profile_matching] LLM v2 eval — 8 cases", flush=True)
+    report = run_profile_matching_evaluation(runtime_version="v2", progress=True)
     report.print()
     print(
         f"[profile_matching] {_format_scores(report, MATCH_SCORE_KEYS)} "
@@ -127,9 +126,9 @@ def test_profile_matching_llm_v3():
 
 
 @pytest.mark.llm
-def test_decision_policy_llm_v3():
-    print("\n[decision_rules] LLM v3 eval — 7 cases", flush=True)
-    report = run_decision_policy_evaluation(runtime_version="v3", progress=True)
+def test_decision_policy_llm_v2():
+    print("\n[decision_rules] LLM v2 eval — 6 cases", flush=True)
+    report = run_decision_policy_evaluation(runtime_version="v2", progress=True)
     report.print()
     print(
         f"[decision_rules] {_format_scores(report, DECISION_SCORE_KEYS)} "

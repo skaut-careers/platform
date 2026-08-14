@@ -6,14 +6,7 @@
     "production-euphemism",
     "hard"
   ],
-  "job_description": {
-    "title": "SRE",
-    "company": "ClearLedger",
-    "location": "London, UK",
-    "description": "Keep payment clearing highly available. You will participate in the PagerDuty rotation, own deployment runbooks, and chase p95 latency on critical paths. Strong Linux, Terraform, and Kubernetes background required. Python scripting is expected.",
-    "seniority": "Senior",
-    "employment_type": "Full-time"
-  },
+  "job_description_text": "SRE\n\nSenior Full-time based in London, UK. Keep payment clearing highly available. You will participate in the PagerDuty rotation, own deployment runbooks, and chase p95 latency on critical paths. Strong Linux, Terraform, and Kubernetes background required. Python scripting is expected.",
   "expected_signals": {
     "required_skills": [
       "Linux",
@@ -25,7 +18,7 @@
     "seniority_signals": [
       "Senior"
     ],
-    "production_expectations": [
+    "experience_requirements": [
       "on-call rotation",
       "deployment"
     ],
@@ -36,7 +29,7 @@
     ],
     "risk_indicators": [],
     "missing_signals": [
-      "remote policy",
+      "work arrangement",
       "salary range",
       "team size"
     ]

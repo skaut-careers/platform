@@ -1,5 +1,5 @@
 {
-  "raw_text": "Maya Chen\nSenior Engineer\nRemote Europe\n\nSkills: Python, LLMs, FastAPI\n\nExperience\n- On-call and observability for production services.\n\nOpen to remote work.",
+  "profile_text": "Maya Chen\nSenior Engineer\nRemote Europe\n\nSkills: Python, LLMs, FastAPI\n\nExperience\n- On-call and observability for production services.\n\nOpen to remote work.",
   "expected_profile": {
     "skills": [
       "Python",

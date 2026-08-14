@@ -81,11 +81,6 @@ def workflow_input(fixture_name: str) -> WorkflowInput:
     )
 
 
-def workflow_raw_texts(fixture_name: str) -> tuple[str, str]:
-    wi = workflow_input(fixture_name)
-    return wi.profile_text, wi.job_description_text
-
-
 def signals_payload(**overrides: list[str]) -> dict[str, list[str]]:
     payload = {field: [] for field in SIGNAL_FIELDS}
     payload.update(overrides)
