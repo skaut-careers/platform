@@ -6,9 +6,6 @@ from app.domain.models import UserProfile
 _LIST_SEPARATOR = re.compile(r"[,;]")
 
 _LIST_FIELDS = {
-    "target roles": "target_roles",
-    "target_roles": "target_roles",
-    "roles": "target_roles",
     "skills": "skills",
     "production experience": "production_experience",
     "production_experience": "production_experience",
@@ -19,11 +16,6 @@ _LIST_FIELDS = {
 _TEXT_FIELDS = {
     "location": "location",
     "seniority": "seniority",
-    "experience": "experience_summary",
-    "experience summary": "experience_summary",
-    "experience_summary": "experience_summary",
-    "summary": "experience_summary",
-    "recent wins": "experience_summary",
 }
 
 

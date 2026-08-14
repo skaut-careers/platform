@@ -11,7 +11,6 @@ from app.agents.orchestration.audit import (
 )
 from app.domain.job_signals import JobSignals
 from app.domain.models import (
-    JobDescription,
     ProfileMatchResult,
     UserProfile,
     WorkflowDecision,
@@ -29,11 +28,10 @@ class WorkflowGraphState(BaseModel):
     job_description_text: str | None = None
 
     user_profile: UserProfile | None = None
-    job_description: JobDescription | None = None
 
     started_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-    signals: JobSignals | None = None
+    job_signals: JobSignals | None = None
     match: ProfileMatchResult | None = None
     decision: WorkflowDecision | None = None
     output: WorkflowOutput | None = None

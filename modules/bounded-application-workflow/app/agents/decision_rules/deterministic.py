@@ -8,7 +8,6 @@ from app.domain.models import (
 # MVP thresholds — docs/PRD.md
 _PREPARE_MIN = 0.75
 _QUEUE_MIN = 0.55
-_ESCALATE_MIN = 0.35
 
 
 def decision_from_score(score: float) -> DecisionType:
@@ -16,8 +15,6 @@ def decision_from_score(score: float) -> DecisionType:
         return DecisionType.PREPARE
     if score >= _QUEUE_MIN:
         return DecisionType.QUEUE
-    if score >= _ESCALATE_MIN:
-        return DecisionType.ESCALATE
     return DecisionType.SKIP
 
 
@@ -27,17 +24,10 @@ def decision_from_signals(
     *,
     severe_seniority_mismatch: bool = False,
 ) -> DecisionType:
-    """Map match score to a decision, then apply job-signal guardrails."""
+    """Map match score to a decision, then apply seniority skip."""
     if severe_seniority_mismatch:
         return DecisionType.SKIP
-
-    base = decision_from_score(score)
-
-    # Risky postings escalate even on a strong match.
-    if base == DecisionType.PREPARE and job_signals.risk_indicators:
-        return DecisionType.ESCALATE
-
-    return base
+    return decision_from_score(score)
 
 
 def build_workflow_decision(

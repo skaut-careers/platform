@@ -33,14 +33,12 @@ from app.agents.orchestration.state import WorkflowGraphState
 from app.domain.job_signals import JobSignals
 from app.domain.models import (
     DecisionType,
-    JobDescription,
     ProfileMatchResult,
     UserProfile,
     WorkflowDecision,
     WorkflowInput,
     WorkflowOutput,
 )
-from app.parser import parse_job_description
 from app.runtime.result import AgentExecutionResult, ExecutionStatus
 
 _NEXT_STEPS: dict[DecisionType, list[str]] = {
@@ -54,11 +52,6 @@ _NEXT_STEPS: dict[DecisionType, list[str]] = {
         "Note what would need to change before actively pursuing it.",
         "Re-run the workflow if your profile or priorities shift.",
     ],
-    DecisionType.ESCALATE: [
-        "Review the opportunity manually before investing application time.",
-        "Clarify ambiguous requirements with the recruiter or hiring team.",
-        "Fill in missing profile or job signals, then run again.",
-    ],
     DecisionType.SKIP: [
         "Record why this opportunity is not a fit for future reference.",
         "Focus search effort on roles that align with your target profile.",
@@ -67,7 +60,6 @@ _NEXT_STEPS: dict[DecisionType, list[str]] = {
 
 _CHECKPOINT_TYPES = (
     UserProfile,
-    JobDescription,
     WorkflowInput,
     WorkflowOutput,
     WorkflowDecision,
@@ -93,13 +85,9 @@ def _now() -> datetime:
 
 
 def _input_summary(state: WorkflowGraphState) -> str:
-    if state.job_description is None:
-        raise RuntimeError("input summary requires job_description")
-    company = state.job_description.company or "an unspecified company"
-    return (
-        f"Profile is being matched against "
-        f"{state.job_description.title} at {company}."
-    )
+    if state.job_description_text is None:
+        raise RuntimeError("input summary requires job_description_text")
+    return "Profile is being matched against the job posting."
 
 
 def _event(
@@ -170,9 +158,8 @@ def build_workflow_graph(
         if state.job_description_text is None:
             raise RuntimeError("signal_extraction requires job_description_text")
         events = _enter_stage(state.events, SIGNAL_EXTRACTION)
-        job_description = parse_job_description(state.job_description_text)
         output = extractor.run(
-            SignalExtractorInput(job_description=job_description)
+            SignalExtractorInput(job_description_text=state.job_description_text)
         )
         events = _record_agent_completed(
             events,
@@ -180,26 +167,18 @@ def build_workflow_graph(
             agent=type(extractor).__name__,
         )
         return {
-            "job_description": job_description,
-            "signals": output.signals,
+            "job_signals": output.job_signals,
             "events": events,
         }
 
     def profile_matching(state: WorkflowGraphState) -> dict[str, Any]:
-        if (
-            state.signals is None
-            or state.user_profile is None
-            or state.job_description is None
-        ):
-            raise RuntimeError(
-                "profile_matching requires signals, user_profile, and job_description"
-            )
+        if state.job_signals is None or state.user_profile is None:
+            raise RuntimeError("profile_matching requires job_signals and user_profile")
         events = _enter_stage(state.events, PROFILE_MATCHING)
         output = matcher.run(
             ProfileMatcherInput(
                 user_profile=state.user_profile,
-                job_description=state.job_description,
-                signals=state.signals,
+                job_signals=state.job_signals,
             )
         )
         events = _record_agent_completed(
@@ -213,11 +192,11 @@ def build_workflow_graph(
         }
 
     def policy_application(state: WorkflowGraphState) -> dict[str, Any]:
-        if state.signals is None or state.match is None:
-            raise RuntimeError("policy_application requires signals and match")
+        if state.job_signals is None or state.match is None:
+            raise RuntimeError("policy_application requires job_signals and match")
         events = _enter_stage(state.events, POLICY_APPLICATION)
         output = policy.run(
-            DecisionPolicyInput(match=state.match, signals=state.signals)
+            DecisionPolicyInput(match=state.match, job_signals=state.job_signals)
         )
         events = _record_agent_completed(
             events,
@@ -230,14 +209,14 @@ def build_workflow_graph(
         }
 
     def decision(state: WorkflowGraphState) -> dict[str, Any]:
-        if state.decision is None or state.signals is None or state.match is None:
-            raise RuntimeError("decision requires decision, signals, and match")
+        if state.decision is None or state.job_signals is None or state.match is None:
+            raise RuntimeError("decision requires decision, job_signals, and match")
 
         events = _enter_stage(state.events, DECISION)
         output = WorkflowOutput(
             input_summary=_input_summary(state),
             decision=state.decision,
-            job_signals=state.signals,
+            job_signals=state.job_signals,
             recommended_next_steps=list(_NEXT_STEPS[state.decision.decision]),
         )
         completed_at = _now()

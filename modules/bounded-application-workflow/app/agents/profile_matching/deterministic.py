@@ -2,7 +2,7 @@ import re
 from typing import Iterable
 
 from app.domain.job_signals import JobSignals
-from app.domain.models import JobDescription, ProfileMatchResult, UserProfile
+from app.domain.models import ProfileMatchResult, UserProfile
 
 _TOKEN_PATTERN = re.compile(r"[a-z0-9]+")
 _STOPWORDS = frozenset({"and", "the", "for", "with", "or"})
@@ -38,14 +38,8 @@ def _tokens(text: str) -> set[str]:
 def _profile_sources(profile: UserProfile) -> list[str]:
     return [
         *profile.skills,
-        *profile.target_roles,
         *profile.work_preferences,
-        profile.experience_summary,
     ]
-
-
-def _profile_corpus(profile: UserProfile) -> str:
-    return " ".join(_profile_sources(profile)).lower()
 
 
 def _specific_tokens(tokens: set[str]) -> set[str]:
@@ -103,27 +97,6 @@ def _partition_skills(
     return matched, missing
 
 
-def _role_aligned(profile: UserProfile, job: JobDescription) -> bool:
-    job_text = f"{job.title} {job.description}".lower()
-    job_title_tokens = _specific_tokens(_tokens(job.title))
-
-    for role in profile.target_roles:
-        role_lower = role.lower().strip()
-        if not role_lower:
-            continue
-
-        if role_lower in job_text:
-            return True
-
-        role_tokens = _specific_tokens(_tokens(role_lower))
-        if role_tokens and role_tokens & job_title_tokens:
-            return True
-
-    profile_tokens = _specific_tokens(_tokens(_profile_corpus(profile)))
-    shared_title_tokens = profile_tokens & job_title_tokens
-    return len(shared_title_tokens) >= 2
-
-
 def _coverage_ratio(matched_count: int, total_count: int) -> float:
     if total_count == 0:
         return 1.0
@@ -131,9 +104,8 @@ def _coverage_ratio(matched_count: int, total_count: int) -> float:
 
 
 # Score weights sum to 1.0.
-_REQUIRED_WEIGHT = 0.48
+_REQUIRED_WEIGHT = 0.62
 _PREFERRED_WEIGHT = 0.10
-_ROLE_WEIGHT = 0.14
 _PRODUCTION_WEIGHT = 0.08
 _SENIORITY_WEIGHT = 0.10
 _WORK_ARRANGEMENT_WEIGHT = 0.05
@@ -164,25 +136,18 @@ def _seniority_rank(value: str) -> int | None:
     return None
 
 
-def _primary_job_seniority(
-    job: JobDescription, signals: JobSignals
-) -> str | None:
-    if job.seniority:
-        return job.seniority
-
-    for signal in signals.seniority_signals:
+def _primary_job_seniority(job_signals: JobSignals) -> str | None:
+    for signal in job_signals.seniority_signals:
         if _seniority_rank(signal) is not None:
             return signal
-
     return None
 
 
 def _seniority_alignment_ratio(
     profile: UserProfile,
-    job: JobDescription,
-    signals: JobSignals,
+    job_signals: JobSignals,
 ) -> float:
-    job_seniority = _primary_job_seniority(job, signals)
+    job_seniority = _primary_job_seniority(job_signals)
     if not job_seniority:
         return 1.0
 
@@ -204,13 +169,13 @@ def _seniority_alignment_ratio(
 
 
 def _production_alignment_ratio(
-    signals: JobSignals,
+    job_signals: JobSignals,
     matched: list[str],
 ) -> float:
-    if not signals.production_expectations:
+    if not job_signals.production_expectations:
         return 1.0
 
-    return _coverage_ratio(len(matched), len(signals.production_expectations))
+    return _coverage_ratio(len(matched), len(job_signals.production_expectations))
 
 
 def _production_gap_is_material(matched: list[str], missing: list[str]) -> bool:
@@ -314,14 +279,13 @@ def _assess_work_and_location_alignment(
 
 def _assess_seniority_alignment(
     profile: UserProfile,
-    job: JobDescription,
-    signals: JobSignals,
+    job_signals: JobSignals,
 ) -> tuple[list[str], list[str], bool]:
     reasons: list[str] = []
     risks: list[str] = []
     severe_mismatch = False
 
-    job_seniority = _primary_job_seniority(job, signals)
+    job_seniority = _primary_job_seniority(job_signals)
     if not job_seniority:
         return reasons, risks, severe_mismatch
 
@@ -394,11 +358,11 @@ def _partition_production_expectations(
 
 
 def _assess_production_alignment(
-    signals: JobSignals,
+    job_signals: JobSignals,
     matched: list[str],
     missing: list[str],
 ) -> tuple[list[str], list[str]]:
-    if not signals.production_expectations:
+    if not job_signals.production_expectations:
         return [], []
 
     reasons: list[str] = []
@@ -407,7 +371,7 @@ def _assess_production_alignment(
     if matched:
         reasons.append(
             "Matched "
-            f"{len(matched)} of {len(signals.production_expectations)} "
+            f"{len(matched)} of {len(job_signals.production_expectations)} "
             "production expectations."
         )
     if missing and _production_gap_is_material(matched, missing):
@@ -421,34 +385,29 @@ def _assess_production_alignment(
 
 def match_profile_to_job(
     user_profile: UserProfile,
-    job_description: JobDescription,
-    signals: JobSignals,
+    job_signals: JobSignals,
 ) -> ProfileMatchResult:
     required_matched, required_missing = _partition_skills(
-        user_profile, signals.required_skills
+        user_profile, job_signals.required_skills
     )
     preferred_matched, _ = _partition_skills(
-        user_profile, signals.preferred_skills
+        user_profile, job_signals.preferred_skills
     )
 
     required_ratio = _coverage_ratio(
-        len(required_matched), len(signals.required_skills)
+        len(required_matched), len(job_signals.required_skills)
     )
     preferred_ratio = _coverage_ratio(
-        len(preferred_matched), len(signals.preferred_skills)
+        len(preferred_matched), len(job_signals.preferred_skills)
     )
-    role_aligned = _role_aligned(user_profile, job_description)
-    role_ratio = 1.0 if role_aligned else 0.0
 
     production_matched, production_missing = _partition_production_expectations(
-        user_profile, signals.production_expectations
+        user_profile, job_signals.production_expectations
     )
-    production_ratio = _production_alignment_ratio(signals, production_matched)
-    seniority_ratio = _seniority_alignment_ratio(
-        user_profile, job_description, signals
-    )
-    job_modes = set(signals.work_arrangements)
-    job_place = " ".join(signals.location_signals).strip()
+    production_ratio = _production_alignment_ratio(job_signals, production_matched)
+    seniority_ratio = _seniority_alignment_ratio(user_profile, job_signals)
+    job_modes = set(job_signals.work_arrangements)
+    job_place = " ".join(job_signals.location_signals).strip()
     work_arrangement_aligned = _work_arrangement_aligned(user_profile, job_modes)
     location_aligned = _location_aligned(user_profile, job_modes, job_place)
     work_ratio = 1.0 if work_arrangement_aligned else 0.0
@@ -458,7 +417,6 @@ def match_profile_to_job(
         1.0,
         _REQUIRED_WEIGHT * required_ratio
         + _PREFERRED_WEIGHT * preferred_ratio
-        + _ROLE_WEIGHT * role_ratio
         + _PRODUCTION_WEIGHT * production_ratio
         + _SENIORITY_WEIGHT * seniority_ratio
         + _WORK_ARRANGEMENT_WEIGHT * work_ratio
@@ -470,17 +428,11 @@ def match_profile_to_job(
 
     if required_matched:
         reasons.append(
-            f"Matched {len(required_matched)} of {len(signals.required_skills)} required skills."
+            f"Matched {len(required_matched)} of {len(job_signals.required_skills)} required skills."
         )
     if preferred_matched:
         reasons.append(
             f"Matched {len(preferred_matched)} preferred skills."
-        )
-    if role_aligned:
-        reasons.append("Job aligns with target role.")
-    else:
-        risks.append(
-            "Job title or description does not clearly align with target roles."
         )
 
     if required_missing:
@@ -489,13 +441,13 @@ def match_profile_to_job(
         )
 
     seniority_reasons, seniority_risks, severe_seniority_mismatch = (
-        _assess_seniority_alignment(user_profile, job_description, signals)
+        _assess_seniority_alignment(user_profile, job_signals)
     )
     reasons.extend(seniority_reasons)
     risks.extend(seniority_risks)
 
     production_reasons, production_risks = _assess_production_alignment(
-        signals,
+        job_signals,
         production_matched,
         production_missing,
     )
@@ -512,7 +464,7 @@ def match_profile_to_job(
     reasons.extend(location_reasons)
     risks.extend(location_risks)
 
-    for indicator in signals.risk_indicators:
+    for indicator in job_signals.risk_indicators:
         risks.append(f"Job posting risk: {indicator}")
 
     return ProfileMatchResult(
@@ -522,7 +474,6 @@ def match_profile_to_job(
         preferred_skills_matched=preferred_matched,
         production_expectations_matched=production_matched,
         production_expectations_missing=production_missing,
-        role_aligned=role_aligned,
         work_arrangement_aligned=work_arrangement_aligned,
         location_aligned=location_aligned,
         severe_seniority_mismatch=severe_seniority_mismatch,
