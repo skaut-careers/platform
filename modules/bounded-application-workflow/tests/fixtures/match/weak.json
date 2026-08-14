@@ -7,13 +7,13 @@
     ],
     "location": "Zurich, Switzerland",
     "seniority": "mid-senior",
-    "production_experience": [],
+    "relevant_experience": [],
     "work_preferences": [
       "remote",
       "hybrid"
     ]
   },
-  "signals": {
+  "job_signals": {
     "required_skills": [
       "React",
       "TypeScript",
@@ -28,14 +28,14 @@
       "senior",
       "Own frontend architecture and design systems"
     ],
-    "production_expectations": [],
+    "experience_requirements": [],
     "work_arrangements": [],
     "location_signals": [
       "Berlin Germany"
     ],
     "risk_indicators": [],
     "missing_signals": [
-      "remote policy",
+      "work arrangement",
       "salary range",
       "team size"
     ]
@@ -51,8 +51,8 @@
       "design systems"
     ],
     "preferred_skills_matched": [],
-    "production_expectations_matched": [],
-    "production_expectations_missing": [],
+    "experience_requirements_matched": [],
+    "experience_requirements_missing": [],
     "work_arrangement_aligned": true,
     "location_aligned": false,
     "severe_seniority_mismatch": false,

@@ -1,5 +1,5 @@
 {
-  "raw_text": "Seniority: junior",
+  "raw_text": "Junior Backend Engineer",
   "expected_profile": {
     "seniority": "junior"
   }

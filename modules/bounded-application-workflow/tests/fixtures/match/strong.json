@@ -12,13 +12,13 @@
     ],
     "location": "Zurich, Switzerland",
     "seniority": "mid-senior",
-    "production_experience": [],
+    "relevant_experience": [],
     "work_preferences": [
       "remote",
       "hybrid"
     ]
   },
-  "signals": {
+  "job_signals": {
     "required_skills": [
       "Python",
       "LLM applications",
@@ -35,7 +35,7 @@
       "product ownership",
       "own LLM-based product workflows"
     ],
-    "production_expectations": [],
+    "experience_requirements": [],
     "work_arrangements": [
       "remote"
     ],
@@ -60,8 +60,8 @@
       "research background",
       "startup experience"
     ],
-    "production_expectations_matched": [],
-    "production_expectations_missing": [],
+    "experience_requirements_matched": [],
+    "experience_requirements_missing": [],
     "work_arrangement_aligned": true,
     "location_aligned": true,
     "severe_seniority_mismatch": false,

@@ -1,5 +1,5 @@
 {
-  "raw_text": "Skills: Python, LLMs, FastAPI\nSeniority: senior\nLocation: Remote Europe\nProduction experience: on-call, observability\nWork preferences: remote",
+  "raw_text": "Maya Chen\nSenior Engineer\nRemote Europe\n\nSkills: Python, LLMs, FastAPI\n\nExperience\n- On-call and observability for production services.\n\nOpen to remote work.",
   "expected_profile": {
     "skills": [
       "Python",
@@ -8,7 +8,7 @@
     ],
     "location": "Remote Europe",
     "seniority": "senior",
-    "production_experience": [
+    "relevant_experience": [
       "on-call",
       "observability"
     ],

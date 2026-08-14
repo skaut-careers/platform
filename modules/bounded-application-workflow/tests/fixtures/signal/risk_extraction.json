@@ -1,10 +1,5 @@
 {
-  "job_description": {
-    "title": "Machine Learning Product Engineer",
-    "company": "Career Tech Platform",
-    "location": "London, UK",
-    "description": "Join our career-tech team building ML-powered product features. Day-to-day ownership is still a bit vague while we shape the roadmap with design and growth.\n\nRequirements:\n• Python\n• ML models\n• product analytics\n• cross-functional collaboration\n\nNice to have:\n• LLM experience\n• career-tech experience"
-  },
+  "raw_text": "Machine Learning Product Engineer\n\nJoin our career-tech team building ML-powered product features in our London office. Day-to-day ownership is still a bit vague while we shape the roadmap with design and growth.\n\nRequirements:\n• Python\n• ML models\n• product analytics\n• cross-functional collaboration\n\nNice to have:\n• LLM experience\n• career-tech experience",
   "expected_signals": {
     "required_skills": [
       "Python",
@@ -17,20 +12,20 @@
       "career-tech experience"
     ],
     "seniority_signals": [],
-    "production_expectations": [],
+    "experience_requirements": [],
+    "work_arrangements": [],
+    "location_signals": [
+      "London"
+    ],
     "risk_indicators": [
       "ambiguous scope"
     ],
     "missing_signals": [
       "seniority level",
-      "remote policy",
+      "work arrangement",
       "salary range",
       "team size",
       "employment type"
-    ],
-    "work_arrangements": [],
-    "location_signals": [
-      "London UK"
     ]
   }
 }

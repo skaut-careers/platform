@@ -3,10 +3,10 @@
     "skills": [],
     "location": "",
     "seniority": "staff",
-    "production_experience": [],
+    "relevant_experience": [],
     "work_preferences": []
   },
-  "signals": {
+  "job_signals": {
     "required_skills": [
       "Python"
     ],
@@ -14,7 +14,7 @@
     "seniority_signals": [
       "junior"
     ],
-    "production_expectations": [],
+    "experience_requirements": [],
     "work_arrangements": [],
     "location_signals": [],
     "risk_indicators": [],
@@ -27,8 +27,8 @@
       "Python"
     ],
     "preferred_skills_matched": [],
-    "production_expectations_matched": [],
-    "production_expectations_missing": [],
+    "experience_requirements_matched": [],
+    "experience_requirements_missing": [],
     "work_arrangement_aligned": true,
     "location_aligned": true,
     "severe_seniority_mismatch": true,
