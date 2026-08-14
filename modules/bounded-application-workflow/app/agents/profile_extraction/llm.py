@@ -29,7 +29,7 @@ class LLMProfileExtractor(
         return DefaultProfileExtractor()
 
     def _format_input(self, agent_input: ProfileExtractorInput) -> str:
-        return agent_input.raw_text
+        return agent_input.profile_text
 
     def _build_output(self, output: UserProfile) -> ProfileExtractorOutput:
         return ProfileExtractorOutput(profile=output)

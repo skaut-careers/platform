@@ -142,7 +142,7 @@ def build_workflow_graph(
             raise RuntimeError("profile_extraction requires profile_text")
         events = _enter_stage(state.events, PROFILE_EXTRACTION)
         user_profile = profile_extractor.run(
-            ProfileExtractorInput(raw_text=state.profile_text)
+            ProfileExtractorInput(profile_text=state.profile_text)
         ).profile
         events = _record_agent_completed(
             events,

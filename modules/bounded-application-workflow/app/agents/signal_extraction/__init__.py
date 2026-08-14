@@ -7,5 +7,5 @@ __all__ = ["DefaultSignalExtractor", "LLMSignalExtractor"]
 
 class DefaultSignalExtractor:
     def run(self, agent_input: SignalExtractorInput) -> SignalExtractorOutput:
-        signals = extract_job_signals(agent_input.job_description)
-        return SignalExtractorOutput(signals=signals)
+        job_signals = extract_job_signals(agent_input.job_description_text)
+        return SignalExtractorOutput(job_signals=job_signals)

@@ -7,7 +7,6 @@ from app.agents.contracts import (
 )
 from app.agents.llm_support import BoundedLLMAgent
 from app.domain.job_signals import SIGNAL_FIELDS, JobSignals
-from app.domain.models import JobDescription
 
 
 class SignalExtractionError(Exception):
@@ -26,20 +25,6 @@ def job_signals_schema() -> dict[str, Any]:
     return schema
 
 
-def format_job_for_prompt(job: JobDescription) -> str:
-    lines = [
-        f"Title: {job.title}",
-        f"Company: {job.company or 'unspecified'}",
-        f"Location: {job.location or 'unspecified'}",
-        f"Seniority: {job.seniority or 'unspecified'}",
-        f"Employment type: {job.employment_type or 'unspecified'}",
-        "",
-        "Description:",
-        job.description,
-    ]
-    return "\n".join(lines)
-
-
 class LLMSignalExtractor(
     BoundedLLMAgent[SignalExtractorInput, JobSignals, SignalExtractorOutput]
 ):
@@ -55,7 +40,7 @@ class LLMSignalExtractor(
         return DefaultSignalExtractor()
 
     def _format_input(self, agent_input: SignalExtractorInput) -> str:
-        return format_job_for_prompt(agent_input.job_description)
+        return agent_input.job_description_text
 
     def _build_output(self, output: JobSignals) -> SignalExtractorOutput:
-        return SignalExtractorOutput(signals=output)
+        return SignalExtractorOutput(job_signals=output)

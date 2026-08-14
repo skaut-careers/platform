@@ -42,7 +42,7 @@ class SignalExtractor(Protocol):
 
 class ProfileExtractorInput(BaseModel):
 
-    raw_text: str
+    profile_text: str
 
 
 class ProfileExtractorOutput(AgentOutput):
