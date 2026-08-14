@@ -19,7 +19,8 @@ from app.api.copilot_runtime import (
     mount_copilotkit_runtime,
 )
 from app.api.main import create_app
-from tests.conftest import runtime_config, workflow_input
+from app.domain.models import WorkflowOutput
+from tests.conftest import expected_decision, runtime_config, workflow_input
 
 _CORE_NODES = frozenset(CANONICAL_STAGES)
 
@@ -33,6 +34,37 @@ def _initial_state(*, thread_id: str | None = None) -> WorkflowGraphState:
         workflow_input("strong_match.json"),
         workflow_id=thread_id,
     )
+
+
+def _raw_state(fixture_name: str = "strong_match.json") -> dict:
+    wi = workflow_input(fixture_name)
+    return {
+        "profile_text": wi.profile_text,
+        "job_description_text": wi.job_description_text,
+    }
+
+
+def _run_input(state: dict) -> RunAgentInput:
+    return RunAgentInput(
+        thread_id=str(uuid.uuid4()),
+        run_id=str(uuid.uuid4()),
+        messages=[],
+        state=state,
+        tools=[],
+        context=[],
+        forwarded_props={},
+    )
+
+
+def _run_agui(state: dict):
+    agent = AguiWorkflowAgent(
+        name=AGUI_WORKFLOW_AGENT_NAME, graph=_orchestrator().graph
+    )
+
+    async def _events():
+        return [event async for event in agent.run(_run_input(state))]
+
+    return asyncio.run(_events())
 
 
 def test_agui_agent_exposes_canonical_graph():
@@ -93,30 +125,51 @@ def test_checkpoint_state_isolated_by_thread_id():
 
 
 def test_agui_agent_run_emits_canonical_step_nodes():
-    orchestrator = _orchestrator()
-    agent = AguiWorkflowAgent(name=AGUI_WORKFLOW_AGENT_NAME, graph=orchestrator.graph)
-    wi = workflow_input("strong_match.json")
-    run_input = RunAgentInput(
-        thread_id=str(uuid.uuid4()),
-        run_id=str(uuid.uuid4()),
-        messages=[],
-        state={
-            "profile_text": wi.profile_text,
-            "job_description_text": wi.job_description_text,
-        },
-        tools=[],
-        context=[],
-        forwarded_props={},
+    events = _run_agui(_raw_state())
+    steps = {
+        event.step_name
+        for event in events
+        if event.type == EventType.STEP_STARTED and event.step_name
+    }
+    assert _CORE_NODES.issubset(steps)
+
+
+def test_agui_agent_run_returns_renderable_decision():
+    fixture = "strong_match.json"
+    events = _run_agui(_raw_state(fixture))
+    assert not any(event.type == EventType.RUN_ERROR for event in events)
+    assert any(event.type == EventType.RUN_FINISHED for event in events)
+
+    output = next(
+        (
+            event.snapshot.get("output")
+            for event in reversed(events)
+            if event.type == EventType.STATE_SNAPSHOT
+            and isinstance(event.snapshot, dict)
+            and event.snapshot.get("output") is not None
+        ),
+        None,
     )
+    assert isinstance(output, WorkflowOutput)
+    decision = output.decision
+    assert decision.decision == expected_decision(fixture)
+    assert isinstance(decision.score, (int, float))
+    assert isinstance(decision.reasons, list)
+    assert isinstance(decision.risks, list)
 
-    async def _steps() -> set[str]:
-        return {
-            event.step_name
-            async for event in agent.run(run_input)
-            if event.type == EventType.STEP_STARTED and event.step_name
-        }
 
-    assert _CORE_NODES.issubset(asyncio.run(_steps()))
+def test_agui_agent_rejects_empty_or_invalid_state():
+    for state in ({}, {"profile_text": "cv", "job_description_text": "   "}):
+        message = next(
+            (
+                event.message
+                for event in _run_agui(state)
+                if event.type == EventType.RUN_ERROR
+            ),
+            None,
+        )
+        assert message is not None
+        assert "profile_text and job_description_text are required" in message
 
 
 def test_app_mounts_orchestrator_canonical_graph():

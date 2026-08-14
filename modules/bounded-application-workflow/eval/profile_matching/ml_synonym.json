@@ -1,45 +1,62 @@
 {
   "id": "ml_synonym",
   "description": "Profile says ML, job requires Machine Learning",
-  "tags": ["synonym", "skills"],
+  "tags": [
+    "synonym",
+    "skills"
+  ],
   "user_profile": {
-    "target_roles": ["ML Engineer"],
-    "skills": ["Python", "ML"],
-    "experience_summary": "Engineer training and serving models end to end.",
+    "skills": [
+      "Python",
+      "ML"
+    ],
     "location": "Zurich",
     "seniority": "senior",
-    "production_experience": ["monitoring"],
-    "work_preferences": ["hybrid"]
+    "relevant_experience": [
+      "monitoring"
+    ],
+    "work_preferences": [
+      "hybrid"
+    ]
   },
-  "job_description": {
-    "title": "ML Engineer",
-    "company": "AI Lab",
-    "location": "Zurich",
-    "description": "Build Machine Learning systems in Python.",
-    "seniority": "senior",
-    "employment_type": "full-time"
-  },
-  "signals": {
-    "required_skills": ["Python", "Machine Learning"],
-    "preferred_skills": ["PyTorch"],
-    "seniority_signals": ["senior"],
-    "production_expectations": ["monitoring"],
-    "work_arrangements": ["hybrid"],
-    "location_signals": ["Zurich"],
+  "job_signals": {
+    "required_skills": [
+      "Python",
+      "Machine Learning"
+    ],
+    "preferred_skills": [
+      "PyTorch"
+    ],
+    "seniority_signals": [
+      "senior"
+    ],
+    "experience_requirements": [
+      "monitoring"
+    ],
+    "work_arrangements": [
+      "hybrid"
+    ],
+    "location_signals": [
+      "Zurich"
+    ],
     "risk_indicators": [],
     "missing_signals": []
   },
   "expected": {
     "score_min": 0.6,
     "score_max": 1.0,
-    "role_aligned": true,
     "work_arrangement_aligned": true,
     "location_aligned": true,
     "severe_seniority_mismatch": false,
-    "required_skills_matched": ["Python", "Machine Learning"],
+    "required_skills_matched": [
+      "Python",
+      "Machine Learning"
+    ],
     "required_skills_missing": [],
     "preferred_skills_matched": [],
-    "production_expectations_matched": ["monitoring"],
-    "production_expectations_missing": []
+    "experience_requirements_matched": [
+      "monitoring"
+    ],
+    "experience_requirements_missing": []
   }
 }

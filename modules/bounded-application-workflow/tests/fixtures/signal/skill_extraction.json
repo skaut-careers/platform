@@ -1,12 +1,5 @@
 {
-  "job_description": {
-    "title": "AI Engineer",
-    "company": "Frontier AI Startup",
-    "location": "Remote Europe",
-    "description": "Build and own LLM-based product workflows, evaluation pipelines, and agentic systems in a product-facing AI role.\n\nRequirements:\n• Python\n• LLM applications\n• evaluation pipelines\n• agentic workflows\n• product ownership\n\nNice to have:\n• research background\n• startup experience",
-    "seniority": "mid-senior",
-    "employment_type": "full-time"
-  },
+  "job_description_text": "AI Engineer\n\nMid-senior full-time remote role in Europe. Build and own LLM-based product workflows, evaluation pipelines, and agentic systems in a product-facing AI role.\n\nRequirements:\n• Python\n• LLM applications\n• evaluation pipelines\n• agentic workflows\n• product ownership\n\nNice to have:\n• research background\n• startup experience",
   "expected_signals": {
     "required_skills": [
       "Python",
@@ -20,19 +13,19 @@
       "startup experience"
     ],
     "seniority_signals": [
-      "mid-senior",
+      "Mid-senior",
       "product ownership",
       "own LLM-based product workflows"
     ],
-    "production_expectations": [],
+    "experience_requirements": [],
+    "work_arrangements": [
+      "remote"
+    ],
+    "location_signals": [],
     "risk_indicators": [],
     "missing_signals": [
       "salary range",
       "team size"
-    ],
-    "work_arrangements": [
-      "remote"
-    ],
-    "location_signals": []
+    ]
   }
 }

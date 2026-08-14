@@ -1,0 +1,37 @@
+{
+  "id": "registered_nurse",
+  "description": "Healthcare posting with credentials, patient duties, and shift work",
+  "tags": [
+    "healthcare",
+    "credentials",
+    "shift-work",
+    "non-tech"
+  ],
+  "job_description_text": "Senior Registered Nurse\n\nFull-time, on-site in our Boston office.\n\nRequirements:\n- RN\n- BLS\n- patient communication\n\nThe role includes patient care and weekend shifts.",
+  "expected_signals": {
+    "required_skills": [
+      "RN",
+      "BLS",
+      "patient communication"
+    ],
+    "preferred_skills": [],
+    "seniority_signals": [
+      "Senior"
+    ],
+    "experience_requirements": [
+      "weekend shifts",
+      "patient care"
+    ],
+    "work_arrangements": [
+      "onsite"
+    ],
+    "location_signals": [
+      "Boston"
+    ],
+    "risk_indicators": [],
+    "missing_signals": [
+      "salary range",
+      "team size"
+    ]
+  }
+}

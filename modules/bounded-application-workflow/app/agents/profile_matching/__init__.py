@@ -9,7 +9,6 @@ class DefaultProfileMatcher:
     def run(self, agent_input: ProfileMatcherInput) -> ProfileMatcherOutput:
         match = match_profile_to_job(
             agent_input.user_profile,
-            agent_input.job_description,
-            agent_input.signals,
+            agent_input.job_signals,
         )
         return ProfileMatcherOutput(match=match)

@@ -1,8 +1,10 @@
 {
-  "raw_text": "Roles: Frontend Engineer\nSkills: TypeScript, React\nLocation: Berlin",
+  "profile_text": "TypeScript and React developer\nBerlin, Germany\n\nSkills\nTypeScript, React",
   "expected_profile": {
-    "target_roles": ["Frontend Engineer"],
-    "skills": ["TypeScript", "React"],
+    "skills": [
+      "TypeScript",
+      "React"
+    ],
     "location": "Berlin"
   }
 }

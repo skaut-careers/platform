@@ -1,0 +1,77 @@
+{
+  "user_profile": {
+    "skills": [
+      "machine learning research",
+      "Python",
+      "LLM applications",
+      "evaluation pipelines",
+      "agentic workflows",
+      "product ownership",
+      "AI reliability",
+      "startup experience"
+    ],
+    "location": "Zurich, Switzerland",
+    "seniority": "mid-senior",
+    "relevant_experience": [],
+    "work_preferences": [
+      "remote",
+      "hybrid"
+    ]
+  },
+  "job_signals": {
+    "required_skills": [
+      "Python",
+      "LLM applications",
+      "evaluation pipelines",
+      "agentic workflows",
+      "product ownership"
+    ],
+    "preferred_skills": [
+      "research background",
+      "startup experience"
+    ],
+    "seniority_signals": [
+      "mid-senior",
+      "product ownership",
+      "own LLM-based product workflows"
+    ],
+    "experience_requirements": [],
+    "work_arrangements": [
+      "remote"
+    ],
+    "location_signals": [],
+    "risk_indicators": [],
+    "missing_signals": [
+      "salary range",
+      "team size"
+    ]
+  },
+  "expected_match": {
+    "score": 1.0,
+    "required_skills_matched": [
+      "Python",
+      "LLM applications",
+      "evaluation pipelines",
+      "agentic workflows",
+      "product ownership"
+    ],
+    "required_skills_missing": [],
+    "preferred_skills_matched": [
+      "research background",
+      "startup experience"
+    ],
+    "experience_requirements_matched": [],
+    "experience_requirements_missing": [],
+    "work_arrangement_aligned": true,
+    "location_aligned": true,
+    "severe_seniority_mismatch": false,
+    "reasons": [
+      "Matched 5 of 5 required skills.",
+      "Matched 2 preferred skills.",
+      "Seniority meets job expectations (job: mid-senior, profile: mid-senior).",
+      "Work arrangement aligns (profile prefs: hybrid, remote; job: remote).",
+      "Job is remote-capable; candidate location is not a hard constraint (profile: Zurich, Switzerland; job: unspecified)."
+    ],
+    "risks": []
+  }
+}

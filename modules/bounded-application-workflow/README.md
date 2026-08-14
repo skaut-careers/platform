@@ -1,6 +1,6 @@
 # Bounded Application Workflow
 
-Decides whether an opportunity is worth pursuing from user profile + job description. Decisions: `prepare` · `queue` · `skip` · `escalate`. No autonomous applications.
+Decides whether an opportunity is worth pursuing from user profile + job description. Decisions: `prepare` · `queue` · `skip`. No autonomous applications.
 
 **Phase:** Milestones 1–5 complete — next: M6 Minimal product, then M7 Retrieval & Tooling and M8 Agent Memory (local Postgres). Public Azure launch is M10. See [ROADMAP](../../docs/ROADMAP.md).
 
@@ -27,8 +27,8 @@ Optional config in module `.env` (gitignored):
 
 | Variable | Default | When needed |
 |----------|---------|-------------|
-| `RUNTIME_CONFIG_VERSION` | `v1` | `v1` deterministic · `v2`/`v3` LLM |
-| `OPENAI_API_KEY` | — | LLM (`v2`/`v3`) or `make test-llm` |
+| `RUNTIME_CONFIG_VERSION` | `v1` | `v1` deterministic · `v2` LLM |
+| `OPENAI_API_KEY` | — | LLM (`v2`) or `make test-llm` |
 | `LOGFIRE_TOKEN` | — | optional; omit for local console / OTel |
 | `CORS_ORIGINS` | `http://localhost:3000,http://127.0.0.1:3000` | only if Next runs on another origin |
 

@@ -2,27 +2,26 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
-from app.domain.job_signals import SIGNAL_FIELDS, JobSignals
+from app.domain.models import SIGNAL_FIELDS, JobSignals
 from app.domain.models import ProfileMatchResult, UserProfile, WorkflowDecision
-from app.domain.signal_text import casefold_for_match
+from app.domain.text_processing import normalize_for_match
 from app.evaluation.dataset import DecisionExpectation, MatchExpectation
 
 # Mirrors UserProfile: list fields scored as sets; string fields as single-value sets.
 PROFILE_LIST_FIELDS = (
-    "target_roles",
     "skills",
-    "production_experience",
+    "relevant_experience",
     "work_preferences",
 )
-PROFILE_TEXT_FIELDS = ("experience_summary", "location", "seniority")
+PROFILE_TEXT_FIELDS = ("location", "seniority")
 PROFILE_SCORED_FIELDS = PROFILE_LIST_FIELDS + PROFILE_TEXT_FIELDS
 
 MATCH_LIST_FIELDS = (
     "required_skills_matched",
     "required_skills_missing",
     "preferred_skills_matched",
-    "production_expectations_matched",
-    "production_expectations_missing",
+    "experience_requirements_matched",
+    "experience_requirements_missing",
 )
 
 DECISION_LIST_FIELDS = (
@@ -33,7 +32,7 @@ DECISION_LIST_FIELDS = (
 
 
 def _signal_set(signals: list[str]) -> set[str]:
-    return {casefold_for_match(signal) for signal in signals if signal.strip()}
+    return {normalize_for_match(signal) for signal in signals if signal.strip()}
 
 
 class FieldScore(BaseModel):
@@ -64,7 +63,6 @@ class MatchScore(BaseModel):
     score_in_range: bool
     score_min: float = Field(ge=0.0, le=1.0)
     score_max: float = Field(ge=0.0, le=1.0)
-    role_aligned_correct: bool
     work_arrangement_aligned_correct: bool
     location_aligned_correct: bool
     severe_seniority_mismatch_correct: bool
@@ -153,7 +151,6 @@ def score_match(expected: MatchExpectation, predicted: ProfileMatchResult) -> Ma
         for field in MATCH_LIST_FIELDS
     ]
     score_in_range = expected.score_min <= predicted.score <= expected.score_max
-    role_ok = predicted.role_aligned == expected.role_aligned
     work_ok = predicted.work_arrangement_aligned == expected.work_arrangement_aligned
     location_ok = predicted.location_aligned == expected.location_aligned
     seniority_ok = (
@@ -165,7 +162,6 @@ def score_match(expected: MatchExpectation, predicted: ProfileMatchResult) -> Ma
         score_in_range=score_in_range,
         score_min=expected.score_min,
         score_max=expected.score_max,
-        role_aligned_correct=role_ok,
         work_arrangement_aligned_correct=work_ok,
         location_aligned_correct=location_ok,
         severe_seniority_mismatch_correct=seniority_ok,

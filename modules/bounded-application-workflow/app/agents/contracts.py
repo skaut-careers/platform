@@ -4,9 +4,8 @@ from typing import TYPE_CHECKING, Any, Optional, Protocol
 
 from pydantic import BaseModel
 
-from app.domain.job_signals import JobSignals
 from app.domain.models import (
-    JobDescription,
+    JobSignals,
     ProfileMatchResult,
     UserProfile,
     WorkflowDecision,
@@ -26,13 +25,13 @@ class AgentOutput(BaseModel):
 
 
 class SignalExtractorInput(BaseModel):
-    """Raw job description to parse into structured signals."""
+    """Raw job posting text to parse into structured signals."""
 
-    job_description: JobDescription
+    job_description_text: str
 
 
 class SignalExtractorOutput(AgentOutput):
-    signals: JobSignals
+    job_signals: JobSignals
 
 
 class SignalExtractor(Protocol):
@@ -43,7 +42,7 @@ class SignalExtractor(Protocol):
 
 class ProfileExtractorInput(BaseModel):
 
-    raw_text: str
+    profile_text: str
 
 
 class ProfileExtractorOutput(AgentOutput):
@@ -58,8 +57,7 @@ class ProfileExtractor(Protocol):
 class ProfileMatcherInput(BaseModel):
 
     user_profile: UserProfile
-    job_description: JobDescription
-    signals: JobSignals
+    job_signals: JobSignals
 
 
 class ProfileMatcherOutput(AgentOutput):
@@ -74,7 +72,7 @@ class ProfileMatcher(Protocol):
 class DecisionPolicyInput(BaseModel):
 
     match: ProfileMatchResult
-    signals: JobSignals
+    job_signals: JobSignals
 
 
 class DecisionPolicyOutput(AgentOutput):

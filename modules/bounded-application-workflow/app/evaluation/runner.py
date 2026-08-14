@@ -15,8 +15,8 @@ from app.agents.wiring import (
     create_profile_matcher,
     create_signal_extractor,
 )
-from app.domain.job_signals import JobSignals
-from app.domain.models import JobDescription, ProfileMatchResult, UserProfile, WorkflowDecision
+from app.domain.models import JobSignals
+from app.domain.models import ProfileMatchResult, UserProfile, WorkflowDecision
 from app.evaluation.dataset import (
     CaseMetadata,
     DecisionCase,
@@ -42,15 +42,15 @@ def run_signal_evaluation(
     cases: list[SignalCase] | None = None,
     progress: bool = False,
     max_concurrency: int | None = 1,
-) -> EvaluationReport[JobDescription, JobSignals, CaseMetadata]:
+) -> EvaluationReport[str, JobSignals, CaseMetadata]:
     """Run the signal-extraction golden dataset via Pydantic Evals."""
     config = runtime_config or load_runtime_config(version=runtime_version)
     extractor = create_signal_extractor(runtime_config=config, model=model)
 
-    def task(job_description: JobDescription) -> JobSignals:
-        output = extractor.run(SignalExtractorInput(job_description=job_description))
+    def task(job_text: str) -> JobSignals:
+        output = extractor.run(SignalExtractorInput(job_description_text=job_text))
         record_fallback(output)
-        return output.signals
+        return output.job_signals
 
     return evaluate_dataset(
         load_signal_dataset(dataset_dir, cases=cases),
@@ -77,8 +77,8 @@ def run_profile_extraction_evaluation(
     config = runtime_config or load_runtime_config(version=runtime_version)
     extractor = create_profile_extractor(runtime_config=config, model=model)
 
-    def task(raw_text: str) -> UserProfile:
-        output = extractor.run(ProfileExtractorInput(raw_text=raw_text))
+    def task(profile_text: str) -> UserProfile:
+        output = extractor.run(ProfileExtractorInput(profile_text=profile_text))
         record_fallback(output)
         return output.profile
 

@@ -65,7 +65,7 @@ def create_signal_extractor(
     model: Model | str | None = None,
     mode: str | None = None,
 ) -> SignalExtractor:
-    """Select the signal extractor from the runtime config (LLM under v2/v3)."""
+    """Select the signal extractor from the runtime config (LLM under v2)."""
     return _create_agent(
         llm_type=LLMSignalExtractor,
         default_factory=DefaultSignalExtractor,
@@ -81,7 +81,7 @@ def create_profile_extractor(
     model: Model | str | None = None,
     mode: str | None = None,
 ) -> ProfileExtractor:
-    """Select the profile extractor from the runtime config (LLM under v2/v3)."""
+    """Select the profile extractor from the runtime config (LLM under v2)."""
     return _create_agent(
         llm_type=LLMProfileExtractor,
         default_factory=DefaultProfileExtractor,
@@ -97,7 +97,7 @@ def create_profile_matcher(
     model: Model | str | None = None,
     mode: str | None = None,
 ) -> ProfileMatcher:
-    """Select the profile matcher from the runtime config (LLM under v2/v3)."""
+    """Select the profile matcher from the runtime config (LLM under v2)."""
     return _create_agent(
         llm_type=LLMProfileMatcher,
         default_factory=DefaultProfileMatcher,
@@ -113,7 +113,7 @@ def create_decision_policy(
     model: Model | str | None = None,
     mode: str | None = None,
 ) -> DecisionPolicy:
-    """Select the decision policy from the runtime config (LLM under v2/v3)."""
+    """Select the decision policy from the runtime config (LLM under v2)."""
     return _create_agent(
         llm_type=LLMDecisionPolicy,
         default_factory=DefaultDecisionPolicy,

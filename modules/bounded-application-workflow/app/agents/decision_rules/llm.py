@@ -21,11 +21,10 @@ def _bullet(label: str, values: list[str]) -> str:
 
 def format_policy_input(agent_input: DecisionPolicyInput) -> str:
     match = agent_input.match
-    signals = agent_input.signals
+    job_signals = agent_input.job_signals
     lines = [
         "Profile match result:",
         f"- score: {match.score:.2f}",
-        f"- role_aligned: {match.role_aligned}",
         f"- work_arrangement_aligned: {match.work_arrangement_aligned}",
         f"- location_aligned: {match.location_aligned}",
         f"- severe_seniority_mismatch: {match.severe_seniority_mismatch}",
@@ -33,25 +32,25 @@ def format_policy_input(agent_input: DecisionPolicyInput) -> str:
         _bullet("required_skills_missing", match.required_skills_missing),
         _bullet("preferred_skills_matched", match.preferred_skills_matched),
         _bullet(
-            "production_expectations_matched",
-            match.production_expectations_matched,
+            "experience_requirements_matched",
+            match.experience_requirements_matched,
         ),
         _bullet(
-            "production_expectations_missing",
-            match.production_expectations_missing,
+            "experience_requirements_missing",
+            match.experience_requirements_missing,
         ),
         _bullet("match reasons", match.reasons),
         _bullet("match risks", match.risks),
         "",
         "Extracted job signals:",
-        _bullet("required_skills", signals.required_skills),
-        _bullet("preferred_skills", signals.preferred_skills),
-        _bullet("seniority_signals", signals.seniority_signals),
-        _bullet("production_expectations", signals.production_expectations),
-        _bullet("work_arrangements", signals.work_arrangements),
-        _bullet("location_signals", signals.location_signals),
-        _bullet("risk_indicators", signals.risk_indicators),
-        _bullet("missing_signals", signals.missing_signals),
+        _bullet("required_skills", job_signals.required_skills),
+        _bullet("preferred_skills", job_signals.preferred_skills),
+        _bullet("seniority_signals", job_signals.seniority_signals),
+        _bullet("experience_requirements", job_signals.experience_requirements),
+        _bullet("work_arrangements", job_signals.work_arrangements),
+        _bullet("location_signals", job_signals.location_signals),
+        _bullet("risk_indicators", job_signals.risk_indicators),
+        _bullet("missing_signals", job_signals.missing_signals),
     ]
     return "\n".join(lines)
 

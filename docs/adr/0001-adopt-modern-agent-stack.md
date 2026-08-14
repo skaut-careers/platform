@@ -39,8 +39,8 @@ product ships and grows on maintained infrastructure rather than bespoke primiti
 
 - **Agents** → Pydantic AI v2 (profile extraction, signal extraction, profile matching, decision policy), preserving deterministic
   fallback behaviour and the existing bounded decision policy/thresholds.
-- **Orchestration & state** → LangGraph `StateGraph` with a checkpointer; `escalate` is a
-  terminal decision (no pause / resume in the product path).
+- **Orchestration & state** → LangGraph `StateGraph` with a checkpointer; all decisions
+  (`prepare` / `queue` / `skip`) are terminal (no pause / resume in the product path).
 - **Observability & evaluation** → Pydantic Logfire (OTel) across FastAPI, LangGraph, and agents,
   with Pydantic Evals for the golden dataset and metrics.
 - **Dependencies/tooling** → current stable versions, PEP 621 `pyproject`, CI matrix.

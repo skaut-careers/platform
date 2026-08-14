@@ -1,4 +1,8 @@
 from app.api.copilot_runtime import AGUI_WORKFLOW_AGENT_NAME
+from app.domain.models import DecisionType
+from tests.conftest import workflow_input
+
+_DECISIONS = {d.value for d in DecisionType}
 
 
 def test_health(api_client):
@@ -20,25 +24,29 @@ def test_cors_allows_local_next(api_client):
 
 def test_run_workflow_validates_body(api_client):
     assert api_client.post("/workflow/run", json={}).status_code == 422
-    empty = api_client.post(
-        "/workflow/run",
-        json={"profile_text": "   ", "job_description_text": "AI Engineer\n\nPython"},
-    )
-    assert empty.status_code == 422
-    assert "must not be empty" in empty.text
+    for payload in (
+        {"profile_text": "   ", "job_description_text": "AI Engineer\n\nPython"},
+        {"profile_text": "Roles: Backend\nSkills: Python", "job_description_text": "  "},
+    ):
+        response = api_client.post("/workflow/run", json=payload)
+        assert response.status_code == 422
+        assert "must not be empty" in response.text
 
 
 def test_run_workflow_returns_decision(api_client):
+    wi = workflow_input("strong_match.json")
     response = api_client.post(
         "/workflow/run",
         json={
-            "profile_text": "Roles: Backend Engineer\nSkills: Python, FastAPI",
-            "job_description_text": (
-                "Backend Engineer\n\nRequirements:\n• Python\n• FastAPI"
-            ),
+            "profile_text": wi.profile_text,
+            "job_description_text": wi.job_description_text,
         },
     )
     assert response.status_code == 200
     body = response.json()
-    assert body["decision"]["decision"]
+    decision = body["decision"]
+    assert decision["decision"] in _DECISIONS
+    assert isinstance(decision["score"], (int, float))
+    assert isinstance(decision["reasons"], list)
+    assert isinstance(decision["risks"], list)
     assert body["job_signals"] is not None

@@ -1,4 +1,4 @@
-.PHONY: install web-install web-build serve web-dev dev test test-llm typecheck web-typecheck web-lint check
+.PHONY: install web-install web-build serve web-dev dev test test-llm typecheck web-typecheck web-lint web-test check
 
 # Convenience wrappers — underlying tools are poetry / pnpm / uvicorn.
 
@@ -39,5 +39,7 @@ web-typecheck:
 web-lint:
 	pnpm --dir web lint
 
-# Backend types+tests + frontend types+lint (no full next build).
-check: typecheck test web-typecheck web-lint
+web-test:
+	pnpm --dir web test
+
+check: typecheck test web-typecheck web-lint web-test

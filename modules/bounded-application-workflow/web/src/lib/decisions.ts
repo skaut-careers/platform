@@ -1,4 +1,4 @@
-export type DecisionType = "prepare" | "queue" | "escalate" | "skip";
+export type DecisionType = "prepare" | "queue" | "skip";
 
 export type DecisionCopy = {
   label: string;
@@ -14,10 +14,6 @@ export const DECISION_COPY: Record<DecisionType, DecisionCopy> = {
   queue: {
     label: "QUEUE",
     parts: ["some things mismatch", "better to come back later"],
-  },
-  escalate: {
-    label: "ESCALATE",
-    parts: ["too unclear to judge", "inspect it personally"],
   },
   skip: {
     label: "SKIP",

@@ -7,5 +7,5 @@ __all__ = ["DefaultProfileExtractor", "LLMProfileExtractor"]
 
 class DefaultProfileExtractor:
     def run(self, agent_input: ProfileExtractorInput) -> ProfileExtractorOutput:
-        profile = extract_user_profile(agent_input.raw_text)
+        profile = extract_user_profile(agent_input.profile_text)
         return ProfileExtractorOutput(profile=profile)

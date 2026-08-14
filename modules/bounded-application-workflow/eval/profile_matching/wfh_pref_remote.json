@@ -1,30 +1,35 @@
 {
   "id": "wfh_pref_remote",
   "description": "Profile preference wfh vs job work_arrangements remote",
-  "tags": ["work-arrangement", "synonym"],
+  "tags": [
+    "work-arrangement",
+    "synonym"
+  ],
   "user_profile": {
-    "target_roles": ["Backend Engineer"],
-    "skills": ["Python", "Go"],
-    "experience_summary": "Backend engineer shipping APIs.",
+    "skills": [
+      "Python",
+      "Go"
+    ],
     "location": "Berlin",
     "seniority": "senior",
-    "production_experience": [],
-    "work_preferences": ["wfh"]
+    "relevant_experience": [],
+    "work_preferences": [
+      "wfh"
+    ]
   },
-  "job_description": {
-    "title": "Backend Engineer",
-    "company": "Distributed Co",
-    "location": "Remote",
-    "description": "Build Python and Go services on a remote-first team.",
-    "seniority": "senior",
-    "employment_type": "full-time"
-  },
-  "signals": {
-    "required_skills": ["Python", "Go"],
+  "job_signals": {
+    "required_skills": [
+      "Python",
+      "Go"
+    ],
     "preferred_skills": [],
-    "seniority_signals": ["senior"],
-    "production_expectations": [],
-    "work_arrangements": ["remote"],
+    "seniority_signals": [
+      "senior"
+    ],
+    "experience_requirements": [],
+    "work_arrangements": [
+      "remote"
+    ],
     "location_signals": [],
     "risk_indicators": [],
     "missing_signals": []
@@ -32,14 +37,16 @@
   "expected": {
     "score_min": 0.6,
     "score_max": 1.0,
-    "role_aligned": true,
     "work_arrangement_aligned": true,
     "location_aligned": true,
     "severe_seniority_mismatch": false,
-    "required_skills_matched": ["Python", "Go"],
+    "required_skills_matched": [
+      "Python",
+      "Go"
+    ],
     "required_skills_missing": [],
     "preferred_skills_matched": [],
-    "production_expectations_matched": [],
-    "production_expectations_missing": []
+    "experience_requirements_matched": [],
+    "experience_requirements_missing": []
   }
 }

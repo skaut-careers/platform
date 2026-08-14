@@ -1,8 +1,8 @@
 {
-  "id": "borderline_escalate",
-  "description": "Score in the escalate band without hard-pass triggers",
+  "id": "below_queue_skip",
+  "description": "Score below the queue band → skip",
   "tags": [
-    "escalate",
+    "skip",
     "threshold"
   ],
   "match": {
@@ -15,11 +15,10 @@
       "Spark"
     ],
     "preferred_skills_matched": [],
-    "production_expectations_matched": [],
-    "production_expectations_missing": [
+    "experience_requirements_matched": [],
+    "experience_requirements_missing": [
       "on-call"
     ],
-    "role_aligned": false,
     "work_arrangement_aligned": true,
     "location_aligned": true,
     "severe_seniority_mismatch": false,
@@ -30,7 +29,7 @@
       "role not aligned"
     ]
   },
-  "signals": {
+  "job_signals": {
     "required_skills": [
       "Python",
       "Spark",
@@ -40,7 +39,7 @@
     "seniority_signals": [
       "mid"
     ],
-    "production_expectations": [
+    "experience_requirements": [
       "on-call"
     ],
     "work_arrangements": [
@@ -53,8 +52,8 @@
     ]
   },
   "expected": {
-    "decision": "escalate",
-    "score_min": 0.35,
+    "decision": "skip",
+    "score_min": 0.0,
     "score_max": 0.54,
     "reasons": [
       "weak skill coverage"

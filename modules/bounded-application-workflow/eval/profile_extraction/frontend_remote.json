@@ -1,15 +1,24 @@
 {
   "id": "frontend_remote",
-  "description": "Clean frontend form fields serialised as labelled lines",
-  "tags": ["frontend", "clean"],
-  "raw_text": "seniority: mid\nlocation: Berlin\ntarget_roles: Frontend Engineer\nskills: React, Next.js, TypeScript, CSS\nwork_preferences: remote",
+  "description": "Structured frontend CV with bullet skills and a remote preference",
+  "tags": [
+    "cv",
+    "structured",
+    "frontend"
+  ],
+  "profile_text": "Lina Berger\nMid-level Frontend Engineer\nBerlin, Germany\n\nTechnical Skills\n- React\n- Next.js\n- TypeScript\n- CSS\n\nExperience\n- Shipped marketing pages and design-system components.\n\nWork preferences: remote",
   "expected_profile": {
-    "target_roles": ["Frontend Engineer"],
-    "skills": ["React", "Next.js", "TypeScript", "CSS"],
-    "experience_summary": "",
+    "skills": [
+      "React",
+      "Next.js",
+      "TypeScript",
+      "CSS"
+    ],
     "location": "Berlin",
     "seniority": "mid",
-    "production_experience": [],
-    "work_preferences": ["remote"]
+    "relevant_experience": [],
+    "work_preferences": [
+      "remote"
+    ]
   }
 }

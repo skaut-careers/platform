@@ -1,8 +1,7 @@
 import pytest
 
 from app.agents.contracts import SignalExtractorInput, SignalExtractorOutput
-from app.domain.job_signals import JobSignals
-from app.domain.models import JobDescription
+from app.domain.models import JobSignals
 from app.runtime import (
     AgentRuntime,
     BoundedAgentRuntime,
@@ -16,13 +15,11 @@ _AGENT = "signal_extractor"
 
 
 def _input() -> SignalExtractorInput:
-    return SignalExtractorInput(
-        job_description=JobDescription(title="AI Engineer", description="- Python")
-    )
+    return SignalExtractorInput(job_description_text="- Python")
 
 
 def _ok(_: SignalExtractorInput) -> SignalExtractorOutput:
-    return SignalExtractorOutput(signals=JobSignals(required_skills=["Python"]))
+    return SignalExtractorOutput(job_signals=JobSignals(required_skills=["Python"]))
 
 
 def _fail(_: SignalExtractorInput) -> SignalExtractorOutput:
@@ -73,7 +70,7 @@ def test_retries_until_success_or_exhausted():
 
 
 def test_unwrap_returns_output_or_raises():
-    assert _execute(_ok).unwrap().signals.required_skills == ["Python"]
+    assert _execute(_ok).unwrap().job_signals.required_skills == ["Python"]
     with pytest.raises(RuntimeExecutionError):
         _execute(_fail).unwrap()
 

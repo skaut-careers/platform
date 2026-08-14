@@ -1,6 +1,6 @@
 {
   "id": "strong_prepare",
-  "description": "High match score, no risk indicators \u2192 prepare",
+  "description": "High match score, no risk indicators → prepare",
   "tags": [
     "prepare",
     "threshold"
@@ -15,11 +15,10 @@
     "preferred_skills_matched": [
       "Go"
     ],
-    "production_expectations_matched": [
+    "experience_requirements_matched": [
       "on-call"
     ],
-    "production_expectations_missing": [],
-    "role_aligned": true,
+    "experience_requirements_missing": [],
     "work_arrangement_aligned": true,
     "location_aligned": true,
     "severe_seniority_mismatch": false,
@@ -29,7 +28,7 @@
     ],
     "risks": []
   },
-  "signals": {
+  "job_signals": {
     "required_skills": [
       "Python",
       "Kubernetes"
@@ -40,7 +39,7 @@
     "seniority_signals": [
       "senior"
     ],
-    "production_expectations": [
+    "experience_requirements": [
       "on-call"
     ],
     "work_arrangements": [

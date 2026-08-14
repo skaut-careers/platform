@@ -1,0 +1,44 @@
+{
+  "user_profile": {
+    "skills": [],
+    "location": "",
+    "seniority": "staff",
+    "relevant_experience": [],
+    "work_preferences": []
+  },
+  "job_signals": {
+    "required_skills": [
+      "Python"
+    ],
+    "preferred_skills": [],
+    "seniority_signals": [
+      "junior"
+    ],
+    "experience_requirements": [],
+    "work_arrangements": [],
+    "location_signals": [],
+    "risk_indicators": [],
+    "missing_signals": []
+  },
+  "expected_match": {
+    "score": 0.28,
+    "required_skills_matched": [],
+    "required_skills_missing": [
+      "Python"
+    ],
+    "preferred_skills_matched": [],
+    "experience_requirements_matched": [],
+    "experience_requirements_missing": [],
+    "work_arrangement_aligned": true,
+    "location_aligned": true,
+    "severe_seniority_mismatch": true,
+    "reasons": [
+      "Work arrangement aligns (profile prefs: unspecified; job: unspecified).",
+      "Location aligns (profile: unspecified; job: unspecified)."
+    ],
+    "risks": [
+      "Missing required skills: Python.",
+      "Profile seniority exceeds job expectations by more than one level (job: junior, profile: staff); this role is not a realistic fit."
+    ]
+  }
+}

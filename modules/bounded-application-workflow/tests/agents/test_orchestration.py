@@ -78,11 +78,11 @@ def test_prepare_path_executed_stages():
     assert run.events[-1].event_type == WorkflowEventType.RUN_COMPLETED
 
 
-def test_escalate_is_terminal_product_result():
+def test_skip_path_completes_workflow():
     output, run = run_workflow_with_state(
         workflow_input("ambiguous_match.json"), runtime_config=_v1()
     )
-    assert output.decision.decision == DecisionType.ESCALATE
+    assert output.decision.decision == DecisionType.SKIP
     assert run.is_complete
     assert run.executed_stages == list(CANONICAL_STAGES)
 

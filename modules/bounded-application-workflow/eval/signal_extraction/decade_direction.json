@@ -6,14 +6,7 @@
     "decade-tenure",
     "hard"
   ],
-  "job_description": {
-    "title": "Engineering Manager",
-    "company": "Northwind Systems",
-    "location": "Onsite - Munich",
-    "description": "After a decade leading product engineering teams, you know how to set technical direction and grow seniors into principals. You have shipped large systems in Java and Kotlin, and you are comfortable with cloud-native architecture on GCP. This role sets strategy for a platform org of several teams.",
-    "seniority": "",
-    "employment_type": "Full-time"
-  },
+  "job_description_text": "Engineering Manager\n\nFull-time Onsite - Munich. After a decade leading product engineering teams, you know how to set technical direction and grow seniors into principals. You have shipped large systems in Java and Kotlin, and you are comfortable with cloud-native architecture on GCP. This role sets strategy for a platform org of several teams.",
   "expected_signals": {
     "required_skills": [
       "Java",
@@ -25,7 +18,7 @@
       "decade of leadership",
       "engineering manager"
     ],
-    "production_expectations": [],
+    "experience_requirements": [],
     "work_arrangements": [
       "onsite"
     ],

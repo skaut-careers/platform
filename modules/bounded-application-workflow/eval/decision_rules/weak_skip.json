@@ -1,6 +1,6 @@
 {
   "id": "weak_skip",
-  "description": "Score below escalate band \u2192 skip",
+  "description": "Score below the queue band → skip",
   "tags": [
     "skip",
     "threshold"
@@ -13,9 +13,8 @@
       "Spring"
     ],
     "preferred_skills_matched": [],
-    "production_expectations_matched": [],
-    "production_expectations_missing": [],
-    "role_aligned": false,
+    "experience_requirements_matched": [],
+    "experience_requirements_missing": [],
     "work_arrangement_aligned": false,
     "location_aligned": false,
     "severe_seniority_mismatch": false,
@@ -26,7 +25,7 @@
       "location mismatch"
     ]
   },
-  "signals": {
+  "job_signals": {
     "required_skills": [
       "Java",
       "Spring"
@@ -35,7 +34,7 @@
     "seniority_signals": [
       "senior"
     ],
-    "production_expectations": [],
+    "experience_requirements": [],
     "work_arrangements": [
       "onsite"
     ],
@@ -48,7 +47,7 @@
   "expected": {
     "decision": "skip",
     "score_min": 0.0,
-    "score_max": 0.34,
+    "score_max": 0.54,
     "reasons": [
       "poor skill overlap"
     ],

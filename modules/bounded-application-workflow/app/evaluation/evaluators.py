@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from pydantic_evals.evaluators import EvaluationReason, Evaluator, EvaluatorContext, EvaluatorOutput
 
 from app.agents.contracts import DecisionPolicyInput, ProfileMatcherInput
-from app.domain.job_signals import JobSignals
+from app.domain.models import JobSignals
 from app.domain.models import ProfileMatchResult, UserProfile, WorkflowDecision
 from app.evaluation.dataset import CaseMetadata
 from app.evaluation.metrics import score_decision, score_match, score_profile, score_signals
@@ -101,7 +101,7 @@ class ProfileExtractionEvaluator(Evaluator[str, UserProfile, object]):
 class ProfileMatchEvaluator(
     Evaluator[ProfileMatcherInput, ProfileMatchResult, CaseMetadata]
 ):
-    """Score band + role/seniority flags + skill/production set F1."""
+    """Score band plus alignment flags and capability/experience set F1."""
 
     def evaluate(
         self,
@@ -120,11 +120,6 @@ class ProfileMatchEvaluator(
                 score=match.score,
                 score_min=scored.score_min,
                 score_max=scored.score_max,
-            ),
-            "role_aligned_correct": _flag_with_reason(
-                scored.role_aligned_correct,
-                expected=expected.role_aligned,
-                got=match.role_aligned,
             ),
             "work_arrangement_aligned_correct": _flag_with_reason(
                 scored.work_arrangement_aligned_correct,

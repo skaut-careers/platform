@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
@@ -16,14 +16,13 @@ from pydantic_ai.models.function import AgentInfo, FunctionModel
 from pydantic_ai.models.test import TestModel
 
 from app.agents.contracts import SignalExtractorInput
-from app.agents.profile_extraction.deterministic import extract_user_profile
-from app.domain.job_signals import SIGNAL_FIELDS
-from app.domain.models import DecisionType, JobDescription, UserProfile, WorkflowInput
-from app.parser import parse_job_description
+from app.domain.models import DecisionType, SIGNAL_FIELDS, WorkflowInput
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 SIGNAL_FIXTURES_DIR = FIXTURES_DIR / "signal"
 PROFILE_FIXTURES_DIR = FIXTURES_DIR / "profile"
+MATCH_FIXTURES_DIR = FIXTURES_DIR / "match"
+DECISION_FIXTURES_DIR = FIXTURES_DIR / "decision"
 
 
 def load_fixture(name: str) -> dict:
@@ -36,6 +35,14 @@ def load_signal_fixture(name: str) -> dict:
 
 def load_profile_fixture(name: str) -> dict:
     return json.loads((PROFILE_FIXTURES_DIR / name).read_text())
+
+
+def load_match_fixture(name: str) -> dict:
+    return json.loads((MATCH_FIXTURES_DIR / name).read_text())
+
+
+def load_decision_fixture(name: str) -> dict:
+    return json.loads((DECISION_FIXTURES_DIR / name).read_text())
 
 
 WORKFLOW_FIXTURES = (
@@ -52,6 +59,14 @@ PROFILE_EXTRACTION_FIXTURES = tuple(
     path.name for path in sorted(PROFILE_FIXTURES_DIR.glob("*.json"))
 )
 
+MATCH_FIXTURES = tuple(
+    path.name for path in sorted(MATCH_FIXTURES_DIR.glob("*.json"))
+)
+
+DECISION_FIXTURES = tuple(
+    path.name for path in sorted(DECISION_FIXTURES_DIR.glob("*.json"))
+)
+
 
 def expected_decision(fixture_name: str) -> DecisionType:
     return DecisionType(load_fixture(fixture_name)["expected_decision"])
@@ -65,25 +80,6 @@ def workflow_input(fixture_name: str) -> WorkflowInput:
     )
 
 
-def workflow_raw_texts(fixture_name: str) -> tuple[str, str]:
-    wi = workflow_input(fixture_name)
-    return wi.profile_text, wi.job_description_text
-
-
-class FixtureEntities(NamedTuple):
-    user_profile: UserProfile
-    job_description: JobDescription
-
-
-def fixture_entities(fixture_name: str) -> FixtureEntities:
-    """Typed profile/job derived from raw workflow fixture texts."""
-    profile_text, job_text = workflow_raw_texts(fixture_name)
-    return FixtureEntities(
-        user_profile=extract_user_profile(profile_text),
-        job_description=parse_job_description(job_text),
-    )
-
-
 def signals_payload(**overrides: list[str]) -> dict[str, list[str]]:
     payload = {field: [] for field in SIGNAL_FIELDS}
     payload.update(overrides)
@@ -92,14 +88,11 @@ def signals_payload(**overrides: list[str]) -> dict[str, list[str]]:
 
 def sample_signal_extractor_input() -> SignalExtractorInput:
     return SignalExtractorInput(
-        job_description=JobDescription(
-            title="AI Engineer",
-            description=(
-                "Build LLM product workflows.\n\n"
-                "Requirements:\n• Python\n\n"
-                "Nice to have:\n• FastAPI"
-            ),
-        )
+        job_description_text=(
+            "Build LLM product workflows.\n\n"
+            "Requirements:\n• Python\n\n"
+            "Nice to have:\n• FastAPI"
+        ),
     )
 
 

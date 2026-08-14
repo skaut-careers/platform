@@ -1,0 +1,68 @@
+{
+  "user_profile": {
+    "skills": [
+      "machine learning research",
+      "Python",
+      "AI systems"
+    ],
+    "location": "Zurich, Switzerland",
+    "seniority": "mid-senior",
+    "relevant_experience": [],
+    "work_preferences": [
+      "remote",
+      "hybrid"
+    ]
+  },
+  "job_signals": {
+    "required_skills": [
+      "React",
+      "TypeScript",
+      "CSS",
+      "frontend architecture",
+      "design systems"
+    ],
+    "preferred_skills": [
+      "Figma"
+    ],
+    "seniority_signals": [
+      "senior",
+      "Own frontend architecture and design systems"
+    ],
+    "experience_requirements": [],
+    "work_arrangements": [],
+    "location_signals": [
+      "Berlin Germany"
+    ],
+    "risk_indicators": [],
+    "missing_signals": [
+      "work arrangement",
+      "salary range",
+      "team size"
+    ]
+  },
+  "expected_match": {
+    "score": 0.13,
+    "required_skills_matched": [],
+    "required_skills_missing": [
+      "React",
+      "TypeScript",
+      "CSS",
+      "frontend architecture",
+      "design systems"
+    ],
+    "preferred_skills_matched": [],
+    "experience_requirements_matched": [],
+    "experience_requirements_missing": [],
+    "work_arrangement_aligned": true,
+    "location_aligned": false,
+    "severe_seniority_mismatch": false,
+    "reasons": [
+      "Work arrangement aligns (profile prefs: hybrid, remote; job: unspecified)."
+    ],
+    "risks": [
+      "Missing required skills: React, TypeScript, CSS, frontend architecture, design systems.",
+      "Job expects senior; profile indicates mid-senior.",
+      "Location mismatch (profile: Zurich, Switzerland; job: Berlin Germany)."
+    ]
+  }
+}

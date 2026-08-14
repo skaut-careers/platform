@@ -27,7 +27,7 @@ _AGENT = agent_name_for(LLMSignalExtractor)
 
 def test_default_config_registry():
     registry = default_config_registry()
-    assert registry.list_versions() == ["v1", "v2", "v3"]
+    assert registry.list_versions() == ["v1", "v2"]
 
     spec = registry.get("v2")
     assert spec.settings == {
@@ -41,7 +41,7 @@ def test_default_config_registry():
 
 def test_default_prompt_registry():
     registry = default_prompt_registry()
-    assert registry.list_versions(_AGENT) == ["v1", "v2"]
+    assert registry.list_versions(_AGENT) == ["v1"]
 
     spec = registry.get(_AGENT, "v1")
     assert "required_skills" in spec.content
@@ -132,23 +132,15 @@ def test_load_runtime_config_rejects_unknown_prompt_reference(tmp_path):
         )
 
 
-def test_runtime_version_switch_changes_prompt_and_settings():
-    model_v2 = RecordingSignalModel(signals_payload(required_skills=["Python"]))
-    LLMSignalExtractor(
-        model=model_v2.as_model(),
+def test_llm_runtime_sends_configured_prompt_version_to_model():
+    prompt = default_prompt_registry().get(_AGENT, "v1")
+    model = RecordingSignalModel(signals_payload(required_skills=["Python"]))
+    output = LLMSignalExtractor(
+        model=model.as_model(),
         runtime_config=runtime_config("v2"),
     ).run(sample_signal_extractor_input())
-    prompt_from_runtime_v2 = model_v2.system_prompts[-1]
 
-    model_v3 = RecordingSignalModel(signals_payload(required_skills=["Python"]))
-    output = LLMSignalExtractor(
-        model=model_v3.as_model(),
-        runtime_config=runtime_config("v3"),
-    ).run(sample_signal_extractor_input())
-    prompt_from_runtime_v3 = model_v3.system_prompts[-1]
-
-    assert "(v2)" not in prompt_from_runtime_v2
-    assert "(v2)" in prompt_from_runtime_v3
-    assert prompt_from_runtime_v2 != prompt_from_runtime_v3
+    assert model.system_prompts == [prompt.content]
     assert output.execution
-    assert output.execution.config_version == "v3"
+    assert output.execution.config_version == "v2"
+    assert output.execution.prompt_hash == prompt.content_hash

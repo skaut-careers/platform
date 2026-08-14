@@ -1,15 +1,24 @@
 {
   "id": "junior_backend",
-  "description": "Clean frontend fields with two work preferences",
-  "tags": ["frontend", "clean"],
-  "raw_text": "seniority: junior\nlocation: Belgrade\ntarget_roles: Backend Engineer\nskills: Go, Kubernetes, PostgreSQL\nwork_preferences: hybrid, onsite",
+  "description": "Junior backend CV with two work arrangements in the header",
+  "tags": [
+    "cv",
+    "structured",
+    "junior"
+  ],
+  "profile_text": "Marko Ilic\nJunior Backend Engineer\nBelgrade, Serbia | hybrid / onsite\n\nSkills\nGo, Kubernetes, PostgreSQL\n\nExperience\n- Wrote API handlers and database migrations.",
   "expected_profile": {
-    "target_roles": ["Backend Engineer"],
-    "skills": ["Go", "Kubernetes", "PostgreSQL"],
-    "experience_summary": "",
+    "skills": [
+      "Go",
+      "Kubernetes",
+      "PostgreSQL"
+    ],
     "location": "Belgrade",
     "seniority": "junior",
-    "production_experience": [],
-    "work_preferences": ["hybrid", "onsite"]
+    "relevant_experience": [],
+    "work_preferences": [
+      "hybrid",
+      "onsite"
+    ]
   }
 }
