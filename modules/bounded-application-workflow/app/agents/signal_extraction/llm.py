@@ -6,7 +6,7 @@ from app.agents.contracts import (
     SignalExtractorOutput,
 )
 from app.agents.llm_support import BoundedLLMAgent
-from app.domain.job_signals import SIGNAL_FIELDS, JobSignals
+from app.domain.models import SIGNAL_FIELDS, JobSignals
 
 
 class SignalExtractionError(Exception):

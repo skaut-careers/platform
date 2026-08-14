@@ -6,10 +6,9 @@ from pydantic import BaseModel, Field
 from pydantic_evals import Case, Dataset
 
 from app.agents.contracts import DecisionPolicyInput, ProfileMatcherInput
-from app.domain.job_signals import JobSignals
 from app.domain.models import (
     DecisionType,
-    JobDescription,
+    JobSignals,
     ProfileMatchResult,
     UserProfile,
     WorkflowDecision,
@@ -36,15 +35,14 @@ class MatchExpectation(BaseModel):
 
     score_min: float = Field(default=0.0, ge=0.0, le=1.0)
     score_max: float = Field(default=1.0, ge=0.0, le=1.0)
-    role_aligned: bool = True
     work_arrangement_aligned: bool = True
     location_aligned: bool = True
     severe_seniority_mismatch: bool = False
     required_skills_matched: list[str] = Field(default_factory=list)
     required_skills_missing: list[str] = Field(default_factory=list)
     preferred_skills_matched: list[str] = Field(default_factory=list)
-    production_expectations_matched: list[str] = Field(default_factory=list)
-    production_expectations_missing: list[str] = Field(default_factory=list)
+    experience_requirements_matched: list[str] = Field(default_factory=list)
+    experience_requirements_missing: list[str] = Field(default_factory=list)
 
 
 class DecisionExpectation(BaseModel):
@@ -57,8 +55,8 @@ class DecisionExpectation(BaseModel):
     missing_information: list[str] = Field(default_factory=list)
 
 
-SignalCase = Case[JobDescription, JobSignals, CaseMetadata]
-SignalDataset = Dataset[JobDescription, JobSignals, CaseMetadata]
+SignalCase = Case[str, JobSignals, CaseMetadata]
+SignalDataset = Dataset[str, JobSignals, CaseMetadata]
 ProfileCase = Case[str, UserProfile, CaseMetadata]
 ProfileDataset = Dataset[str, UserProfile, CaseMetadata]
 # OutputT is ProfileMatchResult (task output); goldens store MatchExpectation in expected_output.
@@ -82,7 +80,7 @@ def load_signal_cases(dataset_dir: Path | None = None) -> list[SignalCase]:
         cases.append(
             Case(
                 name=payload["id"],
-                inputs=JobDescription.model_validate(payload["job_description"]),
+                inputs=payload["job_description_text"],
                 expected_output=JobSignals.model_validate(payload["expected_signals"]),
                 metadata=CaseMetadata(
                     description=payload.get("description", ""),
@@ -101,7 +99,7 @@ def load_profile_cases(dataset_dir: Path | None = None) -> list[ProfileCase]:
         cases.append(
             Case(
                 name=payload["id"],
-                inputs=payload["raw_text"],
+                inputs=payload["profile_text"],
                 expected_output=UserProfile.model_validate(payload["expected_profile"]),
                 metadata=CaseMetadata(
                     description=payload.get("description", ""),
@@ -115,8 +113,7 @@ def load_profile_cases(dataset_dir: Path | None = None) -> list[ProfileCase]:
 def _match_input(payload: dict) -> ProfileMatcherInput:
     return ProfileMatcherInput(
         user_profile=UserProfile.model_validate(payload["user_profile"]),
-        job_description=JobDescription.model_validate(payload["job_description"]),
-        signals=JobSignals.model_validate(payload["signals"]),
+        job_signals=JobSignals.model_validate(payload["job_signals"]),
     )
 
 
@@ -147,7 +144,7 @@ def load_match_cases(dataset_dir: Path | None = None) -> list[MatchCase]:
 def _decision_input(payload: dict) -> DecisionPolicyInput:
     return DecisionPolicyInput(
         match=ProfileMatchResult.model_validate(payload["match"]),
-        signals=JobSignals.model_validate(payload["signals"]),
+        job_signals=JobSignals.model_validate(payload["job_signals"]),
     )
 
 

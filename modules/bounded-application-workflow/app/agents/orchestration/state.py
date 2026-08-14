@@ -9,7 +9,7 @@ from app.agents.orchestration.audit import (
     WorkflowEvent,
     WorkflowEventType,
 )
-from app.domain.job_signals import JobSignals
+from app.domain.models import JobSignals
 from app.domain.models import (
     ProfileMatchResult,
     UserProfile,

@@ -1,7 +1,7 @@
 import pytest
 
 from app.agents.contracts import SignalExtractorInput, SignalExtractorOutput
-from app.domain.job_signals import JobSignals
+from app.domain.models import JobSignals
 from app.runtime import (
     AgentRuntime,
     BoundedAgentRuntime,

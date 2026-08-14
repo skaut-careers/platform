@@ -1,7 +1,7 @@
-from app.domain.job_signals import JobSignals, SignalCategory
 from app.domain.models import (
+    SIGNAL_FIELDS,
     DecisionType,
-    JobDescription,
+    JobSignals,
     ProfileMatchResult,
     UserProfile,
     WorkflowDecision,
@@ -10,11 +10,10 @@ from app.domain.models import (
 )
 
 __all__ = [
+    "SIGNAL_FIELDS",
     "DecisionType",
-    "JobDescription",
     "JobSignals",
     "ProfileMatchResult",
-    "SignalCategory",
     "UserProfile",
     "WorkflowDecision",
     "WorkflowInput",

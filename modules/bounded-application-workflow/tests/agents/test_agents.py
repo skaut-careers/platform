@@ -10,9 +10,9 @@ from app.agents.profile_extraction.deterministic import extract_user_profile
 from app.agents.profile_matching.deterministic import match_profile_to_job
 from app.agents.signal_extraction import LLMSignalExtractor
 from app.agents.signal_extraction.deterministic import extract_job_signals
-from app.domain.job_signals import JobSignals
 from app.domain.models import (
     DecisionType,
+    JobSignals,
     ProfileMatchResult,
     UserProfile,
     WorkflowDecision,

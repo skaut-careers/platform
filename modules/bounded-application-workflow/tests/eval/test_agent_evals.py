@@ -1,7 +1,7 @@
 import pytest
 from pydantic_evals.reporting import EvaluationReport
 
-from app.domain.job_signals import SIGNAL_FIELDS
+from app.domain.models import SIGNAL_FIELDS
 from app.evaluation import (
     DECISION_LIST_FIELDS,
     MATCH_LIST_FIELDS,

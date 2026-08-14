@@ -1,7 +1,7 @@
 import re
 from typing import Iterable
 
-from app.domain.job_signals import JobSignals
+from app.domain.models import JobSignals
 from app.domain.models import ProfileMatchResult, UserProfile
 from app.domain.text_processing import canonicalize_seniority, seniority_rank
 

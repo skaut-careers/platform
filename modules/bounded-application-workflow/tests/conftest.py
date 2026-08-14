@@ -16,8 +16,7 @@ from pydantic_ai.models.function import AgentInfo, FunctionModel
 from pydantic_ai.models.test import TestModel
 
 from app.agents.contracts import SignalExtractorInput
-from app.domain.job_signals import SIGNAL_FIELDS
-from app.domain.models import DecisionType, WorkflowInput
+from app.domain.models import DecisionType, SIGNAL_FIELDS, WorkflowInput
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 SIGNAL_FIXTURES_DIR = FIXTURES_DIR / "signal"

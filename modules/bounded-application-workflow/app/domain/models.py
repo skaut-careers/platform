@@ -5,26 +5,23 @@ from typing import Any, List, Mapping
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
-from app.domain.job_signals import JobSignals
-
 
 class DecisionType(str, Enum):
     PREPARE = "prepare"
     QUEUE = "queue"
     SKIP = "skip"
-    ESCALATE = "escalate"
 
 
 class UserProfile(BaseModel):
     skills: List[str] = Field(default_factory=list)
     location: str = ""
     seniority: str = ""
-    production_experience: List[str] = Field(default_factory=list)
+    relevant_experience: List[str] = Field(default_factory=list)
     work_preferences: List[str] = Field(default_factory=list)
 
     @field_validator(
         "skills",
-        "production_experience",
+        "relevant_experience",
         "work_preferences",
         mode="before",
     )
@@ -42,13 +39,27 @@ class UserProfile(BaseModel):
         return value
 
 
+class JobSignals(BaseModel):
+    required_skills: List[str] = Field(default_factory=list)
+    preferred_skills: List[str] = Field(default_factory=list)
+    seniority_signals: List[str] = Field(default_factory=list)
+    experience_requirements: List[str] = Field(default_factory=list)
+    work_arrangements: List[str] = Field(default_factory=list)
+    location_signals: List[str] = Field(default_factory=list)
+    risk_indicators: List[str] = Field(default_factory=list)
+    missing_signals: List[str] = Field(default_factory=list)
+
+
+SIGNAL_FIELDS = tuple(JobSignals.model_fields.keys())
+
+
 class ProfileMatchResult(BaseModel):
     score: float = Field(ge=0.0, le=1.0)
     required_skills_matched: List[str] = Field(default_factory=list)
     required_skills_missing: List[str] = Field(default_factory=list)
     preferred_skills_matched: List[str] = Field(default_factory=list)
-    production_expectations_matched: List[str] = Field(default_factory=list)
-    production_expectations_missing: List[str] = Field(default_factory=list)
+    experience_requirements_matched: List[str] = Field(default_factory=list)
+    experience_requirements_missing: List[str] = Field(default_factory=list)
     work_arrangement_aligned: bool = False
     location_aligned: bool = False
     severe_seniority_mismatch: bool = False

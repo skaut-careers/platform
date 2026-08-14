@@ -15,7 +15,7 @@ from app.agents.wiring import (
     create_profile_matcher,
     create_signal_extractor,
 )
-from app.domain.job_signals import JobSignals
+from app.domain.models import JobSignals
 from app.domain.models import ProfileMatchResult, UserProfile, WorkflowDecision
 from app.evaluation.dataset import (
     CaseMetadata,
