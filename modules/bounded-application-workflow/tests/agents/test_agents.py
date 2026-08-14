@@ -178,7 +178,7 @@ def test_extract_profile_rejects_empty_text():
         extract_user_profile("   ")
 
 
-def test_extract_profile_still_reads_labeled_lines():
+def test_extract_profile_reads_fields_from_label_style_resume():
     profile = extract_user_profile(
         "seniority: mid\nlocation: Amsterdam\nskills: Python, SQL, Airflow\n"
         "work_preferences: remote"
@@ -191,14 +191,35 @@ def test_extract_profile_still_reads_labeled_lines():
     )
 
 
+@pytest.mark.parametrize(
+    "header_line",
+    ["Berlin, Germany | remote", "remote | Berlin, Germany", "wfh | Berlin"],
+)
+def test_extract_profile_reads_place_regardless_of_segment_order(header_line):
+    profile = extract_user_profile(f"Jane Doe\nSenior Engineer\n{header_line}")
+    assert profile.location == "Berlin"
+
+
+def test_extract_profile_keeps_place_named_like_a_contact_label():
+    profile = extract_user_profile("Jane Doe\nSenior Engineer\nTel Aviv, Israel")
+    assert profile.location == "Tel Aviv"
+
+
 def test_extract_profile_reads_non_tech_skills_section():
     profile = extract_user_profile(
-        "Mid-level Teacher\nLisbon\n\nCompetencies\n"
+        "Mid-level Teacher\nLisbon, Portugal\n\nCompetencies\n"
         "classroom management, curriculum design"
     )
     assert profile.skills == ["classroom management", "curriculum design"]
     assert profile.location == "Lisbon"
     assert profile.seniority == "mid"
+
+
+def test_extract_profile_stops_skills_at_paragraph_boundary():
+    profile = extract_user_profile(
+        "Skills:\n\nPython\n\nAwards\nEmployee of the Year"
+    )
+    assert profile.skills == ["Python"]
 
 
 def test_extract_profile_supports_credentials_and_non_tech_experience():
