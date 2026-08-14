@@ -3,11 +3,11 @@ import { describe, expect, it } from "vitest";
 
 import { MatchResult } from "@/components/MatchResult";
 import { DECISION_COPY } from "@/lib/decisions";
-import type { WorkflowDecisionView } from "@/lib/workflow";
+import type { WorkflowResultView } from "@/lib/workflow";
 
-function decision(
-  overrides: Partial<WorkflowDecisionView> & Pick<WorkflowDecisionView, "decision">,
-): WorkflowDecisionView {
+function result(
+  overrides: Partial<WorkflowResultView> & Pick<WorkflowResultView, "decision">,
+): WorkflowResultView {
   return {
     score: 0.8,
     reasons: [],
@@ -18,32 +18,48 @@ function decision(
 }
 
 describe("MatchResult", () => {
-  it("renders prepare copy without a highlight list when empty", () => {
-    render(
-      <MatchResult decision={decision({ decision: "prepare" })} missingSignals={[]} />,
-    );
-    const copy = DECISION_COPY.prepare;
+  it("renders strong copy without panels when every list is empty", () => {
+    render(<MatchResult result={result({ decision: "strong" })} />);
+    const copy = DECISION_COPY.strong;
     expect(screen.getByText(copy.label)).toBeInTheDocument();
     expect(screen.getByText(copy.parts[0])).toBeInTheDocument();
     expect(screen.queryByRole("list")).not.toBeInTheDocument();
   });
 
-  it("prefers risks, then missing signals, then reasons, capped at 3", () => {
+  it("renders tailwinds, headwinds, and fog panels capped at 3 items each", () => {
     render(
       <MatchResult
-        decision={decision({
+        result={result({
           decision: "queue",
+          reasons: ["matched Python", "matched FastAPI", "matched SQL", "matched Docker"],
           risks: ["ambiguous scope", "conflicting seniority"],
-          reasons: ["matched Python", "matched FastAPI"],
+          missing_information: ["Job posting missing signal: salary"],
         })}
-        missingSignals={["salary", "visa"]}
       />,
     );
     expect(screen.getByText(DECISION_COPY.queue.label)).toBeInTheDocument();
+    expect(screen.getAllByRole("heading", { level: 3 }).map((el) => el.textContent)).toEqual([
+      expect.stringContaining("Tailwinds"),
+      expect.stringContaining("Headwinds"),
+      expect.stringContaining("Fog"),
+    ]);
+    expect(screen.getAllByRole("list")).toHaveLength(3);
     expect(screen.getAllByRole("listitem").map((el) => el.textContent)).toEqual([
+      "matched Python",
+      "matched FastAPI",
+      "matched SQL",
       "ambiguous scope",
       "conflicting seniority",
-      "Missing salary",
+      "Job posting missing signal: salary",
+    ]);
+  });
+
+  it("omits panels whose list is empty", () => {
+    render(
+      <MatchResult result={result({ decision: "skip", risks: ["severe seniority mismatch"] })} />,
+    );
+    expect(screen.getAllByRole("heading", { level: 3 }).map((el) => el.textContent)).toEqual([
+      expect.stringContaining("Headwinds"),
     ]);
   });
 });

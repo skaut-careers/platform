@@ -1,4 +1,4 @@
-export type DecisionType = "prepare" | "queue" | "skip";
+export type DecisionType = "strong" | "prepare" | "queue" | "skip";
 
 export type DecisionCopy = {
   label: string;
@@ -7,9 +7,13 @@ export type DecisionCopy = {
 
 /** Short one-line match copy — two beats for every decision. */
 export const DECISION_COPY: Record<DecisionType, DecisionCopy> = {
+  strong: {
+    label: "STRONG",
+    parts: ["excellent fit", "apply now"],
+  },
   prepare: {
     label: "PREPARE",
-    parts: ["strong fit", "go ahead and apply"],
+    parts: ["good fit", "worth pursuing"],
   },
   queue: {
     label: "QUEUE",

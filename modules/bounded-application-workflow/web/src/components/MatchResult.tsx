@@ -1,38 +1,66 @@
 import { DECISION_COPY, type DecisionType } from "@/lib/decisions";
-import type { WorkflowDecisionView } from "@/lib/workflow";
+import type { WorkflowResultView } from "@/lib/workflow";
 
-const MAX_HIGHLIGHTS = 3;
+const MAX_ITEMS_PER_PANEL = 3;
 
-/** Prefer risks, then a couple missing signals, then one reason — keep the panel short. */
-function highlights(
-  decision: WorkflowDecisionView,
-  missingSignals: string[],
-): string[] {
-  const items: string[] = [];
-  for (const risk of decision.risks) {
-    if (items.length >= MAX_HIGHLIGHTS) break;
-    items.push(risk);
-  }
-  for (const signal of missingSignals) {
-    if (items.length >= MAX_HIGHLIGHTS) break;
-    items.push(`Missing ${signal}`);
-  }
-  for (const reason of decision.reasons) {
-    if (items.length >= MAX_HIGHLIGHTS) break;
-    items.push(reason);
-  }
-  return items;
+type PanelCopy = {
+  title: string;
+  hint: string;
+  glyph: string;
+  tone: string;
+  field: "reasons" | "risks" | "missing_information";
+};
+
+/** The trail metaphor: what pushes you forward, what pushes back, what stays unseen. */
+const PANELS: ReadonlyArray<PanelCopy> = [
+  {
+    title: "Tailwinds",
+    hint: "carrying you forward",
+    glyph: "↑",
+    tone: "is-tailwind",
+    field: "reasons",
+  },
+  {
+    title: "Headwinds",
+    hint: "slowing you down",
+    glyph: "↓",
+    tone: "is-headwind",
+    field: "risks",
+  },
+  {
+    title: "Fog",
+    hint: "we could not see",
+    glyph: "?",
+    tone: "is-fog",
+    field: "missing_information",
+  },
+];
+
+function Panel({ copy, items }: { copy: PanelCopy; items: string[] }) {
+  return (
+    <section className={`result-panel ${copy.tone} w-full text-left`}>
+      <h3 className="result-panel-title mb-1.5">
+        <span className="result-panel-glyph" aria-hidden>
+          {copy.glyph}
+        </span>
+        {copy.title}
+        <span className="result-panel-hint">· {copy.hint}</span>
+      </h3>
+      <ul className="list-disc space-y-1.5 pl-5 text-sm text-ink">
+        {items.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
+      </ul>
+    </section>
+  );
 }
 
-export function MatchResult({
-  decision,
-  missingSignals,
-}: {
-  decision: WorkflowDecisionView;
-  missingSignals: string[];
-}) {
-  const copy = DECISION_COPY[decision.decision as DecisionType];
-  const bullets = highlights(decision, missingSignals);
+export function MatchResult({ result }: { result: WorkflowResultView }) {
+  const copy = DECISION_COPY[result.decision as DecisionType];
+  const panels = PANELS.map((copy) => ({
+    copy,
+    items: result[copy.field].slice(0, MAX_ITEMS_PER_PANEL),
+  })).filter((panel) => panel.items.length > 0);
 
   return (
     <div className="flex w-full max-w-md flex-col items-center gap-4 px-1">
@@ -54,12 +82,12 @@ export function MatchResult({
         </p>
       </div>
 
-      {bullets.length > 0 ? (
-        <ul className="result-tile w-full list-disc space-y-1.5 pl-5 text-left text-sm text-ink">
-          {bullets.map((item) => (
-            <li key={item}>{item}</li>
+      {panels.length > 0 ? (
+        <div className="flex w-full flex-col gap-3">
+          {panels.map((panel) => (
+            <Panel key={panel.copy.field} copy={panel.copy} items={panel.items} />
           ))}
-        </ul>
+        </div>
       ) : null}
     </div>
   );

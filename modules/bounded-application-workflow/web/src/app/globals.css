@@ -261,13 +261,57 @@ body {
   padding-right: 1.25rem;
 }
 
-.result-tile {
+.result-panel {
+  --tone: var(--muted);
   border: 1px solid var(--line);
+  border-left: 3px solid var(--tone);
   background: var(--surface);
   border-radius: 0.65rem;
-  padding: 0.85rem 0.9rem;
+  padding: 0.8rem 0.9rem;
   font-size: 0.9rem;
   color: var(--ink);
+}
+
+.result-panel.is-tailwind {
+  --tone: var(--moss);
+}
+
+.result-panel.is-headwind {
+  --tone: #a8552f;
+}
+
+.result-panel.is-fog {
+  --tone: var(--gold);
+}
+
+.result-panel-title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tone);
+}
+
+.result-panel-glyph {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.05rem;
+  height: 1.05rem;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--tone) 16%, transparent);
+  font-size: 0.62rem;
+  line-height: 1;
+}
+
+.result-panel-hint {
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: var(--muted);
 }
 
 .quest-badge {

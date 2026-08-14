@@ -9,9 +9,8 @@ import { Atmosphere } from "@/components/Atmosphere";
 import { MatchResult } from "@/components/MatchResult";
 import {
   WORKFLOW_AGENT_ID,
-  missingSignals,
   stageProgressLabel,
-  workflowDecision,
+  workflowResult,
   type WorkflowAgentState,
 } from "@/lib/workflow";
 
@@ -58,7 +57,7 @@ export function RunWorkspace() {
   });
 
   const state = (agent.state ?? {}) as WorkflowAgentState;
-  const decision = workflowDecision(state);
+  const result = workflowResult(state);
   const running = agent.isRunning;
 
   function scrollToProduct() {
@@ -93,7 +92,7 @@ export function RunWorkspace() {
 
     try {
       await agent.runAgent();
-      if (!workflowDecision(agent.state as WorkflowAgentState)) {
+      if (!workflowResult(agent.state as WorkflowAgentState)) {
         setRunError("No decision returned. Try again or pick another role.");
       }
     } catch (error) {
@@ -310,11 +309,8 @@ export function RunWorkspace() {
                 <p className="max-w-md text-sm text-[#8a3b2a]" role="alert">
                   {runError}
                 </p>
-              ) : decision ? (
-                <MatchResult
-                  decision={decision}
-                  missingSignals={missingSignals(state)}
-                />
+              ) : result ? (
+                <MatchResult result={result} />
               ) : hasStartedRun ? (
                 <p className="text-sm text-muted">No result yet.</p>
               ) : (

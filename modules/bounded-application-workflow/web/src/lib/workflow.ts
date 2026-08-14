@@ -2,7 +2,8 @@ import type { DecisionType } from "@/lib/decisions";
 
 export const WORKFLOW_AGENT_ID = "application_workflow";
 
-export type WorkflowDecisionView = {
+/** Client-facing result — mirrors backend ``WorkflowOutput``. */
+export type WorkflowResultView = {
   decision: DecisionType;
   score: number;
   reasons: string[];
@@ -14,44 +15,32 @@ export type WorkflowAgentState = {
   profile_text?: string;
   job_description_text?: string;
   user_profile?: unknown;
-  job_signals?: { missing_signals?: string[] };
-  match?: unknown;
-  decision?: WorkflowDecisionView;
-  output?: {
-    decision: WorkflowDecisionView;
-    job_signals?: { missing_signals?: string[] };
-    recommended_next_steps?: string[];
-  };
+  job_signals?: unknown;
+  decision?: WorkflowResultView & Record<string, unknown>;
+  output?: WorkflowResultView;
 };
 
 export function isDecisionType(value: unknown): value is DecisionType {
   return (
+    value === "strong" ||
     value === "prepare" ||
     value === "queue" ||
     value === "skip"
   );
 }
 
-export function workflowDecision(
+export function workflowResult(
   state: WorkflowAgentState,
-): WorkflowDecisionView | null {
-  const decision = state.output?.decision ?? state.decision;
-  if (!decision || !isDecisionType(decision.decision)) return null;
+): WorkflowResultView | null {
+  const result = state.output ?? state.decision;
+  if (!result || !isDecisionType(result.decision)) return null;
   return {
-    decision: decision.decision,
-    score: Number(decision.score ?? 0),
-    reasons: decision.reasons ?? [],
-    risks: decision.risks ?? [],
-    missing_information: decision.missing_information ?? [],
+    decision: result.decision,
+    score: Number(result.score ?? 0),
+    reasons: result.reasons ?? [],
+    risks: result.risks ?? [],
+    missing_information: result.missing_information ?? [],
   };
-}
-
-export function missingSignals(state: WorkflowAgentState): string[] {
-  const fromOutput = state.output?.job_signals?.missing_signals;
-  if (fromOutput?.length) return fromOutput;
-  const fromDecision = workflowDecision(state)?.missing_information;
-  if (fromDecision?.length) return fromDecision;
-  return state.job_signals?.missing_signals ?? [];
 }
 
 export function stageProgressLabel(state: WorkflowAgentState): string {

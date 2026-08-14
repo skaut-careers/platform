@@ -53,7 +53,10 @@ class JobSignals(BaseModel):
 SIGNAL_FIELDS = tuple(JobSignals.model_fields.keys())
 
 
-class ProfileMatchResult(BaseModel):
+class MatchDecision(BaseModel):
+    """Atomic match evidence and terminal workflow decision."""
+
+    decision: DecisionType
     score: float = Field(ge=0.0, le=1.0)
     required_skills_matched: List[str] = Field(default_factory=list)
     required_skills_missing: List[str] = Field(default_factory=list)
@@ -65,6 +68,7 @@ class ProfileMatchResult(BaseModel):
     severe_seniority_mismatch: bool = False
     reasons: List[str] = Field(default_factory=list)
     risks: List[str] = Field(default_factory=list)
+    missing_information: List[str] = Field(default_factory=list)
 
 
 class WorkflowInput(BaseModel):
@@ -89,16 +93,11 @@ class WorkflowInput(BaseModel):
             return None
 
 
-class WorkflowDecision(BaseModel):
+class WorkflowOutput(BaseModel):
+    """Client-facing result: the fields the product UI renders."""
+
     decision: DecisionType
     score: float = Field(ge=0.0, le=1.0)
     reasons: List[str] = Field(default_factory=list)
     risks: List[str] = Field(default_factory=list)
     missing_information: List[str] = Field(default_factory=list)
-
-
-class WorkflowOutput(BaseModel):
-    input_summary: str
-    decision: WorkflowDecision
-    job_signals: JobSignals
-    recommended_next_steps: List[str] = Field(default_factory=list)
