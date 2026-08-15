@@ -280,10 +280,6 @@ body {
   --tone: #a8552f;
 }
 
-.result-panel.is-fog {
-  --tone: var(--gold);
-}
-
 .result-panel-title {
   display: flex;
   align-items: baseline;

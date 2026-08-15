@@ -163,7 +163,6 @@ def build_workflow_graph(
             score=result.score,
             reasons=list(result.reasons),
             risks=list(result.risks),
-            missing_information=list(result.missing_information),
         )
         completed_at = _now()
         events.append(

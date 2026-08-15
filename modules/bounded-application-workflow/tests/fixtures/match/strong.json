@@ -39,12 +39,7 @@
     "work_arrangements": [
       "remote"
     ],
-    "location_signals": [],
-    "risk_indicators": [],
-    "missing_signals": [
-      "salary range",
-      "team size"
-    ]
+    "location_signals": []
   },
   "expected_match": {
     "score": 1.0,

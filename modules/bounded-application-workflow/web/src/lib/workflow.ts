@@ -8,7 +8,6 @@ export type WorkflowResultView = {
   score: number;
   reasons: string[];
   risks: string[];
-  missing_information: string[];
 };
 
 export type WorkflowAgentState = {
@@ -39,7 +38,6 @@ export function workflowResult(
     score: Number(result.score ?? 0),
     reasons: result.reasons ?? [],
     risks: result.risks ?? [],
-    missing_information: result.missing_information ?? [],
   };
 }
 

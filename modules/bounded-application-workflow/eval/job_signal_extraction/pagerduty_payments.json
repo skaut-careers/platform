@@ -25,12 +25,6 @@
     "work_arrangements": [],
     "location_signals": [
       "London"
-    ],
-    "risk_indicators": [],
-    "missing_signals": [
-      "work arrangement",
-      "salary range",
-      "team size"
     ]
   }
 }

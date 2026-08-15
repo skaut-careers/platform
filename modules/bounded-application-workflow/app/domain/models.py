@@ -47,8 +47,6 @@ class JobSignals(BaseModel):
     experience_requirements: List[str] = Field(default_factory=list)
     work_arrangements: List[str] = Field(default_factory=list)
     location_signals: List[str] = Field(default_factory=list)
-    risk_indicators: List[str] = Field(default_factory=list)
-    missing_signals: List[str] = Field(default_factory=list)
 
 
 SIGNAL_FIELDS = tuple(JobSignals.model_fields.keys())
@@ -69,7 +67,6 @@ class MatchDecision(BaseModel):
     severe_seniority_mismatch: bool = False
     reasons: List[str] = Field(default_factory=list)
     risks: List[str] = Field(default_factory=list)
-    missing_information: List[str] = Field(default_factory=list)
 
 
 class WorkflowInput(BaseModel):
@@ -101,4 +98,3 @@ class WorkflowOutput(BaseModel):
     score: float = Field(ge=0.0, le=1.0)
     reasons: List[str] = Field(default_factory=list)
     risks: List[str] = Field(default_factory=list)
-    missing_information: List[str] = Field(default_factory=list)

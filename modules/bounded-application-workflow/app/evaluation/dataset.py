@@ -42,7 +42,6 @@ class MatchDecisionExpectation(BaseModel):
     preferred_skills_matched: list[str] = Field(default_factory=list)
     experience_requirements_matched: list[str] = Field(default_factory=list)
     experience_requirements_missing: list[str] = Field(default_factory=list)
-    missing_information: list[str] = Field(default_factory=list)
 
 
 SignalCase = Case[str, JobSignals, CaseMetadata]

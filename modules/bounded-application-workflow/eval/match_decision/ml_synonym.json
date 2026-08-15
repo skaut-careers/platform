@@ -38,9 +38,7 @@
     ],
     "location_signals": [
       "Zurich"
-    ],
-    "risk_indicators": [],
-    "missing_signals": []
+    ]
   },
   "expected": {
     "decision": "prepare",

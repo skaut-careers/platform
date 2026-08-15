@@ -5,7 +5,6 @@ import re
 from app.domain.models import JobSignals
 from app.domain.text_processing.common import (
     _BULLET_LINE,
-    _SENIORITY_TOKEN_PATTERN,
     collapse_whitespace,
     dedupe_phrases,
     is_short_skill_label,
@@ -83,46 +82,6 @@ _JOB_EXPERIENCE_PATTERNS: tuple[_PatternLabel, ...] = (
         ),
         "production deployment",
     ),
-)
-_JOB_RISK_PATTERNS: tuple[_PatternLabel, ...] = (
-    (
-        re.compile(
-            r"\b(?:unclear|ambiguous|vague|TBD|to be determined)\b",
-            re.IGNORECASE,
-        ),
-        "ambiguous scope",
-    ),
-    (
-        re.compile(
-            r"\b(?:10x|rockstar|ninja|unicorn)(?:\s+\w+){0,2}\b",
-            re.IGNORECASE,
-        ),
-        "unrealistic expectations",
-    ),
-    (re.compile(r"\bwear many hats\b", re.IGNORECASE), "broad unfocused role"),
-    (
-        re.compile(r"\bhigh(?:\s+[\w-]+){0,2}\s+ownership\b", re.IGNORECASE),
-        "high ownership expectations",
-    ),
-)
-_JOB_SALARY = re.compile(
-    r"\b(?:salary|compensation|pay range|pay band|£|\$|€|USD|EUR|CHF|\d+k)\b",
-    re.IGNORECASE,
-)
-_JOB_TEAM_SIZE = re.compile(
-    r"\b(?:team size|team of \d+|\d+[- ]person(?:\s+\w+)?\s+team|"
-    r"\d+\s+(?:people|employees|colleagues|staff members?|team members?))\b",
-    re.IGNORECASE,
-)
-_JOB_WORK_ARRANGEMENT = re.compile(
-    r"\b(?:remote[- ]first|fully remote|remote|hybrid|on[- ]site|"
-    r"office[- ]first|work from home|WFH|work from anywhere)\b",
-    re.IGNORECASE,
-)
-_JOB_EMPLOYMENT_TYPE = re.compile(
-    r"\b(?:full[- ]time|part[- ]time|contract|freelance|permanent|"
-    r"employment type)\b",
-    re.IGNORECASE,
 )
 _JOB_REQUIRED_SECTION = re.compile(
     r"^(?:requirements?|required(?:\s+skills)?|must[- ]haves?|"
@@ -255,30 +214,6 @@ def experience_requirements_from_job(job_text: str) -> list[str]:
     )
 
 
-def risk_indicators_from_job(job_text: str) -> list[str]:
-    return dedupe_phrases(_signals_from_patterns(job_text, _JOB_RISK_PATTERNS))
-
-
-def missing_signals_from_job(
-    job_text: str, *, work_arrangements: list[str]
-) -> list[str]:
-    missing: list[str] = []
-    if (
-        not _SENIORITY_TOKEN_PATTERN.search(job_text)
-        and not _JOB_YEARS_EXPERIENCE.search(job_text)
-    ):
-        missing.append("seniority level")
-    if not work_arrangements and not _JOB_WORK_ARRANGEMENT.search(job_text):
-        missing.append("work arrangement")
-    if not _JOB_SALARY.search(job_text):
-        missing.append("salary range")
-    if not _JOB_TEAM_SIZE.search(job_text):
-        missing.append("team size")
-    if not _JOB_EMPLOYMENT_TYPE.search(job_text):
-        missing.append("employment type")
-    return dedupe_phrases(missing)
-
-
 def normalize_job_signals(job_signals: JobSignals) -> JobSignals:
     # Required dominates preferred: a skill listed in both stays only as required.
     required_skills = dedupe_phrases(job_signals.required_skills)
@@ -295,6 +230,4 @@ def normalize_job_signals(job_signals: JobSignals) -> JobSignals:
         experience_requirements=dedupe_phrases(job_signals.experience_requirements),
         work_arrangements=dedupe_phrases(job_signals.work_arrangements),
         location_signals=dedupe_phrases(job_signals.location_signals),
-        risk_indicators=dedupe_phrases(job_signals.risk_indicators),
-        missing_signals=dedupe_phrases(job_signals.missing_signals),
     )

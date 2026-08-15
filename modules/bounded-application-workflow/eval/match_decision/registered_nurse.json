@@ -41,9 +41,7 @@
     ],
     "location_signals": [
       "Boston"
-    ],
-    "risk_indicators": [],
-    "missing_signals": []
+    ]
   },
   "expected": {
     "decision": "strong",

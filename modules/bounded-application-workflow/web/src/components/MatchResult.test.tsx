@@ -12,7 +12,6 @@ function result(
     score: 0.8,
     reasons: [],
     risks: [],
-    missing_information: [],
     ...overrides,
   };
 }
@@ -26,14 +25,13 @@ describe("MatchResult", () => {
     expect(screen.queryByRole("list")).not.toBeInTheDocument();
   });
 
-  it("renders tailwinds, headwinds, and fog panels capped at 3 items each", () => {
+  it("renders all tailwinds and headwinds", () => {
     render(
       <MatchResult
         result={result({
           decision: "queue",
           reasons: ["matched Python", "matched FastAPI", "matched SQL", "matched Docker"],
-          risks: ["ambiguous scope", "conflicting seniority"],
-          missing_information: ["Job posting missing signal: salary"],
+          risks: ["ambiguous scope", "conflicting seniority", "location mismatch", "extra risk"],
         })}
       />,
     );
@@ -41,16 +39,17 @@ describe("MatchResult", () => {
     expect(screen.getAllByRole("heading", { level: 3 }).map((el) => el.textContent)).toEqual([
       expect.stringContaining("Tailwinds"),
       expect.stringContaining("Headwinds"),
-      expect.stringContaining("Fog"),
     ]);
-    expect(screen.getAllByRole("list")).toHaveLength(3);
+    expect(screen.getAllByRole("list")).toHaveLength(2);
     expect(screen.getAllByRole("listitem").map((el) => el.textContent)).toEqual([
       "matched Python",
       "matched FastAPI",
       "matched SQL",
+      "matched Docker",
       "ambiguous scope",
       "conflicting seniority",
-      "Job posting missing signal: salary",
+      "location mismatch",
+      "extra risk",
     ]);
   });
 

@@ -22,15 +22,6 @@
     ],
     "location_signals": [
       "Berlin"
-    ],
-    "risk_indicators": [
-      "ambiguous scope",
-      "overloaded role"
-    ],
-    "missing_signals": [
-      "seniority level",
-      "salary range",
-      "team size"
     ]
   }
 }

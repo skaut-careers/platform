@@ -24,7 +24,6 @@ MATCH_DECISION_LIST_FIELDS = (
     "preferred_skills_matched",
     "experience_requirements_matched",
     "experience_requirements_missing",
-    "missing_information",
 )
 
 

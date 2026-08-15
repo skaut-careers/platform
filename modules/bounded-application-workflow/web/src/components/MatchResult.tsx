@@ -1,17 +1,15 @@
 import { DECISION_COPY, type DecisionType } from "@/lib/decisions";
 import type { WorkflowResultView } from "@/lib/workflow";
 
-const MAX_ITEMS_PER_PANEL = 3;
-
 type PanelCopy = {
   title: string;
   hint: string;
   glyph: string;
   tone: string;
-  field: "reasons" | "risks" | "missing_information";
+  field: "reasons" | "risks";
 };
 
-/** The trail metaphor: what pushes you forward, what pushes back, what stays unseen. */
+/** The trail metaphor: what pushes you forward, what pushes back. */
 const PANELS: ReadonlyArray<PanelCopy> = [
   {
     title: "Tailwinds",
@@ -26,13 +24,6 @@ const PANELS: ReadonlyArray<PanelCopy> = [
     glyph: "↓",
     tone: "is-headwind",
     field: "risks",
-  },
-  {
-    title: "Fog",
-    hint: "we could not see",
-    glyph: "?",
-    tone: "is-fog",
-    field: "missing_information",
   },
 ];
 
@@ -59,7 +50,7 @@ export function MatchResult({ result }: { result: WorkflowResultView }) {
   const copy = DECISION_COPY[result.decision as DecisionType];
   const panels = PANELS.map((copy) => ({
     copy,
-    items: result[copy.field].slice(0, MAX_ITEMS_PER_PANEL),
+    items: result[copy.field],
   })).filter((panel) => panel.items.length > 0);
 
   return (

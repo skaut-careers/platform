@@ -26,12 +26,6 @@
     "work_arrangements": [],
     "location_signals": [
       "Berlin"
-    ],
-    "risk_indicators": [],
-    "missing_signals": [
-      "work arrangement",
-      "salary range",
-      "team size"
     ]
   }
 }

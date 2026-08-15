@@ -37,8 +37,6 @@ def format_match_decision_input(agent_input: MatchDeciderInput) -> str:
         _bullet("experience_requirements", job_signals.experience_requirements),
         _bullet("work_arrangements", job_signals.work_arrangements),
         _bullet("location_signals", job_signals.location_signals),
-        _bullet("risk_indicators", job_signals.risk_indicators),
-        _bullet("missing_signals", job_signals.missing_signals),
     ]
     return "\n".join(lines)
 

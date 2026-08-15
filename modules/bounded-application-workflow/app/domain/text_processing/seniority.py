@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Iterable
+
 from app.domain.text_processing.common import (
     _SENIORITY_TOKEN_PATTERN,
     collapse_whitespace,
@@ -55,14 +57,19 @@ def seniority_tokens_from_text(text: str) -> list[str]:
     ]
 
 
-def seniority_from_text(text: str) -> str:
-    """Pick the highest-ranked seniority level mentioned in the text."""
+def highest_ranked_seniority(values: Iterable[str]) -> str | None:
+    """Pick the highest-ranked value, ignoring the ones without a known rank."""
     best: tuple[int, str] | None = None
-    for raw in seniority_tokens_from_text(text):
-        rank = seniority_rank(raw)
+    for value in values:
+        rank = seniority_rank(value)
         if rank is None:
             continue
-        canonical = canonicalize_seniority(raw)
         if best is None or rank > best[0]:
-            best = (rank, canonical)
-    return best[1] if best else ""
+            best = (rank, value)
+    return best[1] if best else None
+
+
+def seniority_from_text(text: str) -> str:
+    """Pick the highest-ranked seniority level mentioned in the text."""
+    highest = highest_ranked_seniority(seniority_tokens_from_text(text))
+    return canonicalize_seniority(highest) if highest else ""

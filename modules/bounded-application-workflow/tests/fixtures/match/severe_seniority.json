@@ -16,12 +16,10 @@
     ],
     "experience_requirements": [],
     "work_arrangements": [],
-    "location_signals": [],
-    "risk_indicators": [],
-    "missing_signals": []
+    "location_signals": []
   },
   "expected_match": {
-    "score": 0.28,
+    "score": 0.3,
     "required_skills_matched": [],
     "required_skills_missing": [
       "Python"

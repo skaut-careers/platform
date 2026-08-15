@@ -30,9 +30,7 @@
     "work_arrangements": [
       "remote"
     ],
-    "location_signals": [],
-    "risk_indicators": [],
-    "missing_signals": []
+    "location_signals": []
   },
   "expected": {
     "decision": "skip",

@@ -32,9 +32,7 @@
     ],
     "location_signals": [
       "New York"
-    ],
-    "risk_indicators": [],
-    "missing_signals": []
+    ]
   },
   "expected": {
     "decision": "prepare",

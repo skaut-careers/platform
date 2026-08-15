@@ -1,5 +1,5 @@
 {
-  "job_description_text": "AI Engineer\n\nMid-senior full-time remote role in Europe. Build and own LLM-based product workflows, evaluation pipelines, and agentic systems in a product-facing AI role.\n\nRequirements:\n• Python\n• LLM applications\n• evaluation pipelines\n• agentic workflows\n• product ownership\n\nNice to have:\n• research background\n• startup experience",
+  "job_description_text": "AI Engineer\n\nMid-senior full-time remote role in Europe. Build and own LLM-based product workflows, evaluation pipelines, and agentic systems in a product-facing AI role.\n\nRequirements:\n\u2022 Python\n\u2022 LLM applications\n\u2022 evaluation pipelines\n\u2022 agentic workflows\n\u2022 product ownership\n\nNice to have:\n\u2022 research background\n\u2022 startup experience",
   "expected_signals": {
     "required_skills": [
       "Python",
@@ -21,11 +21,6 @@
     "work_arrangements": [
       "remote"
     ],
-    "location_signals": [],
-    "risk_indicators": [],
-    "missing_signals": [
-      "salary range",
-      "team size"
-    ]
+    "location_signals": []
   }
 }

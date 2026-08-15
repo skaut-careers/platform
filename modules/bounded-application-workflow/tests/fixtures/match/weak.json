@@ -32,16 +32,10 @@
     "work_arrangements": [],
     "location_signals": [
       "Berlin Germany"
-    ],
-    "risk_indicators": [],
-    "missing_signals": [
-      "work arrangement",
-      "salary range",
-      "team size"
     ]
   },
   "expected_match": {
-    "score": 0.13,
+    "score": 0.15,
     "required_skills_matched": [],
     "required_skills_missing": [
       "React",
