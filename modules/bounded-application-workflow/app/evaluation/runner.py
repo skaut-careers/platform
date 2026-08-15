@@ -4,26 +4,22 @@ from pydantic_ai.models import Model
 from pydantic_evals.reporting import EvaluationReport
 
 from app.agents.contracts import (
-    DecisionPolicyInput,
     ProfileExtractorInput,
-    ProfileMatcherInput,
+    MatchDeciderInput,
     SignalExtractorInput,
 )
 from app.agents.wiring import (
-    create_decision_policy,
     create_profile_extractor,
-    create_profile_matcher,
+    create_match_decider,
     create_signal_extractor,
 )
 from app.domain.models import JobSignals
-from app.domain.models import ProfileMatchResult, UserProfile, WorkflowDecision
+from app.domain.models import MatchDecision, UserProfile
 from app.evaluation.dataset import (
     CaseMetadata,
-    DecisionCase,
     MatchCase,
     ProfileCase,
     SignalCase,
-    load_decision_dataset,
     load_match_dataset,
     load_profile_dataset,
     load_signal_dataset,
@@ -92,7 +88,7 @@ def run_profile_extraction_evaluation(
     )
 
 
-def run_profile_matching_evaluation(
+def run_match_decision_evaluation(
     *,
     label: str | None = None,
     runtime_version: str | None = None,
@@ -102,48 +98,20 @@ def run_profile_matching_evaluation(
     cases: list[MatchCase] | None = None,
     progress: bool = False,
     max_concurrency: int | None = 1,
-) -> EvaluationReport[ProfileMatcherInput, ProfileMatchResult, CaseMetadata]:
-    """Run the profile-matching golden dataset via Pydantic Evals."""
+) -> EvaluationReport[MatchDeciderInput, MatchDecision, CaseMetadata]:
+    """Run the match+decision golden dataset via Pydantic Evals."""
     config = runtime_config or load_runtime_config(version=runtime_version)
-    matcher = create_profile_matcher(runtime_config=config, model=model)
+    match_decider = create_match_decider(
+        runtime_config=config, model=model
+    )
 
-    def task(agent_input: ProfileMatcherInput) -> ProfileMatchResult:
-        output = matcher.run(agent_input)
+    def task(agent_input: MatchDeciderInput) -> MatchDecision:
+        output = match_decider.run(agent_input)
         record_fallback(output)
-        return output.match
+        return output.result
 
     return evaluate_dataset(
         load_match_dataset(dataset_dir, cases=cases),
-        task,
-        runtime_config=config,
-        label=label,
-        progress=progress,
-        max_concurrency=max_concurrency,
-    )
-
-
-def run_decision_policy_evaluation(
-    *,
-    label: str | None = None,
-    runtime_version: str | None = None,
-    runtime_config: RuntimeConfig | None = None,
-    model: Model | str | None = None,
-    dataset_dir: Path | None = None,
-    cases: list[DecisionCase] | None = None,
-    progress: bool = False,
-    max_concurrency: int | None = 1,
-) -> EvaluationReport[DecisionPolicyInput, WorkflowDecision, CaseMetadata]:
-    """Run the decision-policy golden dataset via Pydantic Evals."""
-    config = runtime_config or load_runtime_config(version=runtime_version)
-    policy = create_decision_policy(runtime_config=config, model=model)
-
-    def task(agent_input: DecisionPolicyInput) -> WorkflowDecision:
-        output = policy.run(agent_input)
-        record_fallback(output)
-        return output.decision
-
-    return evaluate_dataset(
-        load_decision_dataset(dataset_dir, cases=cases),
         task,
         runtime_config=config,
         label=label,

@@ -6,12 +6,11 @@ Human-curated golden datasets, one directory per LLM-backed agent:
 |---------|-----------|-----------|--------|
 | Signal extractor | [`signal_extraction/`](signal_extraction/) | `job_description_text`, `expected_signals` | set-based P/R/F1 per signal field + macro F1 |
 | Profile extractor | [`profile_extraction/`](profile_extraction/) | `profile_text`, `expected_profile` | set-based F1 per profile field + macro F1 |
-| Profile matcher | [`profile_matching/`](profile_matching/) | `user_profile`, `job_signals`, `expected` | score band + work/location/seniority flags + required/preferred/experience set F1 |
-| Decision policy | [`decision_rules/`](decision_rules/) | `match`, `job_signals`, `expected` | exact decision + score band + reasons/risks/missing_information set F1 |
+| Match decision | [`match_decision/`](match_decision/) | `user_profile`, `job_signals`, `expected` | decision accuracy + score band + work/location/seniority flags + required/preferred/experience/missing_information set F1 |
 
 Input keys match the `WorkflowInput` field names so a golden case reads the same as a product request.
 
-Each agent has exactly **eight** golden cases, except decision policy which has **six**.
+Each agent has exactly **eight** golden cases.
 
 Signal goldens are intentionally hard for regex baselines: prose/numbered skills, soft remote/hybrid cues, PagerDuty→on-call, risk without the word “vague”, and decade-tenure seniority. Prefer empty lists when evidence is weak.
 
@@ -19,15 +18,13 @@ Profile goldens are pasted CVs, not labelled form fields. Structured Skills sect
 
 Matching goldens stress semantic bridges the deterministic matcher misses: skill aliases (`k8s`/`GCP`/`ML`), NYC↔New York place aliasing, `wfh`↔remote preferences, plus one severe seniority negative.
 
-Decision goldens cover score thresholds (`prepare` / `queue` / `skip`) plus a seniority hard-skip. Risk indicators are carried on the decision but do not change the band.
-
 Each case also carries optional `id`, `description`, `tags`. Datasets load as
 [Pydantic Evals](https://pydantic.dev/docs/ai/evals/) `Dataset`s with a matching evaluator.
 
 ## Run
 
 ```bash
-poetry run pytest tests/eval/           # golden datasets (v1 deterministic agents)
+poetry run pytest eval/                 # golden datasets (v1 deterministic agents)
 poetry run pytest -m llm -s             # live LLM; prints Rich report + macro_f1 (-s recommended)
 ```
 

@@ -25,7 +25,7 @@ def discover_agents() -> AgentDiscovery:
             continue
         if (path / "__init__.py").is_file():
             packages.append(path.name)
-        if (path / "prompts").is_dir():
+        if any((path / "prompts").glob("*.txt")):
             runtime_agents.append(path.name)
     return AgentDiscovery(packages=packages, runtime_agents=runtime_agents)
 
