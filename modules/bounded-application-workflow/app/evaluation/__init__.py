@@ -15,7 +15,7 @@ from app.evaluation.dataset import (
 from app.evaluation.evaluators import (
     MatchDecisionEvaluator,
     ProfileExtractionEvaluator,
-    SignalExtractionEvaluator,
+    JobSignalExtractionEvaluator,
 )
 from app.evaluation.metrics import (
     FieldScore,
@@ -33,7 +33,7 @@ from app.evaluation.report import fallback_rate, score_average
 from app.evaluation.runner import (
     run_profile_extraction_evaluation,
     run_match_decision_evaluation,
-    run_signal_evaluation,
+    run_job_signal_evaluation,
 )
 
 __all__ = [
@@ -50,7 +50,7 @@ __all__ = [
     "ProfileScore",
     "SignalCase",
     "SignalDataset",
-    "SignalExtractionEvaluator",
+    "JobSignalExtractionEvaluator",
     "JobSignalsScore",
     "fallback_rate",
     "load_match_cases",
@@ -61,7 +61,7 @@ __all__ = [
     "load_signal_dataset",
     "run_profile_extraction_evaluation",
     "run_match_decision_evaluation",
-    "run_signal_evaluation",
+    "run_job_signal_evaluation",
     "score_average",
     "score_field",
     "score_match_decision",

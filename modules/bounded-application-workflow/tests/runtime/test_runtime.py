@@ -1,6 +1,6 @@
 import pytest
 
-from app.agents.contracts import SignalExtractorInput, SignalExtractorOutput
+from app.agents.contracts import JobSignalExtractorInput, JobSignalExtractorOutput
 from app.domain.models import JobSignals
 from app.runtime import (
     AgentRuntime,
@@ -11,18 +11,18 @@ from app.runtime import (
     RuntimeConfig,
 )
 
-_AGENT = "signal_extractor"
+_AGENT = "job_signal_extractor"
 
 
-def _input() -> SignalExtractorInput:
-    return SignalExtractorInput(job_description_text="- Python")
+def _input() -> JobSignalExtractorInput:
+    return JobSignalExtractorInput(job_description_text="- Python")
 
 
-def _ok(_: SignalExtractorInput) -> SignalExtractorOutput:
-    return SignalExtractorOutput(job_signals=JobSignals(required_skills=["Python"]))
+def _ok(_: JobSignalExtractorInput) -> JobSignalExtractorOutput:
+    return JobSignalExtractorOutput(job_signals=JobSignals(required_skills=["Python"]))
 
 
-def _fail(_: SignalExtractorInput) -> SignalExtractorOutput:
+def _fail(_: JobSignalExtractorInput) -> JobSignalExtractorOutput:
     raise RuntimeError("model unavailable")
 
 
@@ -31,7 +31,7 @@ class _Flaky:
         self.failures = failures
         self.calls = 0
 
-    def __call__(self, agent_input: SignalExtractorInput) -> SignalExtractorOutput:
+    def __call__(self, agent_input: JobSignalExtractorInput) -> JobSignalExtractorOutput:
         self.calls += 1
         if self.calls <= self.failures:
             raise ValueError("transient failure")
@@ -94,7 +94,7 @@ def test_fallback_runs_after_primary_failure():
 
 
 def test_fallback_failure_preserves_primary_error():
-    def fallback_fail(_: SignalExtractorInput) -> SignalExtractorOutput:
+    def fallback_fail(_: JobSignalExtractorInput) -> JobSignalExtractorOutput:
         raise RuntimeError("fallback unavailable")
 
     result = BoundedAgentRuntime().execute(
@@ -110,7 +110,7 @@ def test_fallback_failure_preserves_primary_error():
 def test_retry_policy_skips_non_retryable_errors():
     calls = 0
 
-    def fail_once(_: SignalExtractorInput) -> SignalExtractorOutput:
+    def fail_once(_: JobSignalExtractorInput) -> JobSignalExtractorOutput:
         nonlocal calls
         calls += 1
         raise ValueError("bad config")

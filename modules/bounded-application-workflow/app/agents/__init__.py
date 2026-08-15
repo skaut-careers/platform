@@ -2,9 +2,9 @@ from app.agents.contracts import (
     MatchDecider,
     MatchDeciderInput,
     MatchDeciderOutput,
-    SignalExtractor,
-    SignalExtractorInput,
-    SignalExtractorOutput,
+    JobSignalExtractor,
+    JobSignalExtractorInput,
+    JobSignalExtractorOutput,
     WorkflowOrchestrator,
     WorkflowOrchestratorInput,
     WorkflowOrchestratorOutput,
@@ -14,7 +14,7 @@ from app.agents.match_decision import (
     DefaultMatchDecider,
     LLMMatchDecider,
 )
-from app.agents.signal_extraction import DefaultSignalExtractor, LLMSignalExtractor
+from app.agents.job_signal_extraction import DefaultJobSignalExtractor, LLMJobSignalExtractor
 from app.agents.wiring import (
     create_agents,
     run_workflow,
@@ -23,16 +23,16 @@ from app.agents.wiring import (
 
 __all__ = [
     "DefaultMatchDecider",
-    "DefaultSignalExtractor",
+    "DefaultJobSignalExtractor",
     "DefaultWorkflowOrchestrator",
     "LLMMatchDecider",
-    "LLMSignalExtractor",
+    "LLMJobSignalExtractor",
     "MatchDecider",
     "MatchDeciderInput",
     "MatchDeciderOutput",
-    "SignalExtractor",
-    "SignalExtractorInput",
-    "SignalExtractorOutput",
+    "JobSignalExtractor",
+    "JobSignalExtractorInput",
+    "JobSignalExtractorOutput",
     "WorkflowOrchestrator",
     "WorkflowOrchestratorInput",
     "WorkflowOrchestratorOutput",

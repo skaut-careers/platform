@@ -6,8 +6,8 @@ from app.agents.orchestration.graph import compile_workflow_graph
 from app.agents.orchestration.state import CANONICAL_STAGES, WorkflowGraphState
 from app.agents.profile_extraction import DefaultProfileExtractor
 from app.agents.match_decision import DefaultMatchDecider
-from app.agents.signal_extraction import DefaultSignalExtractor
-from app.agents.wiring import create_agents, create_signal_extractor
+from app.agents.job_signal_extraction import DefaultJobSignalExtractor
+from app.agents.wiring import create_agents, create_job_signal_extractor
 from app.domain.models import DecisionType
 from tests.conftest import (
     WORKFLOW_FIXTURES,
@@ -36,13 +36,13 @@ def test_fixture_decisions(fixture_name):
         (
             "v1",
             "DefaultProfileExtractor",
-            "DefaultSignalExtractor",
+            "DefaultJobSignalExtractor",
             "DefaultMatchDecider",
         ),
         (
             "v2",
             "LLMProfileExtractor",
-            "LLMSignalExtractor",
+            "LLMJobSignalExtractor",
             "LLMMatchDecider",
         ),
     ],
@@ -55,13 +55,13 @@ def test_create_agents_selects_agents_from_runtime(
         signal_model=signals_test_model(), runtime_config=config
     )
     assert orchestrator.profile_extractor.__class__.__name__ == profile_name
-    assert orchestrator.signal_extractor.__class__.__name__ == job_signal_name
+    assert orchestrator.job_signal_extractor.__class__.__name__ == job_signal_name
     assert orchestrator.match_decider.__class__.__name__ == match_decider_name
 
 
 def test_create_agent_rejects_unknown_mode():
     with pytest.raises(ValueError, match="Unsupported agent mode"):
-        create_signal_extractor(mode="magic", runtime_config=_v1())
+        create_job_signal_extractor(mode="magic", runtime_config=_v1())
 
 
 def test_prepare_path_executed_stages():
@@ -85,7 +85,7 @@ def test_skip_path_completes_workflow():
 def test_langgraph_checkpointer_reconstructs_run():
     graph = compile_workflow_graph(
         profile_extractor=DefaultProfileExtractor(),
-        extractor=DefaultSignalExtractor(),
+        job_signal_extractor=DefaultJobSignalExtractor(),
         match_decider=DefaultMatchDecider(),
     )
     initial = WorkflowGraphState.from_workflow_input(

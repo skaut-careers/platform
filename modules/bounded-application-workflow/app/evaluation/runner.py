@@ -6,12 +6,12 @@ from pydantic_evals.reporting import EvaluationReport
 from app.agents.contracts import (
     ProfileExtractorInput,
     MatchDeciderInput,
-    SignalExtractorInput,
+    JobSignalExtractorInput,
 )
 from app.agents.wiring import (
     create_profile_extractor,
     create_match_decider,
-    create_signal_extractor,
+    create_job_signal_extractor,
 )
 from app.domain.models import JobSignals
 from app.domain.models import MatchDecision, UserProfile
@@ -28,7 +28,7 @@ from app.evaluation.report import evaluate_dataset, record_fallback
 from app.runtime import RuntimeConfig, load_runtime_config
 
 
-def run_signal_evaluation(
+def run_job_signal_evaluation(
     *,
     label: str | None = None,
     runtime_version: str | None = None,
@@ -41,10 +41,10 @@ def run_signal_evaluation(
 ) -> EvaluationReport[str, JobSignals, CaseMetadata]:
     """Run the signal-extraction golden dataset via Pydantic Evals."""
     config = runtime_config or load_runtime_config(version=runtime_version)
-    extractor = create_signal_extractor(runtime_config=config, model=model)
+    extractor = create_job_signal_extractor(runtime_config=config, model=model)
 
     def task(job_text: str) -> JobSignals:
-        output = extractor.run(SignalExtractorInput(job_description_text=job_text))
+        output = extractor.run(JobSignalExtractorInput(job_description_text=job_text))
         record_fallback(output)
         return output.job_signals
 

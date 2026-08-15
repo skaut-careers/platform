@@ -25,7 +25,7 @@ Reusable execution path for agents behind the workflow's `Protocol` contracts. W
 | `used_fallback` | fallback produced the output |
 | `config_version` · `config_hash` · `prompt_hash` | provenance for tracing |
 
-`unwrap()` returns the output or raises `RuntimeExecutionError`; `without_output()` returns an audit copy for attaching as `SignalExtractorOutput.execution` (provenance without nesting the full typed output).
+`unwrap()` returns the output or raises `RuntimeExecutionError`; `without_output()` returns an audit copy for attaching as `JobSignalExtractorOutput.execution` (provenance without nesting the full typed output).
 
 ## Configuration
 

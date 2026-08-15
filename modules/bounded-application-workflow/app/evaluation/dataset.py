@@ -14,11 +14,11 @@ from app.domain.models import (
 )
 
 EVAL_ROOT = Path(__file__).resolve().parents[2] / "eval"
-SIGNAL_DATASET_DIR = EVAL_ROOT / "signal_extraction"
+JOB_SIGNAL_DATASET_DIR = EVAL_ROOT / "job_signal_extraction"
 PROFILE_DATASET_DIR = EVAL_ROOT / "profile_extraction"
 MATCH_DATASET_DIR = EVAL_ROOT / "match_decision"
 
-SIGNAL_DATASET_NAME = "signal_extractor_golden"
+JOB_SIGNAL_DATASET_NAME = "job_signal_extractor_golden"
 PROFILE_DATASET_NAME = "profile_extractor_golden"
 MATCH_DATASET_NAME = "match_decision_golden"
 
@@ -61,7 +61,7 @@ def _require_cases(cases: list, root: Path) -> list:
 
 
 def load_signal_cases(dataset_dir: Path | None = None) -> list[SignalCase]:
-    root = dataset_dir or SIGNAL_DATASET_DIR
+    root = dataset_dir or JOB_SIGNAL_DATASET_DIR
     cases: list[SignalCase] = []
     for path in sorted(root.glob("*.json")):
         payload = json.loads(path.read_text())
@@ -134,12 +134,12 @@ def load_signal_dataset(
     *,
     cases: list[SignalCase] | None = None,
 ) -> SignalDataset:
-    from app.evaluation.evaluators import SignalExtractionEvaluator
+    from app.evaluation.evaluators import JobSignalExtractionEvaluator
 
     return SignalDataset(
-        name=SIGNAL_DATASET_NAME,
+        name=JOB_SIGNAL_DATASET_NAME,
         cases=cases if cases is not None else load_signal_cases(dataset_dir),
-        evaluators=[SignalExtractionEvaluator()],
+        evaluators=[JobSignalExtractionEvaluator()],
     )
 
 

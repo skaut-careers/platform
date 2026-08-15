@@ -19,13 +19,13 @@ from app.domain.models import (
 
 # LangGraph node / audit stage ids (same strings appear in executed_stages).
 PROFILE_EXTRACTION = "profile_extraction"
-SIGNAL_EXTRACTION = "signal_extraction"
+JOB_SIGNAL_EXTRACTION = "job_signal_extraction"
 MATCH_DECISION = "match_decision"
 
 CANONICAL_STAGES = frozenset(
     {
         PROFILE_EXTRACTION,
-        SIGNAL_EXTRACTION,
+        JOB_SIGNAL_EXTRACTION,
         MATCH_DECISION,
     }
 )

@@ -9,7 +9,7 @@ Each workflow stage is an agent behind a typed `Protocol` contract in [`contract
 Each stage agent is its own package under `app/agents/`:
 
 ```txt
-signal_extraction/
+job_signal_extraction/
   __init__.py        # Default* adapter (thin, deterministic)
   deterministic.py   # deterministic logic
   llm.py             # LLM-backed implementation (optional)
@@ -34,12 +34,12 @@ The package directory name is the agent's registry name (`agent_name_for`), used
 3. Add a runtime bundle in [`app/runtime/configs/`](../runtime/configs/) with `mode: llm` and a `prompt_version`.
 4. Select deterministic vs. LLM wiring in `wiring.py` from the agent's `mode`.
 
-`signal_extraction/llm.py` is the reference implementation; see the [runtime docs](../runtime/README.md) for the execution lifecycle.
+`job_signal_extraction/llm.py` is the reference implementation; see the [runtime docs](../runtime/README.md) for the execution lifecycle.
 
 ## Current agents
 
 | Agent | Stage | Modes |
 |-------|-------|-------|
 | `profile_extraction` | extract profile | deterministic · llm (Pydantic AI) |
-| `signal_extraction` | extract signals | deterministic · llm (Pydantic AI) |
+| `job_signal_extraction` | extract job signals | deterministic · llm (Pydantic AI) |
 | `match_decision` | score alignment + terminal decision | deterministic · llm (Pydantic AI) |

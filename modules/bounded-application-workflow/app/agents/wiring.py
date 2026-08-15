@@ -8,7 +8,7 @@ from pydantic_ai.models import Model
 from app.agents.contracts import (
     ProfileExtractor,
     MatchDecider,
-    SignalExtractor,
+    JobSignalExtractor,
     WorkflowOrchestratorInput,
 )
 from app.agents.orchestration.orchestrator import DefaultWorkflowOrchestrator
@@ -18,7 +18,7 @@ from app.agents.match_decision import (
     LLMMatchDecider,
 )
 from app.agents.profile_extraction import DefaultProfileExtractor, LLMProfileExtractor
-from app.agents.signal_extraction import DefaultSignalExtractor, LLMSignalExtractor
+from app.agents.job_signal_extraction import DefaultJobSignalExtractor, LLMJobSignalExtractor
 from app.domain.models import WorkflowInput, WorkflowOutput
 from app.runtime import BoundedAgentRuntime, RuntimeConfig
 from app.runtime.config_loader import load_runtime_config
@@ -60,16 +60,16 @@ def _create_agent(
     return default_factory()
 
 
-def create_signal_extractor(
+def create_job_signal_extractor(
     *,
     runtime_config: RuntimeConfig | None = None,
     model: Model | str | None = None,
     mode: str | None = None,
-) -> SignalExtractor:
+) -> JobSignalExtractor:
     """Select the signal extractor from the runtime config (LLM under v2)."""
     return _create_agent(
-        llm_type=LLMSignalExtractor,
-        default_factory=DefaultSignalExtractor,
+        llm_type=LLMJobSignalExtractor,
+        default_factory=DefaultJobSignalExtractor,
         runtime_config=runtime_config,
         model=model,
         mode=mode,
@@ -121,7 +121,7 @@ def create_agents(
         profile_extractor=create_profile_extractor(
             runtime_config=config, model=profile_model
         ),
-        extractor=create_signal_extractor(
+        job_signal_extractor=create_job_signal_extractor(
             runtime_config=config, model=signal_model
         ),
         match_decider=create_match_decider(

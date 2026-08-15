@@ -33,8 +33,8 @@ def discover_agents() -> AgentDiscovery:
 def agent_name_for(agent_type: type) -> str:
     """Derive the registry agent name from the agent package folder.
 
-    Classes defined inside an agent package (e.g. ``signal_extraction/llm.py``)
-    resolve to the package directory name (``signal_extraction``).
+    Classes defined inside an agent package (e.g. ``job_signal_extraction/llm.py``)
+    resolve to the package directory name (``job_signal_extraction``).
     """
     module_path = Path(inspect.getfile(agent_type)).resolve()
     parent = module_path.parent

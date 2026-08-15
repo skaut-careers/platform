@@ -4,7 +4,7 @@ from langgraph.graph.state import CompiledStateGraph
 from app.agents.contracts import (
     ProfileExtractor,
     MatchDecider,
-    SignalExtractor,
+    JobSignalExtractor,
     WorkflowOrchestratorInput,
     WorkflowOrchestratorOutput,
 )
@@ -12,7 +12,7 @@ from app.agents.orchestration.graph import compile_workflow_graph, default_check
 from app.agents.orchestration.runner import execute_workflow_pipeline
 from app.agents.profile_extraction import DefaultProfileExtractor
 from app.agents.match_decision import DefaultMatchDecider
-from app.agents.signal_extraction import DefaultSignalExtractor
+from app.agents.job_signal_extraction import DefaultJobSignalExtractor
 
 
 class DefaultWorkflowOrchestrator:
@@ -20,18 +20,18 @@ class DefaultWorkflowOrchestrator:
         self,
         *,
         profile_extractor: ProfileExtractor | None = None,
-        extractor: SignalExtractor | None = None,
+        job_signal_extractor: JobSignalExtractor | None = None,
         match_decider: MatchDecider | None = None,
         graph: CompiledStateGraph | None = None,
         checkpointer: MemorySaver | None = None,
     ) -> None:
         self._profile_extractor = profile_extractor or DefaultProfileExtractor()
-        self._extractor = extractor or DefaultSignalExtractor()
+        self._job_signal_extractor = job_signal_extractor or DefaultJobSignalExtractor()
         self._match_decider = match_decider or DefaultMatchDecider()
         self._checkpointer = checkpointer or default_checkpointer()
         self._graph = graph or compile_workflow_graph(
             profile_extractor=self._profile_extractor,
-            extractor=self._extractor,
+            job_signal_extractor=self._job_signal_extractor,
             match_decider=self._match_decider,
             checkpointer=self._checkpointer,
         )
@@ -41,8 +41,8 @@ class DefaultWorkflowOrchestrator:
         return self._profile_extractor
 
     @property
-    def signal_extractor(self) -> SignalExtractor:
-        return self._extractor
+    def job_signal_extractor(self) -> JobSignalExtractor:
+        return self._job_signal_extractor
 
     @property
     def match_decider(self) -> MatchDecider:
@@ -63,7 +63,7 @@ class DefaultWorkflowOrchestrator:
         result = execute_workflow_pipeline(
             agent_input.workflow_input,
             profile_extractor=self._profile_extractor,
-            extractor=self._extractor,
+            job_signal_extractor=self._job_signal_extractor,
             match_decider=self._match_decider,
             graph=self._graph,
         )

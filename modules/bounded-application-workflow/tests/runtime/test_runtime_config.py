@@ -1,6 +1,6 @@
 import pytest
 
-from app.agents.signal_extraction import LLMSignalExtractor
+from app.agents.job_signal_extraction import LLMJobSignalExtractor
 from app.runtime.agent_identity import agent_name_for, discover_agents
 from app.runtime.config_loader import load_runtime_config
 from app.runtime.config_registry import (
@@ -18,11 +18,11 @@ from app.runtime.prompt_registry import (
 from tests.conftest import (
     RecordingSignalModel,
     runtime_config,
-    sample_signal_extractor_input,
+    sample_job_signal_extractor_input,
     signals_payload,
 )
 
-_AGENT = agent_name_for(LLMSignalExtractor)
+_AGENT = agent_name_for(LLMJobSignalExtractor)
 
 
 def test_default_config_registry():
@@ -46,16 +46,16 @@ def test_default_prompt_registry():
     spec = registry.get(_AGENT, "v1")
     assert "required_skills" in spec.content
     assert spec.content_hash == compute_content_hash(spec.content)
-    assert registry.get_for(LLMSignalExtractor, "v1").agent_name == _AGENT
+    assert registry.get_for(LLMJobSignalExtractor, "v1").agent_name == _AGENT
 
 
 def test_discover_agents_finds_runtime_packages():
     discovery = discover_agents()
-    assert "signal_extraction" in discovery.packages
+    assert "job_signal_extraction" in discovery.packages
     assert discovery.runtime_agents == [
+        "job_signal_extraction",
         "match_decision",
         "profile_extraction",
-        "signal_extraction",
     ]
 
 
@@ -85,13 +85,13 @@ def test_config_registry_from_directory(tmp_path):
 
 
 def test_prompt_registry_from_agents_directory(tmp_path):
-    prompts_dir = tmp_path / "signal_extraction" / "prompts"
+    prompts_dir = tmp_path / "job_signal_extraction" / "prompts"
     prompts_dir.mkdir(parents=True)
     (prompts_dir / "v2.txt").write_text("prompt v2")
 
     registry = PromptRegistry.from_agents_directory(tmp_path)
-    assert registry.get("signal_extraction", "v2").content == "prompt v2"
-    assert registry.list_versions("signal_extraction") == ["v2"]
+    assert registry.get("job_signal_extraction", "v2").content == "prompt v2"
+    assert registry.list_versions("job_signal_extraction") == ["v2"]
 
 
 @pytest.mark.parametrize(
@@ -100,7 +100,7 @@ def test_prompt_registry_from_agents_directory(tmp_path):
 )
 def test_load_runtime_config(version, mode, prompt_version):
     config = runtime_config(version)
-    agent = config.agent_for(LLMSignalExtractor)
+    agent = config.agent_for(LLMJobSignalExtractor)
 
     assert agent.mode == mode
     if mode == "deterministic":
@@ -134,10 +134,10 @@ def test_load_runtime_config_rejects_unknown_prompt_reference(tmp_path):
 def test_llm_runtime_sends_configured_prompt_version_to_model():
     prompt = default_prompt_registry().get(_AGENT, "v1")
     model = RecordingSignalModel(signals_payload(required_skills=["Python"]))
-    output = LLMSignalExtractor(
+    output = LLMJobSignalExtractor(
         model=model.as_model(),
         runtime_config=runtime_config("v2"),
-    ).run(sample_signal_extractor_input())
+    ).run(sample_job_signal_extractor_input())
 
     assert model.system_prompts == [prompt.content]
     assert output.execution

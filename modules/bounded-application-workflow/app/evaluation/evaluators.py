@@ -52,7 +52,7 @@ def _range_with_reason(
 
 
 @dataclass
-class SignalExtractionEvaluator(Evaluator[object, JobSignals, object]):
+class JobSignalExtractionEvaluator(Evaluator[object, JobSignals, object]):
     """Precision / recall / F1 per signal field + macro F1 (set-based, case-insensitive)."""
 
     def evaluate(self, ctx: EvaluatorContext[object, JobSignals, object]) -> EvaluatorOutput:

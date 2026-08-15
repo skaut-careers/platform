@@ -4,7 +4,7 @@ Human-curated golden datasets, one directory per LLM-backed agent:
 
 | Dataset | Directory | Case JSON | Metric |
 |---------|-----------|-----------|--------|
-| Signal extractor | [`signal_extraction/`](signal_extraction/) | `job_description_text`, `expected_signals` | set-based P/R/F1 per signal field + macro F1 |
+| Job signal extractor | [`job_signal_extraction/`](job_signal_extraction/) | `job_description_text`, `expected_signals` | set-based P/R/F1 per signal field + macro F1 |
 | Profile extractor | [`profile_extraction/`](profile_extraction/) | `profile_text`, `expected_profile` | set-based F1 per profile field + macro F1 |
 | Match decision | [`match_decision/`](match_decision/) | `user_profile`, `job_signals`, `expected` | decision accuracy + score band + work/location/seniority flags + required/preferred/experience/missing_information set F1 |
 

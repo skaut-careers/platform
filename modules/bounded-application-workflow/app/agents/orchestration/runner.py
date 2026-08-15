@@ -8,7 +8,7 @@ from langgraph.graph.state import CompiledStateGraph
 from app.agents.contracts import (
     ProfileExtractor,
     MatchDecider,
-    SignalExtractor,
+    JobSignalExtractor,
 )
 from app.agents.orchestration.graph import compile_workflow_graph
 from app.agents.orchestration.state import WorkflowGraphState
@@ -37,7 +37,7 @@ def execute_workflow_pipeline(
     workflow_input: WorkflowInput,
     *,
     profile_extractor: ProfileExtractor | None = None,
-    extractor: SignalExtractor,
+    job_signal_extractor: JobSignalExtractor,
     match_decider: MatchDecider,
     graph: CompiledStateGraph | None = None,
     checkpointer: MemorySaver | None = None,
@@ -46,7 +46,7 @@ def execute_workflow_pipeline(
     """Run the workflow via LangGraph from a validated ``WorkflowInput``."""
     compiled = graph or compile_workflow_graph(
         profile_extractor=profile_extractor or DefaultProfileExtractor(),
-        extractor=extractor,
+        job_signal_extractor=job_signal_extractor,
         match_decider=match_decider,
         checkpointer=checkpointer,
     )

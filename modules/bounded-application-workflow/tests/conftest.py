@@ -15,7 +15,7 @@ from pydantic_ai.models import Model
 from pydantic_ai.models.function import AgentInfo, FunctionModel
 from pydantic_ai.models.test import TestModel
 
-from app.agents.contracts import SignalExtractorInput
+from app.agents.contracts import JobSignalExtractorInput
 from app.domain.models import DecisionType, SIGNAL_FIELDS, WorkflowInput
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
@@ -46,7 +46,7 @@ WORKFLOW_FIXTURES = (
     "ambiguous_match.json",
 )
 
-SIGNAL_EXTRACTION_FIXTURES = tuple(
+JOB_SIGNAL_EXTRACTION_FIXTURES = tuple(
     path.name for path in sorted(SIGNAL_FIXTURES_DIR.glob("*.json"))
 )
 
@@ -76,8 +76,8 @@ def signals_payload(**overrides: list[str]) -> dict[str, list[str]]:
     return payload
 
 
-def sample_signal_extractor_input() -> SignalExtractorInput:
-    return SignalExtractorInput(
+def sample_job_signal_extractor_input() -> JobSignalExtractorInput:
+    return JobSignalExtractorInput(
         job_description_text=(
             "Build LLM product workflows.\n\n"
             "Requirements:\n• Python\n\n"

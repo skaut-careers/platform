@@ -13,8 +13,8 @@ from app.agents.contracts import (
     ProfileExtractorInput,
     MatchDecider,
     MatchDeciderInput,
-    SignalExtractor,
-    SignalExtractorInput,
+    JobSignalExtractor,
+    JobSignalExtractorInput,
 )
 from app.agents.orchestration.audit import (
     WorkflowEvent,
@@ -23,7 +23,7 @@ from app.agents.orchestration.audit import (
 from app.agents.orchestration.state import (
     MATCH_DECISION,
     PROFILE_EXTRACTION,
-    SIGNAL_EXTRACTION,
+    JOB_SIGNAL_EXTRACTION,
     WorkflowGraphState,
 )
 from app.domain.models import JobSignals
@@ -103,7 +103,7 @@ def _record_agent_completed(
 def build_workflow_graph(
     *,
     profile_extractor: ProfileExtractor,
-    extractor: SignalExtractor,
+    job_signal_extractor: JobSignalExtractor,
     match_decider: MatchDecider,
 ) -> StateGraph:
 
@@ -124,17 +124,17 @@ def build_workflow_graph(
             "events": events,
         }
 
-    def signal_extraction(state: WorkflowGraphState) -> dict[str, Any]:
+    def job_signal_extraction(state: WorkflowGraphState) -> dict[str, Any]:
         if state.job_description_text is None:
-            raise RuntimeError("signal_extraction requires job_description_text")
-        events = _enter_stage(state.events, SIGNAL_EXTRACTION)
-        output = extractor.run(
-            SignalExtractorInput(job_description_text=state.job_description_text)
+            raise RuntimeError("job_signal_extraction requires job_description_text")
+        events = _enter_stage(state.events, JOB_SIGNAL_EXTRACTION)
+        output = job_signal_extractor.run(
+            JobSignalExtractorInput(job_description_text=state.job_description_text)
         )
         events = _record_agent_completed(
             events,
-            stage=SIGNAL_EXTRACTION,
-            agent=type(extractor).__name__,
+            stage=JOB_SIGNAL_EXTRACTION,
+            agent=type(job_signal_extractor).__name__,
         )
         return {
             "job_signals": output.job_signals,
@@ -182,12 +182,12 @@ def build_workflow_graph(
 
     graph = StateGraph(WorkflowGraphState)
     graph.add_node(PROFILE_EXTRACTION, profile_extraction)
-    graph.add_node(SIGNAL_EXTRACTION, signal_extraction)
+    graph.add_node(JOB_SIGNAL_EXTRACTION, job_signal_extraction)
     graph.add_node(MATCH_DECISION, match_decision)
 
     graph.add_edge(START, PROFILE_EXTRACTION)
-    graph.add_edge(PROFILE_EXTRACTION, SIGNAL_EXTRACTION)
-    graph.add_edge(SIGNAL_EXTRACTION, MATCH_DECISION)
+    graph.add_edge(PROFILE_EXTRACTION, JOB_SIGNAL_EXTRACTION)
+    graph.add_edge(JOB_SIGNAL_EXTRACTION, MATCH_DECISION)
     graph.add_edge(MATCH_DECISION, END)
     return graph
 
@@ -195,12 +195,12 @@ def build_workflow_graph(
 def compile_workflow_graph(
     *,
     profile_extractor: ProfileExtractor,
-    extractor: SignalExtractor,
+    job_signal_extractor: JobSignalExtractor,
     match_decider: MatchDecider,
     checkpointer: MemorySaver | None = None,
 ) -> CompiledStateGraph:
     return build_workflow_graph(
         profile_extractor=profile_extractor,
-        extractor=extractor,
+        job_signal_extractor=job_signal_extractor,
         match_decider=match_decider,
     ).compile(checkpointer=checkpointer or default_checkpointer())

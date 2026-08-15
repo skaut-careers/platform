@@ -23,20 +23,20 @@ class AgentOutput(BaseModel):
     execution: Optional[AgentExecutionResult[Any]] = None
 
 
-class SignalExtractorInput(BaseModel):
+class JobSignalExtractorInput(BaseModel):
     """Raw job posting text to parse into structured signals."""
 
     job_description_text: str
 
 
-class SignalExtractorOutput(AgentOutput):
+class JobSignalExtractorOutput(AgentOutput):
     job_signals: JobSignals
 
 
-class SignalExtractor(Protocol):
+class JobSignalExtractor(Protocol):
     """Parse job descriptions into structured signal categories."""
 
-    def run(self, agent_input: SignalExtractorInput) -> SignalExtractorOutput: ...
+    def run(self, agent_input: JobSignalExtractorInput) -> JobSignalExtractorOutput: ...
 
 
 class ProfileExtractorInput(BaseModel):

@@ -9,16 +9,16 @@ Stack: **LangGraph** (orchestration) · **Pydantic AI** (agents) · **Logfire** 
 ```mermaid
 stateDiagram-v2
     [*] --> profile_extraction
-    profile_extraction --> signal_extraction
-    signal_extraction --> match_decision
+    profile_extraction --> job_signal_extraction
+    job_signal_extraction --> match_decision
     match_decision --> [*]
 ```
 
-LangGraph `StateGraph` nodes: `profile_extraction` → `UserProfile` → `signal_extraction` → `JobSignals` → `match_decision` → flat `MatchDecision` / client `WorkflowOutput` (`strong` / `prepare` / `queue` / `skip`). Matching and policy share one LLM call so the score, reasons, risks, and terminal decision stay aligned. Checkpointed `WorkflowGraphState` holds data plus thin audit (`events` / `executed_stages`).
+LangGraph `StateGraph` nodes: `profile_extraction` → `UserProfile` → `job_signal_extraction` → `JobSignals` → `match_decision` → flat `MatchDecision` / client `WorkflowOutput` (`strong` / `prepare` / `queue` / `skip`). Matching and policy share one LLM call so the score, reasons, risks, and terminal decision stay aligned. Checkpointed `WorkflowGraphState` holds data plus thin audit (`events` / `executed_stages`).
 
 ## Agents
 
-Each stage is a typed `Protocol`. LLM agents (`LLMProfileExtractor`, `LLMSignalExtractor`, `LLMMatchDecider`) use Pydantic AI for structured outputs; `BoundedAgentRuntime` bounds attempts, deterministic fallback, and `AgentExecutionResult` provenance. Prompts and runtime settings are versioned (`RUNTIME_CONFIG_VERSION`).
+Each stage is a typed `Protocol`. LLM agents (`LLMProfileExtractor`, `LLMJobSignalExtractor`, `LLMMatchDecider`) use Pydantic AI for structured outputs; `BoundedAgentRuntime` bounds attempts, deterministic fallback, and `AgentExecutionResult` provenance. Prompts and runtime settings are versioned (`RUNTIME_CONFIG_VERSION`).
 
 ```mermaid
 flowchart TD

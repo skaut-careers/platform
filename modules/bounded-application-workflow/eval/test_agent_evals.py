@@ -11,11 +11,11 @@ from app.evaluation import (
     load_signal_cases,
     run_profile_extraction_evaluation,
     run_match_decision_evaluation,
-    run_signal_evaluation,
+    run_job_signal_evaluation,
     score_average,
 )
 
-SIGNAL_SCORE_KEYS = (
+JOB_SIGNAL_SCORE_KEYS = (
     "macro_f1",
     *(f"{field}_f1" for field in SIGNAL_FIELDS),
 )
@@ -43,11 +43,11 @@ def _format_scores(report: EvaluationReport, keys: tuple[str, ...]) -> str:
     return " ".join(f"{key}={score_average(report, key):.3f}" for key in keys)
 
 
-def test_signal_extraction_deterministic():
-    report = run_signal_evaluation(runtime_version="v1", progress=False)
+def test_job_signal_extraction_deterministic():
+    report = run_job_signal_evaluation(runtime_version="v1", progress=False)
     assert len(report.cases) == len(load_signal_cases()) == 8
     assert fallback_rate(report) == 0.0
-    _assert_scores_in_unit(report, SIGNAL_SCORE_KEYS)
+    _assert_scores_in_unit(report, JOB_SIGNAL_SCORE_KEYS)
 
 
 def test_profile_extraction_deterministic():
@@ -65,17 +65,17 @@ def test_match_decision_deterministic():
 
 
 @pytest.mark.llm
-def test_signal_extraction_llm_v2():
-    print("\n[signal_extraction] LLM v2 eval — 8 cases", flush=True)
-    report = run_signal_evaluation(runtime_version="v2", progress=True)
+def test_job_signal_extraction_llm_v2():
+    print("\n[job_signal_extraction] LLM v2 eval — 8 cases", flush=True)
+    report = run_job_signal_evaluation(runtime_version="v2", progress=True)
     report.print()
     print(
-        f"[signal_extraction] {_format_scores(report, SIGNAL_SCORE_KEYS)} "
+        f"[job_signal_extraction] {_format_scores(report, JOB_SIGNAL_SCORE_KEYS)} "
         f"fallback_rate={fallback_rate(report):.3f}",
         flush=True,
     )
     assert fallback_rate(report) == 0.0
-    _assert_scores_in_unit(report, SIGNAL_SCORE_KEYS)
+    _assert_scores_in_unit(report, JOB_SIGNAL_SCORE_KEYS)
     assert score_average(report, "macro_f1") >= 0.7
 
 
