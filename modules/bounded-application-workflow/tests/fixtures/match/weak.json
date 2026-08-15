@@ -51,7 +51,7 @@
     "location_aligned": false,
     "severe_seniority_mismatch": false,
     "reasons": [
-      "Work arrangement aligns (profile prefs: hybrid, remote; job: unspecified)."
+      "Work arrangement aligns (profile prefs: hybrid, remote; job: No preference)."
     ],
     "risks": [
       "Missing required skills: React, TypeScript, CSS, frontend architecture, design systems.",

@@ -55,14 +55,16 @@ class RuntimeConfig(BaseModel):
         *,
         agent_name: str | None = None,
         config_version: str = "v1",
-        mode: Literal["deterministic", "llm"] = "llm",
         model: str = "gpt-5.4-mini",
         max_attempts: int = 2,
         prompt_version: str = "v1",
         prompt_registry: PromptRegistry | None = None,
     ) -> Self:
+        resolved_mode: Literal["deterministic", "llm"] = (
+            "deterministic" if config_version == "v1" else "llm"
+        )
         agent_settings = {
-            "mode": mode,
+            "mode": resolved_mode,
             "model": model,
             "max_attempts": max_attempts,
             "prompt_version": prompt_version,
@@ -77,7 +79,7 @@ class RuntimeConfig(BaseModel):
             settings=settings,
             content_hash=compute_config_hash(settings),
         )
-        if mode != "llm":
+        if resolved_mode != "llm":
             return cls.from_spec(spec)
 
         from app.runtime.prompt_registry import default_prompt_registry

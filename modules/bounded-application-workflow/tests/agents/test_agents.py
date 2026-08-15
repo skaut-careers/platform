@@ -1,35 +1,32 @@
 import pytest
 from pydantic_ai.exceptions import ModelHTTPError
 
-from app.agents.decision_rules.deterministic import (
-    build_workflow_decision,
+from app.agents.contracts import MatchDeciderInput
+from app.agents.match_decision.deterministic import (
     decision_from_match,
     decision_from_score,
+    match_and_decide,
 )
 from app.agents.profile_extraction.deterministic import extract_user_profile
-from app.agents.profile_matching.deterministic import match_profile_to_job
-from app.agents.signal_extraction import LLMSignalExtractor
-from app.agents.signal_extraction.deterministic import extract_job_signals
+from app.agents.match_decision import LLMMatchDecider
+from app.agents.job_signal_extraction import LLMJobSignalExtractor
+from app.agents.job_signal_extraction.deterministic import extract_job_signals
 from app.domain.models import (
     DecisionType,
     JobSignals,
-    ProfileMatchResult,
     UserProfile,
-    WorkflowDecision,
 )
 from app.runtime import ExecutionStatus, RuntimeConfig
 from tests.conftest import (
-    DECISION_FIXTURES,
     MATCH_FIXTURES,
     PROFILE_EXTRACTION_FIXTURES,
-    SIGNAL_EXTRACTION_FIXTURES,
+    JOB_SIGNAL_EXTRACTION_FIXTURES,
     SIGNAL_FIELDS,
     RecordingSignalModel,
-    load_decision_fixture,
     load_match_fixture,
     load_profile_fixture,
     load_signal_fixture,
-    sample_signal_extractor_input,
+    sample_job_signal_extractor_input,
     signals_test_model,
 )
 
@@ -37,11 +34,12 @@ from tests.conftest import (
 @pytest.mark.parametrize("fixture_name", MATCH_FIXTURES)
 def test_match_profile_from_fixture(fixture_name):
     case = load_match_fixture(fixture_name)
-    result = match_profile_to_job(
+    result = match_and_decide(
         UserProfile(**case["user_profile"]),
         JobSignals(**case["job_signals"]),
     )
-    assert result == ProfileMatchResult(**case["expected_match"])
+    for field, expected in case["expected_match"].items():
+        assert getattr(result, field) == expected
 
 
 @pytest.mark.parametrize(
@@ -50,12 +48,14 @@ def test_match_profile_from_fixture(fixture_name):
         (["remote"], ["remote"], "Lisbon", [], True, True),
         (["remote"], ["onsite"], "Lisbon", ["Berlin"], False, False),
         (["onsite"], ["onsite"], "Berlin", ["Berlin"], True, True),
+        (["onsite"], ["onsite"], "Berlin", [], True, False),
+        (["onsite"], ["hybrid"], "Berlin", [], False, False),
     ],
 )
 def test_work_and_location_alignment(
     prefs, arrangements, location, places, expect_work, expect_location
 ):
-    result = match_profile_to_job(
+    result = match_and_decide(
         UserProfile(
             skills=["Python"],
             location=location,
@@ -71,13 +71,13 @@ def test_work_and_location_alignment(
     assert result.location_aligned is expect_location
 
 
-def test_onsite_location_mismatch_lowers_score():
+def test_onsite_location_mismatch_queues_without_changing_score():
     job_signals = JobSignals(
         required_skills=["Python"],
         work_arrangements=["onsite"],
         location_signals=["Berlin"],
     )
-    aligned = match_profile_to_job(
+    aligned = match_and_decide(
         UserProfile(
             skills=["Python"],
             location="Berlin",
@@ -85,7 +85,7 @@ def test_onsite_location_mismatch_lowers_score():
         ),
         job_signals,
     )
-    mismatched = match_profile_to_job(
+    mismatched = match_and_decide(
         UserProfile(
             skills=["Python"],
             location="Lisbon",
@@ -93,11 +93,13 @@ def test_onsite_location_mismatch_lowers_score():
         ),
         job_signals,
     )
-    assert mismatched.score < aligned.score
+    assert mismatched.score == aligned.score
+    assert mismatched.decision == DecisionType.QUEUE
+    assert aligned.decision == DecisionType.STRONG
     assert any("On-site role with incompatible locations" in r for r in mismatched.risks)
 
 
-@pytest.mark.parametrize("fixture_name", SIGNAL_EXTRACTION_FIXTURES)
+@pytest.mark.parametrize("fixture_name", JOB_SIGNAL_EXTRACTION_FIXTURES)
 def test_extract_signals_from_fixture(fixture_name):
     case = load_signal_fixture(fixture_name)
     job_signals = extract_job_signals(case["job_description_text"])
@@ -141,28 +143,43 @@ def test_extract_work_and_location(description, expect_work, expect_places):
         (0.54, DecisionType.SKIP),
         (0.55, DecisionType.QUEUE),
         (0.75, DecisionType.PREPARE),
+        (0.90, DecisionType.STRONG),
     ],
 )
 def test_decision_thresholds(score, expected):
     assert decision_from_score(score) == expected
 
 
-def test_decision_risk_and_seniority_overrides():
-    assert decision_from_match(0.9) == DecisionType.PREPARE
+def test_decision_alignment_overrides():
+    assert decision_from_match(0.95) == DecisionType.STRONG
     assert (
-        decision_from_match(0.9, severe_seniority_mismatch=True)
+        decision_from_match(0.95, severe_seniority_mismatch=True)
         == DecisionType.SKIP
     )
-
-
-@pytest.mark.parametrize("fixture_name", DECISION_FIXTURES)
-def test_build_workflow_decision_from_fixture(fixture_name):
-    case = load_decision_fixture(fixture_name)
-    decision = build_workflow_decision(
-        ProfileMatchResult(**case["match"]),
-        JobSignals(**case["job_signals"]),
+    assert (
+        decision_from_match(0.95, work_arrangement_aligned=False)
+        == DecisionType.SKIP
     )
-    assert decision == WorkflowDecision(**case["expected_decision"])
+    assert (
+        decision_from_match(0.95, location_aligned=False)
+        == DecisionType.QUEUE
+    )
+    assert (
+        decision_from_match(0.60, location_aligned=False)
+        == DecisionType.QUEUE
+    )
+    assert (
+        decision_from_match(0.40, location_aligned=False)
+        == DecisionType.SKIP
+    )
+    assert (
+        decision_from_match(
+            0.95,
+            work_arrangement_aligned=False,
+            location_aligned=False,
+        )
+        == DecisionType.SKIP
+    )
 
 
 @pytest.mark.parametrize("fixture_name", PROFILE_EXTRACTION_FIXTURES)
@@ -256,7 +273,7 @@ def test_extract_and_match_non_tech_job_requirements():
     assert signals.required_skills == ["RN", "BLS", "patient communication"]
     assert signals.experience_requirements == ["weekend shifts", "patient care"]
 
-    result = match_profile_to_job(
+    result = match_and_decide(
         UserProfile(
             skills=["RN", "BLS", "patient communication"],
             location="Boston",
@@ -272,21 +289,54 @@ def test_extract_and_match_non_tech_job_requirements():
     assert result.score == 1.0
 
 
-def test_llm_signal_extractor_success_and_fallback():
-    ok = LLMSignalExtractor(
+def test_llm_job_signal_extractor_success_and_fallback():
+    ok = LLMJobSignalExtractor(
         model=signals_test_model(required_skills=["Python"], preferred_skills=["FastAPI"]),
-    ).run(sample_signal_extractor_input())
+        runtime_config=RuntimeConfig.build(config_version="v2"),
+    ).run(sample_job_signal_extractor_input())
     assert ok.job_signals.required_skills == ["Python"]
     assert ok.execution and not ok.execution.used_fallback
 
-    failed = LLMSignalExtractor(
+    failed = LLMJobSignalExtractor(
         model=RecordingSignalModel(
             ModelHTTPError(status_code=503, model_name="test", body="down")
         ).as_model(),
-        runtime_config=RuntimeConfig.build(max_attempts=1),
-    ).run(sample_signal_extractor_input())
+        runtime_config=RuntimeConfig.build(config_version="v2", max_attempts=1),
+    ).run(sample_job_signal_extractor_input())
     assert failed.execution
     assert failed.execution.used_fallback
     assert failed.execution.status == ExecutionStatus.SUCCESS
-    assert (failed.execution.error or "").startswith("SignalExtractionLLMError")
+    assert (failed.execution.error or "").startswith("JobSignalExtractionLLMError")
+
+
+def test_llm_match_decider_returns_match_and_decision_in_one_call():
+    payload = {
+        "decision": "strong",
+        "score": 0.95,
+        "required_skills_matched": ["Python"],
+        "required_skills_missing": [],
+        "preferred_skills_matched": [],
+        "experience_requirements_matched": [],
+        "experience_requirements_missing": [],
+        "work_arrangement_aligned": True,
+        "location_aligned": True,
+        "severe_seniority_mismatch": False,
+        "reasons": ["Required skill matches."],
+        "risks": [],
+        "missing_information": [],
+    }
+    model = RecordingSignalModel(payload)
+    output = LLMMatchDecider(
+        model=model.as_model(),
+        runtime_config=RuntimeConfig.build(config_version="v2"),
+    ).run(
+        MatchDeciderInput(
+            user_profile=UserProfile(skills=["Python"]),
+            job_signals=JobSignals(required_skills=["Python"]),
+        )
+    )
+
+    assert model.call_count == 1
+    assert output.result.score == 0.95
+    assert output.result.decision == DecisionType.STRONG
 

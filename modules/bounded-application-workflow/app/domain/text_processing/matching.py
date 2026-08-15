@@ -72,9 +72,11 @@ def location_aligned(
 
     if "remote" in job_modes and "onsite" not in job_modes:
         return True
-    if "onsite" in job_modes or (not job_modes and job_place):
+    if "onsite" in job_modes or "hybrid" in job_modes:
+        if not job_place:
+            return False
         return locations_compatible(profile_location, job_place)
-    if "hybrid" in job_modes:
+    if not job_modes and job_place:
         return locations_compatible(profile_location, job_place)
     return True
 

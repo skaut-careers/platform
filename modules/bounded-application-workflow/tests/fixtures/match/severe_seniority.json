@@ -31,8 +31,8 @@
     "location_aligned": true,
     "severe_seniority_mismatch": true,
     "reasons": [
-      "Work arrangement aligns (profile prefs: unspecified; job: unspecified).",
-      "Location aligns (profile: unspecified; job: unspecified)."
+      "Work arrangement aligns (profile prefs: No preference; job: No preference).",
+      "Location aligns (profile: No location; job: No location)."
     ],
     "risks": [
       "Missing required skills: Python.",

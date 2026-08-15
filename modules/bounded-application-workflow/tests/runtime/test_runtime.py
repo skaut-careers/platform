@@ -39,7 +39,7 @@ class _Flaky:
 
 
 def _runtime(**overrides) -> RuntimeConfig:
-    return RuntimeConfig.build(agent_name=_AGENT, mode="deterministic", **overrides)
+    return RuntimeConfig.build(agent_name=_AGENT, **overrides)
 
 
 def _execute(operation, **config):
