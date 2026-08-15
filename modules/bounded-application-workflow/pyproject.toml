@@ -28,7 +28,7 @@ httpx = "^0.28"
 pyright = "^1.1.411"
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["tests", "eval"]
 addopts = "-m 'not llm'"
 markers = [
     "llm: live OpenAI evals (requires OPENAI_API_KEY; run with: poetry run pytest -m llm)",

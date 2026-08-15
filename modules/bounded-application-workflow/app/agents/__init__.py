@@ -1,10 +1,7 @@
 from app.agents.contracts import (
-    DecisionPolicy,
-    DecisionPolicyInput,
-    DecisionPolicyOutput,
-    ProfileMatcher,
-    ProfileMatcherInput,
-    ProfileMatcherOutput,
+    MatchDecider,
+    MatchDeciderInput,
+    MatchDeciderOutput,
     SignalExtractor,
     SignalExtractorInput,
     SignalExtractorOutput,
@@ -12,9 +9,11 @@ from app.agents.contracts import (
     WorkflowOrchestratorInput,
     WorkflowOrchestratorOutput,
 )
-from app.agents.decision_rules import DefaultDecisionPolicy, LLMDecisionPolicy
 from app.agents.orchestration import DefaultWorkflowOrchestrator
-from app.agents.profile_matching import DefaultProfileMatcher
+from app.agents.match_decision import (
+    DefaultMatchDecider,
+    LLMMatchDecider,
+)
 from app.agents.signal_extraction import DefaultSignalExtractor, LLMSignalExtractor
 from app.agents.wiring import (
     create_agents,
@@ -23,18 +22,14 @@ from app.agents.wiring import (
 )
 
 __all__ = [
-    "DecisionPolicy",
-    "DecisionPolicyInput",
-    "DecisionPolicyOutput",
-    "DefaultDecisionPolicy",
-    "DefaultProfileMatcher",
+    "DefaultMatchDecider",
     "DefaultSignalExtractor",
     "DefaultWorkflowOrchestrator",
-    "LLMDecisionPolicy",
+    "LLMMatchDecider",
     "LLMSignalExtractor",
-    "ProfileMatcher",
-    "ProfileMatcherInput",
-    "ProfileMatcherOutput",
+    "MatchDecider",
+    "MatchDeciderInput",
+    "MatchDeciderOutput",
     "SignalExtractor",
     "SignalExtractorInput",
     "SignalExtractorOutput",

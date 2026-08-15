@@ -26,7 +26,7 @@ Job search is noisy and cognitively expensive. Existing tools optimize volume, s
 4. Apply bounded decision policy
 5. Return structured recommendation via API
 
-The module **evaluates** (prepare, queue, skip). It does **not** apply to jobs, send emails, automate browsers, optimize resumes, or scrape platforms at scale.
+The module **evaluates** (strong, prepare, queue, skip). It does **not** apply to jobs, send emails, automate browsers, optimize resumes, or scrape platforms at scale.
 
 ---
 
@@ -120,6 +120,7 @@ Structured evaluation object:
 
 | Decision | Meaning |
 | -------- | ------- |
+| strong | Excellent alignment — apply now |
 | prepare | High alignment — pursue actively |
 | queue | Potential fit, not current priority |
 | skip | Low alignment or poor strategic fit |
@@ -128,6 +129,7 @@ Structured evaluation object:
 
 | Score | Decision |
 | ----- | -------- |
+| ≥ 0.90 | strong |
 | ≥ 0.75 | prepare |
 | ≥ 0.55 | queue |
 | < 0.55 | skip |

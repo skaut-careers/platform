@@ -6,9 +6,8 @@ from pydantic import BaseModel
 
 from app.domain.models import (
     JobSignals,
-    ProfileMatchResult,
+    MatchDecision,
     UserProfile,
-    WorkflowDecision,
     WorkflowInput,
     WorkflowOutput,
 )
@@ -54,34 +53,21 @@ class ProfileExtractor(Protocol):
     def run(self, agent_input: ProfileExtractorInput) -> ProfileExtractorOutput: ...
 
 
-class ProfileMatcherInput(BaseModel):
-
+class MatchDeciderInput(BaseModel):
     user_profile: UserProfile
     job_signals: JobSignals
 
 
-class ProfileMatcherOutput(AgentOutput):
-    match: ProfileMatchResult
+class MatchDeciderOutput(AgentOutput):
+    result: MatchDecision
 
 
-class ProfileMatcher(Protocol):
+class MatchDecider(Protocol):
+    """Match a profile and produce one terminal decision atomically."""
 
-    def run(self, agent_input: ProfileMatcherInput) -> ProfileMatcherOutput: ...
-
-
-class DecisionPolicyInput(BaseModel):
-
-    match: ProfileMatchResult
-    job_signals: JobSignals
-
-
-class DecisionPolicyOutput(AgentOutput):
-    decision: WorkflowDecision
-
-
-class DecisionPolicy(Protocol):
-
-    def run(self, agent_input: DecisionPolicyInput) -> DecisionPolicyOutput: ...
+    def run(
+        self, agent_input: MatchDeciderInput
+    ) -> MatchDeciderOutput: ...
 
 
 class WorkflowOrchestratorInput(BaseModel):

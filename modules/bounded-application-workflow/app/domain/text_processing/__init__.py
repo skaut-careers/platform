@@ -2,6 +2,15 @@
 
 from __future__ import annotations
 
+from app.domain.text_processing.alignment import (
+    coverage_ratio,
+    location_aligned,
+    primary_job_seniority,
+    seniority_alignment_ratio,
+    seniority_labels_compatible,
+    seniority_rank_gap,
+    work_arrangement_aligned,
+)
 from app.domain.text_processing.common import (
     collapse_whitespace,
     dedupe_phrases,
@@ -47,10 +56,12 @@ from app.domain.text_processing.work_arrangements import work_arrangements_from_
 __all__ = [
     "canonicalize_seniority",
     "collapse_whitespace",
+    "coverage_ratio",
     "dedupe_phrases",
     "experience_requirements_from_job",
     "is_arrangement_only",
     "is_short_skill_label",
+    "location_aligned",
     "location_from_profile",
     "locations_compatible",
     "missing_signals_from_job",
@@ -60,11 +71,15 @@ __all__ = [
     "place_from_segment",
     "places_from_text",
     "phrases_from_list",
+    "primary_job_seniority",
     "relevant_experience_from_profile",
     "risk_indicators_from_job",
+    "seniority_alignment_ratio",
     "seniority_from_profile",
     "seniority_from_text",
+    "seniority_labels_compatible",
     "seniority_rank",
+    "seniority_rank_gap",
     "seniority_signals_from_job",
     "seniority_tokens_from_text",
     "skills_from_job_text",
@@ -72,6 +87,7 @@ __all__ = [
     "strip_fillers",
     "text_matches_capability",
     "text_tokens",
+    "work_arrangement_aligned",
     "work_arrangements_from_text",
     "work_preferences_from_profile",
 ]

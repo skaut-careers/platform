@@ -6,17 +6,18 @@ from typing import Any, TypeVar, cast
 from pydantic_ai.models import Model
 
 from app.agents.contracts import (
-    DecisionPolicy,
     ProfileExtractor,
-    ProfileMatcher,
+    MatchDecider,
     SignalExtractor,
     WorkflowOrchestratorInput,
 )
-from app.agents.decision_rules import DefaultDecisionPolicy, LLMDecisionPolicy
 from app.agents.orchestration.orchestrator import DefaultWorkflowOrchestrator
 from app.agents.orchestration.state import WorkflowGraphState
+from app.agents.match_decision import (
+    DefaultMatchDecider,
+    LLMMatchDecider,
+)
 from app.agents.profile_extraction import DefaultProfileExtractor, LLMProfileExtractor
-from app.agents.profile_matching import DefaultProfileMatcher, LLMProfileMatcher
 from app.agents.signal_extraction import DefaultSignalExtractor, LLMSignalExtractor
 from app.domain.models import WorkflowInput, WorkflowOutput
 from app.runtime import BoundedAgentRuntime, RuntimeConfig
@@ -91,32 +92,16 @@ def create_profile_extractor(
     )
 
 
-def create_profile_matcher(
+def create_match_decider(
     *,
     runtime_config: RuntimeConfig | None = None,
     model: Model | str | None = None,
     mode: str | None = None,
-) -> ProfileMatcher:
-    """Select the profile matcher from the runtime config (LLM under v2)."""
+) -> MatchDecider:
+    """Select the atomic match-and-decision agent."""
     return _create_agent(
-        llm_type=LLMProfileMatcher,
-        default_factory=DefaultProfileMatcher,
-        runtime_config=runtime_config,
-        model=model,
-        mode=mode,
-    )
-
-
-def create_decision_policy(
-    *,
-    runtime_config: RuntimeConfig | None = None,
-    model: Model | str | None = None,
-    mode: str | None = None,
-) -> DecisionPolicy:
-    """Select the decision policy from the runtime config (LLM under v2)."""
-    return _create_agent(
-        llm_type=LLMDecisionPolicy,
-        default_factory=DefaultDecisionPolicy,
+        llm_type=LLMMatchDecider,
+        default_factory=DefaultMatchDecider,
         runtime_config=runtime_config,
         model=model,
         mode=mode,
@@ -128,8 +113,7 @@ def create_agents(
     runtime_config: RuntimeConfig | None = None,
     profile_model: Model | str | None = None,
     signal_model: Model | str | None = None,
-    match_model: Model | str | None = None,
-    policy_model: Model | str | None = None,
+    match_decision_model: Model | str | None = None,
 ) -> DefaultWorkflowOrchestrator:
     """Wire agents from runtime config; optional per-agent model overrides for tests."""
     config = runtime_config or load_runtime_config()
@@ -140,11 +124,8 @@ def create_agents(
         extractor=create_signal_extractor(
             runtime_config=config, model=signal_model
         ),
-        matcher=create_profile_matcher(
-            runtime_config=config, model=match_model
-        ),
-        policy=create_decision_policy(
-            runtime_config=config, model=policy_model
+        match_decider=create_match_decider(
+            runtime_config=config, model=match_decision_model
         ),
     )
 

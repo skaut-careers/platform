@@ -11,11 +11,10 @@ stateDiagram-v2
     [*] --> profile_extraction
     profile_extraction --> signal_extraction
     signal_extraction --> match_decision
-    match_decision --> decision
-    decision --> [*]
+    match_decision --> [*]
 ```
 
-LangGraph `StateGraph` nodes: `profile_extraction` → `UserProfile` → `signal_extraction` → `JobSignals` → `match_decision` → `ProfileMatchResult` + `WorkflowDecision` → terminal `decision` (`prepare` / `queue` / `skip`). Matching and policy share one LLM call so the score, reasons, risks, and terminal decision stay aligned. Checkpointed `WorkflowGraphState` holds data plus thin audit (`events` / `executed_stages`).
+LangGraph `StateGraph` nodes: `profile_extraction` → `UserProfile` → `signal_extraction` → `JobSignals` → `match_decision` → flat `MatchDecision` / client `WorkflowOutput` (`strong` / `prepare` / `queue` / `skip`). Matching and policy share one LLM call so the score, reasons, risks, and terminal decision stay aligned. Checkpointed `WorkflowGraphState` holds data plus thin audit (`events` / `executed_stages`).
 
 ## Agents
 
