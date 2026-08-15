@@ -151,11 +151,11 @@ def test_agui_agent_run_returns_renderable_decision():
         None,
     )
     assert isinstance(output, WorkflowOutput)
-    decision = output.decision
-    assert decision.decision == expected_decision(fixture)
-    assert isinstance(decision.score, (int, float))
-    assert isinstance(decision.reasons, list)
-    assert isinstance(decision.risks, list)
+    assert output.decision == expected_decision(fixture)
+    assert isinstance(output.score, (int, float))
+    assert isinstance(output.reasons, list)
+    assert isinstance(output.risks, list)
+    assert isinstance(output.missing_information, list)
 
 
 def test_agui_agent_rejects_empty_or_invalid_state():

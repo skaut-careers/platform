@@ -22,7 +22,6 @@ FIXTURES_DIR = Path(__file__).parent / "fixtures"
 SIGNAL_FIXTURES_DIR = FIXTURES_DIR / "signal"
 PROFILE_FIXTURES_DIR = FIXTURES_DIR / "profile"
 MATCH_FIXTURES_DIR = FIXTURES_DIR / "match"
-DECISION_FIXTURES_DIR = FIXTURES_DIR / "decision"
 
 
 def load_fixture(name: str) -> dict:
@@ -39,10 +38,6 @@ def load_profile_fixture(name: str) -> dict:
 
 def load_match_fixture(name: str) -> dict:
     return json.loads((MATCH_FIXTURES_DIR / name).read_text())
-
-
-def load_decision_fixture(name: str) -> dict:
-    return json.loads((DECISION_FIXTURES_DIR / name).read_text())
 
 
 WORKFLOW_FIXTURES = (
@@ -62,11 +57,6 @@ PROFILE_EXTRACTION_FIXTURES = tuple(
 MATCH_FIXTURES = tuple(
     path.name for path in sorted(MATCH_FIXTURES_DIR.glob("*.json"))
 )
-
-DECISION_FIXTURES = tuple(
-    path.name for path in sorted(DECISION_FIXTURES_DIR.glob("*.json"))
-)
-
 
 def expected_decision(fixture_name: str) -> DecisionType:
     return DecisionType(load_fixture(fixture_name)["expected_decision"])

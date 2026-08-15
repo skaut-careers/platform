@@ -7,13 +7,11 @@ from app.evaluation import (
     MATCH_LIST_FIELDS,
     PROFILE_SCORED_FIELDS,
     fallback_rate,
-    load_decision_cases,
     load_match_cases,
     load_profile_cases,
     load_signal_cases,
-    run_decision_policy_evaluation,
     run_profile_extraction_evaluation,
-    run_profile_matching_evaluation,
+    run_match_decision_evaluation,
     run_signal_evaluation,
     score_average,
 )
@@ -26,18 +24,14 @@ PROFILE_SCORE_KEYS = (
     "macro_f1",
     *(f"{field}_f1" for field in PROFILE_SCORED_FIELDS),
 )
-MATCH_SCORE_KEYS = (
+MATCH_DECISION_SCORE_KEYS = (
     "macro_f1",
+    "decision_accuracy",
     "score_in_range",
     "work_arrangement_aligned_correct",
     "location_aligned_correct",
     "severe_seniority_mismatch_correct",
     *(f"{field}_f1" for field in MATCH_LIST_FIELDS),
-)
-DECISION_SCORE_KEYS = (
-    "decision_accuracy",
-    "score_in_range",
-    "macro_f1",
     *(f"{field}_f1" for field in DECISION_LIST_FIELDS),
 )
 
@@ -65,18 +59,11 @@ def test_profile_extraction_deterministic():
     _assert_scores_in_unit(report, PROFILE_SCORE_KEYS)
 
 
-def test_profile_matching_deterministic():
-    report = run_profile_matching_evaluation(runtime_version="v1", progress=False)
+def test_match_decision_deterministic():
+    report = run_match_decision_evaluation(runtime_version="v1", progress=False)
     assert len(report.cases) == len(load_match_cases()) == 8
     assert fallback_rate(report) == 0.0
-    _assert_scores_in_unit(report, MATCH_SCORE_KEYS)
-
-
-def test_decision_policy_deterministic():
-    report = run_decision_policy_evaluation(runtime_version="v1", progress=False)
-    assert len(report.cases) == len(load_decision_cases()) == 6
-    assert fallback_rate(report) == 0.0
-    _assert_scores_in_unit(report, DECISION_SCORE_KEYS)
+    _assert_scores_in_unit(report, MATCH_DECISION_SCORE_KEYS)
 
 
 @pytest.mark.llm
@@ -110,32 +97,17 @@ def test_profile_extraction_llm_v2():
 
 
 @pytest.mark.llm
-def test_profile_matching_llm_v2():
-    print("\n[profile_matching] LLM v2 eval — 8 cases", flush=True)
-    report = run_profile_matching_evaluation(runtime_version="v2", progress=True)
+def test_match_decision_llm_v2():
+    print("\n[match_decision] LLM v2 eval — 8 cases", flush=True)
+    report = run_match_decision_evaluation(runtime_version="v2", progress=True)
     report.print()
     print(
-        f"[profile_matching] {_format_scores(report, MATCH_SCORE_KEYS)} "
+        f"[match_decision] {_format_scores(report, MATCH_DECISION_SCORE_KEYS)} "
         f"fallback_rate={fallback_rate(report):.3f}",
         flush=True,
     )
     assert fallback_rate(report) == 0.0
-    _assert_scores_in_unit(report, MATCH_SCORE_KEYS)
+    _assert_scores_in_unit(report, MATCH_DECISION_SCORE_KEYS)
+    assert score_average(report, "decision_accuracy") >= 0.85
     assert score_average(report, "macro_f1") >= 0.8
     assert score_average(report, "required_skills_matched_f1") >= 0.7
-
-
-@pytest.mark.llm
-def test_decision_policy_llm_v2():
-    print("\n[decision_rules] LLM v2 eval — 6 cases", flush=True)
-    report = run_decision_policy_evaluation(runtime_version="v2", progress=True)
-    report.print()
-    print(
-        f"[decision_rules] {_format_scores(report, DECISION_SCORE_KEYS)} "
-        f"fallback_rate={fallback_rate(report):.3f}",
-        flush=True,
-    )
-    assert fallback_rate(report) == 0.0
-    _assert_scores_in_unit(report, DECISION_SCORE_KEYS)
-    assert score_average(report, "decision_accuracy") >= 0.85
-    assert score_average(report, "macro_f1") >= 0.7

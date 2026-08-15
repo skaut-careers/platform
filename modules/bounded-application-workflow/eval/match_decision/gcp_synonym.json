@@ -1,0 +1,59 @@
+{
+  "id": "gcp_synonym",
+  "description": "Profile says GCP, job requires Google Cloud",
+  "tags": [
+    "synonym",
+    "skills"
+  ],
+  "user_profile": {
+    "skills": [
+      "Terraform",
+      "GCP"
+    ],
+    "location": "Remote",
+    "seniority": "senior",
+    "relevant_experience": [
+      "reliability"
+    ],
+    "work_preferences": [
+      "remote"
+    ]
+  },
+  "job_signals": {
+    "required_skills": [
+      "Terraform",
+      "Google Cloud"
+    ],
+    "preferred_skills": [],
+    "seniority_signals": [
+      "senior"
+    ],
+    "experience_requirements": [
+      "reliability"
+    ],
+    "work_arrangements": [
+      "remote"
+    ],
+    "location_signals": [],
+    "risk_indicators": [],
+    "missing_signals": []
+  },
+  "expected": {
+    "decision": "prepare",
+    "score_min": 0.6,
+    "score_max": 1.0,
+    "work_arrangement_aligned": true,
+    "location_aligned": true,
+    "severe_seniority_mismatch": false,
+    "required_skills_matched": [
+      "Terraform",
+      "Google Cloud"
+    ],
+    "required_skills_missing": [],
+    "preferred_skills_matched": [],
+    "experience_requirements_matched": [
+      "reliability"
+    ],
+    "experience_requirements_missing": []
+  }
+}

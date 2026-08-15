@@ -1,0 +1,68 @@
+{
+  "id": "registered_nurse",
+  "description": "Credential and clinical-duty alignment for a healthcare role",
+  "tags": [
+    "healthcare",
+    "credentials",
+    "non-tech"
+  ],
+  "user_profile": {
+    "skills": [
+      "RN",
+      "BLS",
+      "patient communication"
+    ],
+    "location": "Boston",
+    "seniority": "senior",
+    "relevant_experience": [
+      "patient care",
+      "weekend shifts"
+    ],
+    "work_preferences": [
+      "onsite"
+    ]
+  },
+  "job_signals": {
+    "required_skills": [
+      "RN",
+      "BLS",
+      "patient communication"
+    ],
+    "preferred_skills": [],
+    "seniority_signals": [
+      "senior"
+    ],
+    "experience_requirements": [
+      "patient care",
+      "weekend shifts"
+    ],
+    "work_arrangements": [
+      "onsite"
+    ],
+    "location_signals": [
+      "Boston"
+    ],
+    "risk_indicators": [],
+    "missing_signals": []
+  },
+  "expected": {
+    "decision": "strong",
+    "score_min": 0.95,
+    "score_max": 1.0,
+    "work_arrangement_aligned": true,
+    "location_aligned": true,
+    "severe_seniority_mismatch": false,
+    "required_skills_matched": [
+      "RN",
+      "BLS",
+      "patient communication"
+    ],
+    "required_skills_missing": [],
+    "preferred_skills_matched": [],
+    "experience_requirements_matched": [
+      "patient care",
+      "weekend shifts"
+    ],
+    "experience_requirements_missing": []
+  }
+}

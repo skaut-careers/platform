@@ -1,0 +1,53 @@
+{
+  "id": "role_title_variant",
+  "description": "Frontend Engineer vs UI Engineer \u2014 semantic role alignment without shared title tokens",
+  "tags": [
+    "role",
+    "semantic"
+  ],
+  "user_profile": {
+    "skills": [
+      "React",
+      "TypeScript"
+    ],
+    "location": "London",
+    "seniority": "mid",
+    "relevant_experience": [],
+    "work_preferences": [
+      "remote"
+    ]
+  },
+  "job_signals": {
+    "required_skills": [
+      "React",
+      "TypeScript"
+    ],
+    "preferred_skills": [],
+    "seniority_signals": [
+      "mid"
+    ],
+    "experience_requirements": [],
+    "work_arrangements": [
+      "remote"
+    ],
+    "location_signals": [],
+    "risk_indicators": [],
+    "missing_signals": []
+  },
+  "expected": {
+    "decision": "prepare",
+    "score_min": 0.6,
+    "score_max": 1.0,
+    "work_arrangement_aligned": true,
+    "location_aligned": true,
+    "severe_seniority_mismatch": false,
+    "required_skills_matched": [
+      "React",
+      "TypeScript"
+    ],
+    "required_skills_missing": [],
+    "preferred_skills_matched": [],
+    "experience_requirements_matched": [],
+    "experience_requirements_missing": []
+  }
+}

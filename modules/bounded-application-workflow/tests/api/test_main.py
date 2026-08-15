@@ -44,9 +44,8 @@ def test_run_workflow_returns_decision(api_client):
     )
     assert response.status_code == 200
     body = response.json()
-    decision = body["decision"]
-    assert decision["decision"] in _DECISIONS
-    assert isinstance(decision["score"], (int, float))
-    assert isinstance(decision["reasons"], list)
-    assert isinstance(decision["risks"], list)
-    assert body["job_signals"] is not None
+    assert body["decision"] in _DECISIONS
+    assert isinstance(body["score"], (int, float))
+    assert isinstance(body["reasons"], list)
+    assert isinstance(body["risks"], list)
+    assert isinstance(body["missing_information"], list)
