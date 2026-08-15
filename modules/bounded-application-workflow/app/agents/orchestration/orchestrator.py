@@ -2,18 +2,16 @@ from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph.state import CompiledStateGraph
 
 from app.agents.contracts import (
-    DecisionPolicy,
     ProfileExtractor,
-    ProfileMatcher,
+    MatchDecider,
     SignalExtractor,
     WorkflowOrchestratorInput,
     WorkflowOrchestratorOutput,
 )
-from app.agents.decision_rules import DefaultDecisionPolicy
 from app.agents.orchestration.graph import compile_workflow_graph, default_checkpointer
 from app.agents.orchestration.runner import execute_workflow_pipeline
 from app.agents.profile_extraction import DefaultProfileExtractor
-from app.agents.profile_matching import DefaultProfileMatcher
+from app.agents.match_decision import DefaultMatchDecider
 from app.agents.signal_extraction import DefaultSignalExtractor
 
 
@@ -23,21 +21,18 @@ class DefaultWorkflowOrchestrator:
         *,
         profile_extractor: ProfileExtractor | None = None,
         extractor: SignalExtractor | None = None,
-        matcher: ProfileMatcher | None = None,
-        policy: DecisionPolicy | None = None,
+        match_decider: MatchDecider | None = None,
         graph: CompiledStateGraph | None = None,
         checkpointer: MemorySaver | None = None,
     ) -> None:
         self._profile_extractor = profile_extractor or DefaultProfileExtractor()
         self._extractor = extractor or DefaultSignalExtractor()
-        self._matcher = matcher or DefaultProfileMatcher()
-        self._policy = policy or DefaultDecisionPolicy()
+        self._match_decider = match_decider or DefaultMatchDecider()
         self._checkpointer = checkpointer or default_checkpointer()
         self._graph = graph or compile_workflow_graph(
             profile_extractor=self._profile_extractor,
             extractor=self._extractor,
-            matcher=self._matcher,
-            policy=self._policy,
+            match_decider=self._match_decider,
             checkpointer=self._checkpointer,
         )
 
@@ -50,12 +45,8 @@ class DefaultWorkflowOrchestrator:
         return self._extractor
 
     @property
-    def matcher(self) -> ProfileMatcher:
-        return self._matcher
-
-    @property
-    def policy(self) -> DecisionPolicy:
-        return self._policy
+    def match_decider(self) -> MatchDecider:
+        return self._match_decider
 
     @property
     def graph(self) -> CompiledStateGraph:
@@ -73,8 +64,7 @@ class DefaultWorkflowOrchestrator:
             agent_input.workflow_input,
             profile_extractor=self._profile_extractor,
             extractor=self._extractor,
-            matcher=self._matcher,
-            policy=self._policy,
+            match_decider=self._match_decider,
             graph=self._graph,
         )
         if result.state.output is None:

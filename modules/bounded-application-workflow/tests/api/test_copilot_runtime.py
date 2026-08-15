@@ -9,20 +9,16 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from langgraph.graph import END, START, StateGraph
 
-from app.agents.orchestration.state import WorkflowGraphState
-from app.agents.orchestration.stages import CANONICAL_STAGES
+from app.agents.orchestration.state import CANONICAL_STAGES, WorkflowGraphState
 from app.agents.wiring import create_agents
 from app.api.copilot_runtime import (
     AGUI_WORKFLOW_AGENT_NAME,
-    CANONICAL_WORKFLOW_NODES,
     AguiWorkflowAgent,
     mount_copilotkit_runtime,
 )
 from app.api.main import create_app
 from app.domain.models import WorkflowOutput
 from tests.conftest import expected_decision, runtime_config, workflow_input
-
-_CORE_NODES = frozenset(CANONICAL_STAGES)
 
 
 def _orchestrator():
@@ -71,7 +67,7 @@ def test_agui_agent_exposes_canonical_graph():
     orchestrator = _orchestrator()
     agent = AguiWorkflowAgent(name=AGUI_WORKFLOW_AGENT_NAME, graph=orchestrator.graph)
     assert agent.graph is orchestrator.graph
-    assert CANONICAL_WORKFLOW_NODES.issubset(set(agent.graph.nodes))
+    assert CANONICAL_STAGES.issubset(set(agent.graph.nodes))
 
 
 def test_canonical_graph_runs_core_nodes():
@@ -92,7 +88,7 @@ def test_canonical_graph_runs_core_nodes():
                 seen.append(node)
 
     asyncio.run(_collect())
-    assert _CORE_NODES.issubset(seen)
+    assert CANONICAL_STAGES.issubset(seen)
     assert (
         orchestrator.graph.get_state({"configurable": {"thread_id": thread_id}}).values.get(
             "output"
@@ -131,7 +127,7 @@ def test_agui_agent_run_emits_canonical_step_nodes():
         for event in events
         if event.type == EventType.STEP_STARTED and event.step_name
     }
-    assert _CORE_NODES.issubset(steps)
+    assert CANONICAL_STAGES.issubset(steps)
 
 
 def test_agui_agent_run_returns_renderable_decision():
@@ -178,4 +174,4 @@ def test_app_mounts_orchestrator_canonical_graph():
     assert client.get("/copilotkit/health").json()["agent"]["name"] == (
         AGUI_WORKFLOW_AGENT_NAME
     )
-    assert CANONICAL_WORKFLOW_NODES.issubset(set(orchestrator.graph.nodes))
+    assert CANONICAL_STAGES.issubset(set(orchestrator.graph.nodes))

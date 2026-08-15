@@ -16,26 +16,11 @@ from copilotkit import LangGraphAGUIAgent
 from fastapi import FastAPI
 from langchain_core.runnables import RunnableConfig
 from langgraph.graph.state import CompiledStateGraph
-from app.agents.orchestration.state import WorkflowGraphState
+from app.agents.orchestration.state import CANONICAL_STAGES, WorkflowGraphState
 from app.domain.models import WorkflowInput
-from app.agents.orchestration.stages import (
-    DECISION,
-    PROFILE_EXTRACTION,
-    MATCH_DECISION,
-    SIGNAL_EXTRACTION,
-)
 
 AGUI_WORKFLOW_AGENT_NAME = "application_workflow"
 COPILOTKIT_PATH = "/copilotkit"
-
-CANONICAL_WORKFLOW_NODES = frozenset(
-    {
-        PROFILE_EXTRACTION,
-        SIGNAL_EXTRACTION,
-        MATCH_DECISION,
-        DECISION,
-    }
-)
 
 
 class AguiWorkflowAgent(LangGraphAGUIAgent):
@@ -128,8 +113,8 @@ def mount_copilotkit_runtime(
     *,
     graph: CompiledStateGraph,
 ) -> None:
-    if not CANONICAL_WORKFLOW_NODES.issubset(set(graph.nodes)):
-        missing = sorted(CANONICAL_WORKFLOW_NODES - set(graph.nodes))
+    if not CANONICAL_STAGES.issubset(set(graph.nodes)):
+        missing = sorted(CANONICAL_STAGES - set(graph.nodes))
         raise ValueError(
             "AG-UI must mount the canonical workflow graph; "
             f"missing nodes: {missing}"
@@ -151,7 +136,7 @@ def mount_copilotkit_runtime(
 
 __all__ = [
     "AGUI_WORKFLOW_AGENT_NAME",
-    "CANONICAL_WORKFLOW_NODES",
+    "CANONICAL_STAGES",
     "COPILOTKIT_PATH",
     "AguiWorkflowAgent",
     "WorkflowGraphState",

@@ -11,11 +11,23 @@ from app.agents.orchestration.audit import (
 )
 from app.domain.models import JobSignals
 from app.domain.models import (
-    ProfileMatchResult,
+    MatchDecision,
     UserProfile,
-    WorkflowDecision,
     WorkflowInput,
     WorkflowOutput,
+)
+
+# LangGraph node / audit stage ids (same strings appear in executed_stages).
+PROFILE_EXTRACTION = "profile_extraction"
+SIGNAL_EXTRACTION = "signal_extraction"
+MATCH_DECISION = "match_decision"
+
+CANONICAL_STAGES = frozenset(
+    {
+        PROFILE_EXTRACTION,
+        SIGNAL_EXTRACTION,
+        MATCH_DECISION,
+    }
 )
 
 
@@ -32,8 +44,7 @@ class WorkflowGraphState(BaseModel):
     started_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     job_signals: JobSignals | None = None
-    match: ProfileMatchResult | None = None
-    decision: WorkflowDecision | None = None
+    match_decision: MatchDecision | None = None
     output: WorkflowOutput | None = None
 
     events: list[WorkflowEvent] = Field(default_factory=list)

@@ -6,9 +6,8 @@ from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph.state import CompiledStateGraph
 
 from app.agents.contracts import (
-    DecisionPolicy,
     ProfileExtractor,
-    ProfileMatcher,
+    MatchDecider,
     SignalExtractor,
 )
 from app.agents.orchestration.graph import compile_workflow_graph
@@ -39,8 +38,7 @@ def execute_workflow_pipeline(
     *,
     profile_extractor: ProfileExtractor | None = None,
     extractor: SignalExtractor,
-    matcher: ProfileMatcher,
-    policy: DecisionPolicy,
+    match_decider: MatchDecider,
     graph: CompiledStateGraph | None = None,
     checkpointer: MemorySaver | None = None,
     thread_id: str | None = None,
@@ -49,8 +47,7 @@ def execute_workflow_pipeline(
     compiled = graph or compile_workflow_graph(
         profile_extractor=profile_extractor or DefaultProfileExtractor(),
         extractor=extractor,
-        matcher=matcher,
-        policy=policy,
+        match_decider=match_decider,
         checkpointer=checkpointer,
     )
     workflow_id = thread_id or str(uuid4())

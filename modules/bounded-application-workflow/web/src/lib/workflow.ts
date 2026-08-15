@@ -16,7 +16,7 @@ export type WorkflowAgentState = {
   job_description_text?: string;
   user_profile?: unknown;
   job_signals?: unknown;
-  decision?: WorkflowResultView & Record<string, unknown>;
+  match_decision?: WorkflowResultView & Record<string, unknown>;
   output?: WorkflowResultView;
 };
 
@@ -32,7 +32,7 @@ export function isDecisionType(value: unknown): value is DecisionType {
 export function workflowResult(
   state: WorkflowAgentState,
 ): WorkflowResultView | null {
-  const result = state.output ?? state.decision;
+  const result = state.output ?? state.match_decision;
   if (!result || !isDecisionType(result.decision)) return null;
   return {
     decision: result.decision,

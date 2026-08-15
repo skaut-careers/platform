@@ -3,8 +3,7 @@ import pytest
 from app.agents import run_workflow, run_workflow_with_state
 from app.agents.orchestration.audit import WorkflowEventType
 from app.agents.orchestration.graph import compile_workflow_graph
-from app.agents.orchestration.stages import CANONICAL_STAGES
-from app.agents.orchestration.state import WorkflowGraphState
+from app.agents.orchestration.state import CANONICAL_STAGES, WorkflowGraphState
 from app.agents.profile_extraction import DefaultProfileExtractor
 from app.agents.match_decision import DefaultMatchDecider
 from app.agents.signal_extraction import DefaultSignalExtractor
@@ -69,7 +68,7 @@ def test_prepare_path_executed_stages():
     _, run = run_workflow_with_state(
         workflow_input("strong_match.json"), runtime_config=_v1()
     )
-    assert run.executed_stages == list(CANONICAL_STAGES)
+    assert set(run.executed_stages) == CANONICAL_STAGES
     assert run.events[0].event_type == WorkflowEventType.RUN_STARTED
     assert run.events[-1].event_type == WorkflowEventType.RUN_COMPLETED
 
@@ -80,7 +79,7 @@ def test_skip_path_completes_workflow():
     )
     assert output.decision == DecisionType.SKIP
     assert run.is_complete
-    assert run.executed_stages == list(CANONICAL_STAGES)
+    assert set(run.executed_stages) == CANONICAL_STAGES
 
 
 def test_langgraph_checkpointer_reconstructs_run():
