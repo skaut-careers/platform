@@ -4,11 +4,13 @@ from dataclasses import dataclass
 
 from pydantic_evals.evaluators import EvaluationReason, Evaluator, EvaluatorContext, EvaluatorOutput
 
-from app.agents.contracts import DecisionPolicyInput, ProfileMatcherInput
+from typing import cast
+
+from app.agents.contracts import MatchDeciderInput
 from app.domain.models import JobSignals
-from app.domain.models import ProfileMatchResult, UserProfile, WorkflowDecision
-from app.evaluation.dataset import CaseMetadata
-from app.evaluation.metrics import score_decision, score_match, score_profile, score_signals
+from app.domain.models import MatchDecision, UserProfile
+from app.evaluation.dataset import CaseMetadata, MatchDecisionExpectation
+from app.evaluation.metrics import score_match_decision, score_profile, score_job_signals
 
 
 def _f1_with_reason(
@@ -57,7 +59,7 @@ class SignalExtractionEvaluator(Evaluator[object, JobSignals, object]):
         if ctx.expected_output is None:
             raise ValueError("expected_output is required")
 
-        scored = score_signals(ctx.expected_output, ctx.output)
+        scored = score_job_signals(ctx.expected_output, ctx.output)
         scores: dict[str, float | bool | EvaluationReason] = {
             "macro_f1": scored.macro_f1,
             "exact_match": scored.exact_match,
@@ -98,83 +100,49 @@ class ProfileExtractionEvaluator(Evaluator[str, UserProfile, object]):
 
 
 @dataclass
-class ProfileMatchEvaluator(
-    Evaluator[ProfileMatcherInput, ProfileMatchResult, CaseMetadata]
+class MatchDecisionEvaluator(
+    Evaluator[MatchDeciderInput, MatchDecision, CaseMetadata]
 ):
-    """Score band plus alignment flags and capability/experience set F1."""
+    """Decision accuracy + score band + alignment flags + match/decision set F1."""
 
     def evaluate(
         self,
-        ctx: EvaluatorContext[ProfileMatcherInput, ProfileMatchResult, CaseMetadata],
+        ctx: EvaluatorContext[MatchDeciderInput, MatchDecision, CaseMetadata],
     ) -> EvaluatorOutput:
         if ctx.expected_output is None:
             raise ValueError("expected_output is required")
 
-        expected = ctx.expected_output
-        match = ctx.output
-        scored = score_match(expected, match)  # type: ignore[arg-type]
+        # Goldens store a MatchDecisionExpectation in expected_output (see MatchCase).
+        expected = cast(MatchDecisionExpectation, ctx.expected_output)
+        result = ctx.output
+        scored = score_match_decision(expected, result)
         scores: dict[str, float | EvaluationReason] = {
             "macro_f1": scored.macro_f1,
+            "decision_accuracy": _flag_with_reason(
+                scored.decision_correct,
+                expected=expected.decision,
+                got=result.decision,
+            ),
             "score_in_range": _range_with_reason(
                 scored.score_in_range,
-                score=match.score,
+                score=result.score,
                 score_min=scored.score_min,
                 score_max=scored.score_max,
             ),
             "work_arrangement_aligned_correct": _flag_with_reason(
                 scored.work_arrangement_aligned_correct,
                 expected=expected.work_arrangement_aligned,
-                got=match.work_arrangement_aligned,
+                got=result.work_arrangement_aligned,
             ),
             "location_aligned_correct": _flag_with_reason(
                 scored.location_aligned_correct,
                 expected=expected.location_aligned,
-                got=match.location_aligned,
+                got=result.location_aligned,
             ),
             "severe_seniority_mismatch_correct": _flag_with_reason(
                 scored.severe_seniority_mismatch_correct,
                 expected=expected.severe_seniority_mismatch,
-                got=match.severe_seniority_mismatch,
-            ),
-        }
-        for field in scored.fields:
-            scores[f"{field.field}_f1"] = _f1_with_reason(
-                f1=field.f1,
-                exact_match=field.exact_match,
-                missing=field.missing,
-                extra=field.extra,
-            )
-        return scores
-
-
-@dataclass
-class DecisionPolicyEvaluator(
-    Evaluator[DecisionPolicyInput, WorkflowDecision, CaseMetadata]
-):
-    """Exact decision + score band + reasons/risks/missing_information set F1."""
-
-    def evaluate(
-        self,
-        ctx: EvaluatorContext[DecisionPolicyInput, WorkflowDecision, CaseMetadata],
-    ) -> EvaluatorOutput:
-        if ctx.expected_output is None:
-            raise ValueError("expected_output is required")
-
-        expected = ctx.expected_output
-        decision = ctx.output
-        scored = score_decision(expected, decision)  # type: ignore[arg-type]
-        scores: dict[str, float | EvaluationReason] = {
-            "macro_f1": scored.macro_f1,
-            "decision_accuracy": _flag_with_reason(
-                scored.decision_correct,
-                expected=expected.decision,
-                got=decision.decision,
-            ),
-            "score_in_range": _range_with_reason(
-                scored.score_in_range,
-                score=decision.score,
-                score_min=scored.score_min,
-                score_max=scored.score_max,
+                got=result.severe_seniority_mismatch,
             ),
         }
         for field in scored.fields:

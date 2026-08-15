@@ -37,7 +37,7 @@ With `LOGFIRE_TOKEN` in `.env`, experiments appear in the Logfire Evals UI.
 | Module | Role |
 |--------|------|
 | `app/evaluation/dataset.py` | JSON → `Case` / `Dataset` for every agent |
-| `app/evaluation/metrics.py` | set precision / recall / F1 (`score_field`, `score_signals`, `score_profile`) |
+| `app/evaluation/metrics.py` | set precision / recall / F1 (`score_field`, `score_job_signals`, `score_profile`, `score_match_decision`) |
 | `app/evaluation/evaluators.py` | Pydantic Evals evaluators |
 | `app/evaluation/runner.py` | `run_*_evaluation()` → `EvaluationReport` |
 | `app/evaluation/report.py` | shared harness + report helpers |

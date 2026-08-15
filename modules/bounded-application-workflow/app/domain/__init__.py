@@ -2,9 +2,8 @@ from app.domain.models import (
     SIGNAL_FIELDS,
     DecisionType,
     JobSignals,
-    ProfileMatchResult,
+    MatchDecision,
     UserProfile,
-    WorkflowDecision,
     WorkflowInput,
     WorkflowOutput,
 )
@@ -13,9 +12,8 @@ __all__ = [
     "SIGNAL_FIELDS",
     "DecisionType",
     "JobSignals",
-    "ProfileMatchResult",
+    "MatchDecision",
     "UserProfile",
-    "WorkflowDecision",
     "WorkflowInput",
     "WorkflowOutput",
 ]

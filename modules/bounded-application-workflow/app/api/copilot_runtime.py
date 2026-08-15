@@ -20,9 +20,8 @@ from app.agents.orchestration.state import WorkflowGraphState
 from app.domain.models import WorkflowInput
 from app.agents.orchestration.stages import (
     DECISION,
-    POLICY_APPLICATION,
     PROFILE_EXTRACTION,
-    PROFILE_MATCHING,
+    MATCH_DECISION,
     SIGNAL_EXTRACTION,
 )
 
@@ -33,8 +32,7 @@ CANONICAL_WORKFLOW_NODES = frozenset(
     {
         PROFILE_EXTRACTION,
         SIGNAL_EXTRACTION,
-        PROFILE_MATCHING,
-        POLICY_APPLICATION,
+        MATCH_DECISION,
         DECISION,
     }
 )

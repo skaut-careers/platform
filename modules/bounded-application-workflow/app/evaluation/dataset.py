@@ -5,25 +5,22 @@ from typing import cast
 from pydantic import BaseModel, Field
 from pydantic_evals import Case, Dataset
 
-from app.agents.contracts import DecisionPolicyInput, ProfileMatcherInput
+from app.agents.contracts import MatchDeciderInput
 from app.domain.models import (
     DecisionType,
     JobSignals,
-    ProfileMatchResult,
+    MatchDecision,
     UserProfile,
-    WorkflowDecision,
 )
 
 EVAL_ROOT = Path(__file__).resolve().parents[2] / "eval"
 SIGNAL_DATASET_DIR = EVAL_ROOT / "signal_extraction"
 PROFILE_DATASET_DIR = EVAL_ROOT / "profile_extraction"
-MATCH_DATASET_DIR = EVAL_ROOT / "profile_matching"
-DECISION_DATASET_DIR = EVAL_ROOT / "decision_rules"
+MATCH_DATASET_DIR = EVAL_ROOT / "match_decision"
 
 SIGNAL_DATASET_NAME = "signal_extractor_golden"
 PROFILE_DATASET_NAME = "profile_extractor_golden"
-MATCH_DATASET_NAME = "profile_matcher_golden"
-DECISION_DATASET_NAME = "decision_policy_golden"
+MATCH_DATASET_NAME = "match_decision_golden"
 
 
 class CaseMetadata(BaseModel):
@@ -31,8 +28,10 @@ class CaseMetadata(BaseModel):
     tags: list[str] = Field(default_factory=list)
 
 
-class MatchExpectation(BaseModel):
+class MatchDecisionExpectation(BaseModel):
+    """Expected match_decision fields for one golden case."""
 
+    decision: DecisionType
     score_min: float = Field(default=0.0, ge=0.0, le=1.0)
     score_max: float = Field(default=1.0, ge=0.0, le=1.0)
     work_arrangement_aligned: bool = True
@@ -43,15 +42,6 @@ class MatchExpectation(BaseModel):
     preferred_skills_matched: list[str] = Field(default_factory=list)
     experience_requirements_matched: list[str] = Field(default_factory=list)
     experience_requirements_missing: list[str] = Field(default_factory=list)
-
-
-class DecisionExpectation(BaseModel):
-
-    decision: DecisionType
-    score_min: float = Field(default=0.0, ge=0.0, le=1.0)
-    score_max: float = Field(default=1.0, ge=0.0, le=1.0)
-    reasons: list[str] = Field(default_factory=list)
-    risks: list[str] = Field(default_factory=list)
     missing_information: list[str] = Field(default_factory=list)
 
 
@@ -59,11 +49,9 @@ SignalCase = Case[str, JobSignals, CaseMetadata]
 SignalDataset = Dataset[str, JobSignals, CaseMetadata]
 ProfileCase = Case[str, UserProfile, CaseMetadata]
 ProfileDataset = Dataset[str, UserProfile, CaseMetadata]
-# OutputT is ProfileMatchResult (task output); goldens store MatchExpectation in expected_output.
-MatchCase = Case[ProfileMatcherInput, ProfileMatchResult, CaseMetadata]
-MatchDataset = Dataset[ProfileMatcherInput, ProfileMatchResult, CaseMetadata]
-DecisionCase = Case[DecisionPolicyInput, WorkflowDecision, CaseMetadata]
-DecisionDataset = Dataset[DecisionPolicyInput, WorkflowDecision, CaseMetadata]
+# OutputT is MatchDecision (task output); goldens store MatchDecisionExpectation in expected_output.
+MatchCase = Case[MatchDeciderInput, MatchDecision, CaseMetadata]
+MatchDataset = Dataset[MatchDeciderInput, MatchDecision, CaseMetadata]
 
 
 def _require_cases(cases: list, root: Path) -> list:
@@ -110,8 +98,8 @@ def load_profile_cases(dataset_dir: Path | None = None) -> list[ProfileCase]:
     return _require_cases(cases, root)
 
 
-def _match_input(payload: dict) -> ProfileMatcherInput:
-    return ProfileMatcherInput(
+def _match_input(payload: dict) -> MatchDeciderInput:
+    return MatchDeciderInput(
         user_profile=UserProfile.model_validate(payload["user_profile"]),
         job_signals=JobSignals.model_validate(payload["job_signals"]),
     )
@@ -128,38 +116,7 @@ def load_match_cases(dataset_dir: Path | None = None) -> list[MatchCase]:
                 Case(
                     name=payload["id"],
                     inputs=_match_input(payload),
-                    expected_output=MatchExpectation.model_validate(
-                        payload["expected"]
-                    ),
-                    metadata=CaseMetadata(
-                        description=payload.get("description", ""),
-                        tags=payload.get("tags", []),
-                    ),
-                ),
-            )
-        )
-    return _require_cases(cases, root)
-
-
-def _decision_input(payload: dict) -> DecisionPolicyInput:
-    return DecisionPolicyInput(
-        match=ProfileMatchResult.model_validate(payload["match"]),
-        job_signals=JobSignals.model_validate(payload["job_signals"]),
-    )
-
-
-def load_decision_cases(dataset_dir: Path | None = None) -> list[DecisionCase]:
-    root = dataset_dir or DECISION_DATASET_DIR
-    cases: list[DecisionCase] = []
-    for path in sorted(root.glob("*.json")):
-        payload = json.loads(path.read_text())
-        cases.append(
-            cast(
-                DecisionCase,
-                Case(
-                    name=payload["id"],
-                    inputs=_decision_input(payload),
-                    expected_output=DecisionExpectation.model_validate(
+                    expected_output=MatchDecisionExpectation.model_validate(
                         payload["expected"]
                     ),
                     metadata=CaseMetadata(
@@ -205,24 +162,10 @@ def load_match_dataset(
     *,
     cases: list[MatchCase] | None = None,
 ) -> MatchDataset:
-    from app.evaluation.evaluators import ProfileMatchEvaluator
+    from app.evaluation.evaluators import MatchDecisionEvaluator
 
     return MatchDataset(
         name=MATCH_DATASET_NAME,
         cases=cases if cases is not None else load_match_cases(dataset_dir),
-        evaluators=[ProfileMatchEvaluator()],
-    )
-
-
-def load_decision_dataset(
-    dataset_dir: Path | None = None,
-    *,
-    cases: list[DecisionCase] | None = None,
-) -> DecisionDataset:
-    from app.evaluation.evaluators import DecisionPolicyEvaluator
-
-    return DecisionDataset(
-        name=DECISION_DATASET_NAME,
-        cases=cases if cases is not None else load_decision_cases(dataset_dir),
-        evaluators=[DecisionPolicyEvaluator()],
+        evaluators=[MatchDecisionEvaluator()],
     )

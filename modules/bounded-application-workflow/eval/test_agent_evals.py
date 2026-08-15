@@ -3,8 +3,7 @@ from pydantic_evals.reporting import EvaluationReport
 
 from app.domain.models import SIGNAL_FIELDS
 from app.evaluation import (
-    DECISION_LIST_FIELDS,
-    MATCH_LIST_FIELDS,
+    MATCH_DECISION_LIST_FIELDS,
     PROFILE_SCORED_FIELDS,
     fallback_rate,
     load_match_cases,
@@ -31,8 +30,7 @@ MATCH_DECISION_SCORE_KEYS = (
     "work_arrangement_aligned_correct",
     "location_aligned_correct",
     "severe_seniority_mismatch_correct",
-    *(f"{field}_f1" for field in MATCH_LIST_FIELDS),
-    *(f"{field}_f1" for field in DECISION_LIST_FIELDS),
+    *(f"{field}_f1" for field in MATCH_DECISION_LIST_FIELDS),
 )
 
 

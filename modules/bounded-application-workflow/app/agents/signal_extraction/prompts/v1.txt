@@ -21,7 +21,7 @@ Rules:
 - Treat optional phrasing as preferred; treat expected/must-have phrasing as required.
 - Infer work_arrangements and location_signals from clear description cues, including soft remote/hybrid cues.
 - For work_arrangements use only: remote, hybrid, onsite. Map common synonyms into those three labels; never return the synonym phrase itself.
-- Split multi-part places into separate short location_signals when both city and country/region appear.
+- For multi-part places like "Berlin, Germany", keep only the primary city or place name as one location_signal; do not also emit the country/region.
 - Put concrete required duties and prior-domain expectations in experience_requirements;
   use short phrases such as patient care, inventory management, classroom management,
   shift work, regulatory compliance, or incident response.

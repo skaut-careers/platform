@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field, ValidationError, field_validator
 
 
 class DecisionType(str, Enum):
+    STRONG = "strong"
     PREPARE = "prepare"
     QUEUE = "queue"
     SKIP = "skip"
